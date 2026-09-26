@@ -1,0 +1,68 @@
+{
+  "name": "contract-invoice",
+  "displayName": "Invoice for Contracts of Mandate",
+  "type": "module",
+  "author": {
+    "name": "DraugSköll",
+    "email": "kprinny@gmail.com"
+  },
+  "funding": [
+    {
+      "type": "patreon",
+      "url": "https://patreon.com/draugskoll"
+    },
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/reisene"
+    }
+  ],
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,css,scss,md,mdx,html}": [
+      "prettier --write"
+    ]
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "prepare": "husky",
+    "typecheck": "tsc --noEmit",
+    "typecheck:ts6": "tsc6 --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@vercel/config": "^0.7.0",
+    "bootstrap": "^5.3.8",
+    "next": "16.3.6",
+    "react": "19.2.8",
+    "react-bootstrap": "^2.10.10",
+    "react-dom": "19.2.8",
+    "react-icons": "^5.7.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "@types/node": "20.6.0",
+    "@types/react": "19.0.12",
+    "@types/react-dom": "19.0.4",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "eslint": "10.11.0",
+    "eslint-config-next": "16.3.6",
+    "husky": "^9.1.7",
+    "lint-staged": "17.5.1",
+    "prettier": "^3.9.9",
+    "prettier-plugin-organize-imports": "^4.3.0",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript-eslint": "^8.70.1"
+  },
+  "overrides": {
+    "path-to-regexp": "6.3.0"
+  }
+}

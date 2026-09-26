@@ -16,6 +16,14 @@
       "url": "https://github.com/sponsors/reisene"
     }
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reisene/invoice-creator.git"
+  },
+  "homepage": "https://github.com/reisene/invoice-creator#readme",
+  "bugs": {
+    "url": "https://github.com/reisene/invoice-creator/issues"
+  },
   "version": "0.1.0",
   "private": true,
   "engines": {

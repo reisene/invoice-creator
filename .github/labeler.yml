@@ -1,27 +1,33 @@
 documentation:
-  - "**/*.md"
-  - "README*"
-  - "docs/**"
+  - any-glob-to-any-file:
+    - '**/*.md'
+    - 'README*'
+    - 'docs/**'
 
 config:
-  - ".github/**"
-  - "*.yml"
-  - "*.yaml"
+  - any-glob-to-any-file:
+    - '.github/**'
+    - '*.yml'
+    - '*.yaml'
 
 frontend:
-  - "app/**"
-  - "components/**"
-  - "public/**"
+  - any-glob-to-any-file:
+    - 'app/**'
+    - 'components/**'
+    - 'public/**'
 
 dependencies:
-  - "package.json"
-  - "package-lock.json"
-  - ".nvmrc"
+  - any-glob-to-any-file:
+    - 'package.json'
+    - 'package-lock.json'
+    - '.nvmrc'
 
 ci:
-  - ".github/workflows/**"
-  - ".github/dependabot.yml"
+  - any-glob-to-any-file:
+    - '.github/workflows/**'
+    - '.github/dependabot.yml'
 
 styles:
-  - "**/*.css"
-  - "**/*.scss"
+  - any-glob-to-any-file:
+    - '**/*.css'
+    - '**/*.scss'

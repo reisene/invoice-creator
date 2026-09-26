@@ -1,10 +1,18 @@
 import AppNavbar from '@/components/AppNavbar';
+import Footer from '@/components/Footer';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { IconType } from 'react-icons';
+import { BsGithub } from 'react-icons/bs';
 import './globals.css';
 
 const siteUrl: string = process.env.SITE_URL || 'localhost:3000';
+const author: { name: string; url: string; ico: IconType } = {
+  name: 'DraugSköll',
+  url: 'https://github.com/reisene',
+  ico: BsGithub,
+};
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -31,7 +39,9 @@ export const metadata: Metadata = {
       rel: 'icon',
     },
   ],
-  authors: [{ name: 'DraugSköll', url: 'https://github.com/reisene' }],
+  authors: [{ name: author.name, url: author.url }],
+  publisher: author.name,
+  creator: author.name,
 };
 
 export const viewport: Viewport = {
@@ -49,6 +59,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       <body className='min-vh-100 d-flex flex-column'>
         <AppNavbar />
         <main className={'py-5'}>{children}</main>
+        <Footer author={author} />
       </body>
     </html>
   );

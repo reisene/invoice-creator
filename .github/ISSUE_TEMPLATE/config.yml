@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions / support
+    url: https://github.com/reisene/invoce-creator/discussions
+    about: Please ask general questions and get support here.
+  - name: Security vulnerability
+    url: https://github.com/reisene/invoce-creator/security/advisories/new
+    about: Please report security issues privately through GitHub Security Advisories.

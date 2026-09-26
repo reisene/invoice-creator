@@ -1,0 +1,27 @@
+documentation:
+  - "**/*.md"
+  - "README*"
+  - "docs/**"
+
+config:
+  - ".github/**"
+  - "*.yml"
+  - "*.yaml"
+
+frontend:
+  - "app/**"
+  - "components/**"
+  - "public/**"
+
+dependencies:
+  - "package.json"
+  - "package-lock.json"
+  - ".nvmrc"
+
+ci:
+  - ".github/workflows/**"
+  - ".github/dependabot.yml"
+
+styles:
+  - "**/*.css"
+  - "**/*.scss"

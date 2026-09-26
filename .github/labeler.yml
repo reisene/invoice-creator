@@ -1,36 +1,27 @@
-version: 1
+documentation:
+  - "**/*.md"
+  - "README*"
+  - "docs/**"
 
-labels:
-  - label: "documentation"
-    files:
-      - "**/*.md"
-      - "README*"
-      - "docs/**"
+config:
+  - ".github/**"
+  - "*.yml"
+  - "*.yaml"
 
-  - label: "config"
-    files:
-      - ".github/**"
-      - "*.yml"
-      - "*.yaml"
+frontend:
+  - "app/**"
+  - "components/**"
+  - "public/**"
 
-  - label: "frontend"
-    files:
-      - "app/**"
-      - "components/**"
-      - "public/**"
+dependencies:
+  - "package.json"
+  - "package-lock.json"
+  - ".nvmrc"
 
-  - label: "dependencies"
-    files:
-      - "package.json"
-      - "package-lock.json"
-      - ".nvmrc"
+ci:
+  - ".github/workflows/**"
+  - ".github/dependabot.yml"
 
-  - label: "ci"
-    files:
-      - ".github/workflows/**"
-      - ".github/dependabot.yml"
-
-  - label: "styles"
-    files:
-      - "**/*.css"
-      - "**/*.scss"
+styles:
+  - "**/*.css"
+  - "**/*.scss"

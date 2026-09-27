@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GitFlowSettingsState">
+    <option name="counter" value="1" />
+    <option name="developBranch" value="develop" />
+    <option name="featurePrefix" value="feature/" />
+    <option name="hotfixPrefix" value="hotfix/" />
+    <option name="integrateWithTasks" value="true" />
+    <option name="mainBranch" value="main" />
+    <option name="releasePrefix" value="release/" />
+    <option name="repoCiEntries">
+      <list>
+        <RepoCiEntry>
+          <option name="repoPath" value="$PROJECT_DIR$" />
+          <option name="repoName" value="contract-invoice" />
+        </RepoCiEntry>
+      </list>
+    </option>
+    <option name="showDetails" value="true" />
+  </component>
+</project>

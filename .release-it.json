@@ -1,0 +1,23 @@
+{
+  "git": {
+    "requireBranch": ["develop", "release/*"],
+    "requireCleanWorkingDir": true,
+    "requireUpstream": false,
+    "commit": true,
+    "commitMessage": "chore(release): ${version}",
+    "tag": false,
+    "push": false
+  },
+  "github": {
+    "release": false
+  },
+  "npm": {
+    "publish": false
+  },
+  "plugins": {
+    "@release-it/conventional-changelog": {
+      "preset": "conventionalcommits",
+      "infile": "CHANGELOG.md"
+    }
+  }
+}

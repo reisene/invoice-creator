@@ -1,21 +1,10 @@
 import type { InvoiceData } from '@/types/invoice';
 import type { InvoiceFormData } from '@/types/invoiceForm';
-
-// Stałe (2026 – możesz potem zaktualizować)
-const PENSION_RATE = 0.0976; // 9,76%
-const RENT_RATE = 0.015; // 1,5%
-const SICKNESS_RATE = 0.0245; // 2,45%
-const HEALTH_RATE = 0.09; // 9%
-
-const TAX_RATE_1 = 0.12; // 12% do progu
-const TAX_RATE_2 = 0.32; // 32% powyżej progu
-const TAX_THRESHOLD = 120_000; // roczny próg podatkowy
-
-const MONTHLY_TAX_REDUCTION = 300; // miesięczna ulga podatkowa
-const YEARLY_YOUNG_RELIEF_LIMIT = 85_528; // limit ulgi dla młodych (roczny)
+import type { TaxParams } from '@/types/taxParams';
 
 export function calculateInvoice(
   data: InvoiceFormData,
+  P: TaxParams,
   yearToDateIncome: number = 0,
 ): InvoiceData {
   // 1. Brutto
@@ -29,13 +18,15 @@ export function calculateInvoice(
     data.contractorStatus === 'standard' ||
     data.contractorStatus === 'with_employment';
 
-  const pensionContribution = hasSocialContributions ? gross * PENSION_RATE : 0;
+  const pensionContribution = hasSocialContributions
+    ? gross * P.pensionRate
+    : 0;
 
-  const rentContribution = hasSocialContributions ? gross * RENT_RATE : 0;
+  const rentContribution = hasSocialContributions ? gross * P.rentRate : 0;
 
   const sicknessContribution =
     hasSocialContributions && data.voluntarySickness
-      ? gross * SICKNESS_RATE
+      ? gross * P.sicknessRate
       : 0;
 
   const totalSocialContributions =
@@ -45,10 +36,11 @@ export function calculateInvoice(
   const healthContributionBase = gross - totalSocialContributions;
 
   // 4. Składka zdrowotna (9%)
-  const healthContribution = healthContributionBase * HEALTH_RATE;
+  const healthContribution = healthContributionBase * P.healthRate;
 
   // 5. Koszty uzyskania przychodu
-  const costRate = data.costType === '50' ? 0.5 : 0.2;
+  const costRate =
+    data.costType === '50' ? P.costRateArtistic : P.costRateStandard;
   const taxDeductibleCosts = healthContributionBase * costRate;
 
   // 6. Podstawa opodatkowania
@@ -58,13 +50,13 @@ export function calculateInvoice(
   // 7. Zaliczka na PIT (12% do progu, 32% powyżej)
   const projectedYearlyIncome = yearToDateIncome + gross;
   const taxRate =
-    projectedYearlyIncome <= TAX_THRESHOLD ? TAX_RATE_1 : TAX_RATE_2;
+    projectedYearlyIncome <= P.taxThreshold ? P.taxRate1 : P.taxRate2;
 
   const taxBeforeReduction = Math.round(taxableBase * taxRate);
 
   // 8. Ulga podatkowa (300 zł miesięcznie, proporcjonalnie)
   const taxReductionAmountApplied = data.taxReduction
-    ? MONTHLY_TAX_REDUCTION
+    ? Math.min(data.taxReductionAmount, P.monthlyTaxReduction)
     : 0;
 
   // 9. Zaliczka na PIT po uldze
@@ -83,7 +75,7 @@ export function calculateInvoice(
   if (isEligibleForYoungRelief) {
     const remainingLimit = Math.max(
       0,
-      YEARLY_YOUNG_RELIEF_LIMIT - yearToDateIncome,
+      P.yearlyYoungReliefLimit - yearToDateIncome,
     );
     youngReliefApplied = Math.min(taxBeforeYoungRelief, remainingLimit);
   }

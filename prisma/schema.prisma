@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model TaxParam {
+  id                     Int      @id @default(autoincrement())
+  year                   Int      @unique
+  pensionRate            Decimal  @default(0.0976) @db.Decimal(5, 4)
+  rentRate               Decimal  @default(0.015) @db.Decimal(5, 4)
+  sicknessRate           Decimal  @default(0.0245) @db.Decimal(5, 4)
+  healthRate             Decimal  @default(0.09) @db.Decimal(5, 4)
+  taxRate1               Decimal  @default(0.12) @db.Decimal(5, 4)
+  taxRate2               Decimal  @default(0.32) @db.Decimal(5, 4)
+  taxThreshold           Decimal  @default(120000) @db.Decimal(12, 2)
+  monthlyTaxReduction    Decimal  @default(300) @db.Decimal(10, 2)
+  yearlyYoungReliefLimit Decimal  @default(85528) @db.Decimal(12, 2)
+  zusLimitMultiple       Int      @default(30)
+  minimumWage            Decimal  @default(4300) @db.Decimal(10, 2)
+  costRateStandard       Decimal  @default(0.2) @db.Decimal(5, 4)
+  costRateArtistic       Decimal  @default(0.5) @db.Decimal(5, 4)
+  createdAt              DateTime @default(now())
+  createdBy              String
+  comment                String?
+
+  @@index([year])
+}

@@ -54,6 +54,8 @@ interface GeneratorClientProps {
 
 export default function GeneratorClient({ taxParams }: GeneratorClientProps) {
   const [formData, setFormData] = useState<InvoiceFormData>(getInitialData());
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const taxYear = Number(formData.periodStart.slice(0, 4));
   const selectedTaxParams = [...taxParams]
     .reverse()
@@ -65,8 +67,41 @@ export default function GeneratorClient({ taxParams }: GeneratorClientProps) {
     [formData, selectedTaxParams],
   );
 
-  const handleDownloadPdf = () => {
-    alert('PDF będzie generowany w kolejnym kroku.');
+  const handleDownloadPdf = async () => {
+    if (!invoiceData || isGeneratingPdf) return;
+
+    setIsGeneratingPdf(true);
+    setPdfError(null);
+
+    try {
+      const [{ pdf }, { default: createInvoicePdfDocument }] =
+        await Promise.all([
+          import('@react-pdf/renderer'),
+          import('./InvoicePdfDocument'),
+        ]);
+
+      const blob = await pdf(createInvoicePdfDocument(invoiceData)).toBlob();
+      const objectUrl = URL.createObjectURL(blob);
+      const downloadLink = document.createElement('a');
+      const filenamePart = (
+        invoiceData.contract.number || invoiceData.contract.periodStart
+      ).replace(/[^a-zA-Z0-9_-]/g, '_');
+
+      downloadLink.href = objectUrl;
+      downloadLink.download = `rachunek-${filenamePart}.pdf`;
+      document.body.append(downloadLink);
+      downloadLink.click();
+      downloadLink.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    } catch (error: unknown) {
+      setPdfError(
+        error instanceof Error
+          ? error.message
+          : 'Nie udało się wygenerować pliku PDF.',
+      );
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   return (
@@ -83,10 +118,19 @@ export default function GeneratorClient({ taxParams }: GeneratorClientProps) {
             <>
               <InvoicePreview data={invoiceData} />
               <div className='mt-3 text-end'>
-                <Button variant='primary' onClick={handleDownloadPdf}>
-                  Pobierz PDF
+                <Button
+                  variant='primary'
+                  onClick={handleDownloadPdf}
+                  disabled={isGeneratingPdf}
+                >
+                  {isGeneratingPdf ? 'Generowanie PDF…' : 'Pobierz PDF'}
                 </Button>
               </div>
+              {pdfError ? (
+                <Alert className='mt-3' variant='danger' role='alert'>
+                  Nie udało się wygenerować PDF: {pdfError}
+                </Alert>
+              ) : null}
             </>
           ) : (
             <Alert variant='danger'>

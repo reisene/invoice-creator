@@ -1,10 +1,14 @@
 'use client';
 
+import { saveInvoice } from '@/app/actions/savedData';
 import InvoiceForm from '@/components/generator/InvoiceForm';
 import InvoicePreview from '@/components/generator/InvoicePreview';
+import SavedPartiesPanel from '@/components/generator/SavedPartiesPanel';
 import { calculateInvoice } from '@/lib/calculateInvoice';
+import { validateInvoiceForm } from '@/lib/validateInvoiceForm';
 import type { InvoiceData } from '@/types/invoice';
 import type { InvoiceFormData } from '@/types/invoiceForm';
+import type { SavedPartyDto } from '@/types/savedData';
 import type { TaxParams } from '@/types/taxParams';
 import { useMemo, useState } from 'react';
 import { Alert, Button, Col, Container, Row } from 'react-bootstrap';
@@ -42,6 +46,8 @@ function getInitialData(): InvoiceFormData {
     voluntarySickness: false,
     costType: '20',
     youngRelief: false,
+    yearToDateTaxableIncome: 0,
+    yearToDateYoungReliefIncome: 0,
 
     taxReduction: true,
     taxReductionAmount: 300,
@@ -50,10 +56,27 @@ function getInitialData(): InvoiceFormData {
 
 interface GeneratorClientProps {
   taxParams: TaxParams[];
+  signedIn: boolean;
+  initialParties: SavedPartyDto[];
+  initialInvoice?: { id: string; data: InvoiceFormData };
 }
 
-export default function GeneratorClient({ taxParams }: GeneratorClientProps) {
-  const [formData, setFormData] = useState<InvoiceFormData>(getInitialData());
+export default function GeneratorClient({
+  taxParams,
+  signedIn,
+  initialParties,
+  initialInvoice,
+}: GeneratorClientProps) {
+  const [formData, setFormData] = useState<InvoiceFormData>(
+    initialInvoice?.data ?? getInitialData(),
+  );
+  const [parties, setParties] = useState(initialParties);
+  const [invoiceId, setInvoiceId] = useState(initialInvoice?.id);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{
+    variant: 'success' | 'danger';
+    text: string;
+  } | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const taxYear = Number(formData.periodStart.slice(0, 4));
@@ -67,8 +90,27 @@ export default function GeneratorClient({ taxParams }: GeneratorClientProps) {
     [formData, selectedTaxParams],
   );
 
+  const validationErrors = useMemo(
+    () => validateInvoiceForm(formData, selectedTaxParams),
+    [formData, selectedTaxParams],
+  );
+
+  const handleSave = async () => {
+    if (isSaving || validationErrors.length > 0) return;
+    setIsSaving(true);
+    setSaveMessage(null);
+    const result = await saveInvoice(formData, invoiceId);
+    setIsSaving(false);
+    if (result.ok) {
+      setInvoiceId(result.data.id);
+      setSaveMessage({ variant: 'success', text: 'Rachunek zapisany.' });
+    } else {
+      setSaveMessage({ variant: 'danger', text: result.error });
+    }
+  };
+
   const handleDownloadPdf = async () => {
-    if (!invoiceData || isGeneratingPdf) return;
+    if (!invoiceData || isGeneratingPdf || validationErrors.length > 0) return;
 
     setIsGeneratingPdf(true);
     setPdfError(null);
@@ -110,22 +152,71 @@ export default function GeneratorClient({ taxParams }: GeneratorClientProps) {
 
       <Row className='g-4'>
         <Col lg={6}>
-          <InvoiceForm data={formData} onChange={setFormData} />
+          {signedIn ? (
+            <SavedPartiesPanel
+              parties={parties}
+              data={formData}
+              onChange={setFormData}
+              onSaved={(party) => setParties((prev) => [...prev, party])}
+            />
+          ) : null}
+          <InvoiceForm
+            data={formData}
+            onChange={setFormData}
+            taxParams={selectedTaxParams}
+          />
         </Col>
 
         <Col lg={6}>
-          {invoiceData ? (
+          {invoiceData && selectedTaxParams ? (
             <>
-              <InvoicePreview data={invoiceData} />
-              <div className='mt-3 text-end'>
+              <InvoicePreview
+                data={invoiceData}
+                taxParams={selectedTaxParams}
+              />
+              <div className='mt-3 d-flex justify-content-end gap-2'>
+                {signedIn ? (
+                  <Button
+                    variant='outline-primary'
+                    onClick={handleSave}
+                    disabled={isSaving || validationErrors.length > 0}
+                  >
+                    {isSaving
+                      ? 'Zapisywanie…'
+                      : invoiceId
+                        ? 'Zaktualizuj rachunek'
+                        : 'Zapisz rachunek'}
+                  </Button>
+                ) : null}
                 <Button
                   variant='primary'
                   onClick={handleDownloadPdf}
-                  disabled={isGeneratingPdf}
+                  disabled={isGeneratingPdf || validationErrors.length > 0}
                 >
                   {isGeneratingPdf ? 'Generowanie PDF…' : 'Pobierz PDF'}
                 </Button>
               </div>
+              {!signedIn ? (
+                <p className='text-muted small text-end mt-2 mb-0'>
+                  <a href='/auth/sign-in'>Zaloguj się</a>, aby zapisywać
+                  rachunki i dane stron.
+                </p>
+              ) : null}
+              {saveMessage ? (
+                <Alert className='mt-3' variant={saveMessage.variant}>
+                  {saveMessage.text}
+                </Alert>
+              ) : null}
+              {validationErrors.length > 0 ? (
+                <Alert className='mt-3' variant='warning'>
+                  <strong>Aby pobrać PDF, popraw:</strong>
+                  <ul className='mb-0'>
+                    {validationErrors.map((message) => (
+                      <li key={message}>{message}</li>
+                    ))}
+                  </ul>
+                </Alert>
+              ) : null}
               {pdfError ? (
                 <Alert className='mt-3' variant='danger' role='alert'>
                   Nie udało się wygenerować PDF: {pdfError}

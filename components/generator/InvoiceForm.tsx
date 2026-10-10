@@ -6,14 +6,23 @@ import type {
   InvoiceFormData,
   TaxReductionAmount,
 } from '@/types/invoiceForm';
+import type { TaxParams } from '@/types/taxParams';
 import { Col, Form, Row } from 'react-bootstrap';
 
 interface InvoiceFormProps {
   data: InvoiceFormData;
   onChange: (data: InvoiceFormData) => void;
+  taxParams?: TaxParams;
 }
 
-export default function InvoiceForm({ data, onChange }: InvoiceFormProps) {
+const percent = (rate: number) => `${Math.round(rate * 10000) / 100}%`;
+
+export default function InvoiceForm({
+  data,
+  onChange,
+  taxParams,
+}: InvoiceFormProps) {
+  const fullReduction = taxParams?.monthlyTaxReduction ?? 300;
   const updateField = <K extends keyof InvoiceFormData>(
     field: K,
     value: InvoiceFormData[K],
@@ -42,6 +51,36 @@ export default function InvoiceForm({ data, onChange }: InvoiceFormProps) {
           </Form.Group>
         </Col>
       </Row>
+
+      {data.youngRelief ? (
+        <Row className='mb-3'>
+          <Col md={6}>
+            <Form.Group>
+              <Form.Label>
+                Przychód objęty ulgą dla młodych od początku roku
+              </Form.Label>
+              <Form.Control
+                type='number'
+                step='0.01'
+                min={0}
+                max={taxParams?.yearlyYoungReliefLimit}
+                value={data.yearToDateYoungReliefIncome}
+                onChange={(e) =>
+                  updateField(
+                    'yearToDateYoungReliefIncome',
+                    e.target.value ? Number(e.target.value) : 0,
+                  )
+                }
+                required
+              />
+              <Form.Text>
+                Wpisz przychód z tego roku, który wcześniej wykorzystał limit
+                ulgi. Bieżący rachunek zostanie doliczony automatycznie.
+              </Form.Text>
+            </Form.Group>
+          </Col>
+        </Row>
+      ) : null}
 
       <Row className='mb-3'>
         <Col md={6}>
@@ -326,9 +365,40 @@ export default function InvoiceForm({ data, onChange }: InvoiceFormProps) {
               }
               required
             >
-              <option value='20'>20% (standard)</option>
-              <option value='50'>50% (prawa autorskie)</option>
+              <option value='20'>
+                {percent(taxParams?.costRateStandard ?? 0.2)} (standard)
+              </option>
+              <option value='50'>
+                {percent(taxParams?.costRateArtistic ?? 0.5)} (prawa autorskie)
+              </option>
             </Form.Select>
+          </Form.Group>
+        </Col>
+      </Row>
+
+      <Row className='mb-3'>
+        <Col md={6}>
+          <Form.Group>
+            <Form.Label>
+              Dochód do opodatkowania uzyskany od początku roku
+            </Form.Label>
+            <Form.Control
+              type='number'
+              step='1'
+              min={0}
+              value={data.yearToDateTaxableIncome}
+              onChange={(e) =>
+                updateField(
+                  'yearToDateTaxableIncome',
+                  e.target.value ? Number(e.target.value) : 0,
+                )
+              }
+              required
+            />
+            <Form.Text>
+              Wpisz dotychczasową podstawę opodatkowania według skali z tego
+              roku, bez bieżącego rachunku. Jeśli jej nie znasz, pozostaw 0.
+            </Form.Text>
           </Form.Group>
         </Col>
       </Row>
@@ -354,6 +424,10 @@ export default function InvoiceForm({ data, onChange }: InvoiceFormProps) {
               checked={data.youngRelief}
               onChange={(e) => updateField('youngRelief', e.target.checked)}
             />
+            <Form.Text muted>
+              Dla osób poniżej 26 lat. Wymaga złożenia zleceniodawcy
+              oświadczenia o zastosowaniu ulgi.
+            </Form.Text>
           </Form.Group>
         </Col>
       </Row>
@@ -386,8 +460,8 @@ export default function InvoiceForm({ data, onChange }: InvoiceFormProps) {
                 }
                 required={data.taxReduction}
               >
-                <option value={300}>300 zł (jedna umowa)</option>
-                <option value={150}>150 zł (dwie umowy)</option>
+                <option value={300}>{fullReduction} zł (jedna umowa)</option>
+                <option value={150}>{fullReduction / 2} zł (dwie umowy)</option>
                 <option value={0}>0 zł (trzy lub więcej umów)</option>
               </Form.Select>
             </Form.Group>

@@ -29,3 +29,37 @@ model TaxParam {
 
   @@index([year])
 }
+
+enum PartyKind {
+  CLIENT
+  CONTRACTOR
+}
+
+model Invoice {
+  id             String   @id @default(cuid())
+  userId         String
+  title          String
+  contractNumber String?
+  periodStart    String
+  net            Decimal  @db.Decimal(12, 2)
+  data           Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId, updatedAt])
+}
+
+model SavedParty {
+  id         String    @id @default(cuid())
+  userId     String
+  kind       PartyKind
+  label      String
+  clientType String?
+  name       String
+  address    String
+  nip        String?
+  pesel      String?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId, kind])
+}

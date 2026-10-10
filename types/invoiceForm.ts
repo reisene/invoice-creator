@@ -40,6 +40,8 @@ export interface InvoiceFormData {
   voluntarySickness: boolean;
   costType: CostType;
   youngRelief: boolean;
+  yearToDateTaxableIncome: number;
+  yearToDateYoungReliefIncome: number;
 
   // Ulga podatkowa
   taxReduction: boolean;

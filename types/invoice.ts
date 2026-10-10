@@ -57,6 +57,7 @@ export interface InvoiceData {
 
     // Koszty uzyskania przychodu
     taxDeductibleCosts: number; // 20% lub 50%
+    youngReliefIncomeApplied: number;
 
     // Podstawa opodatkowania
     taxableBaseUnrounded: number;

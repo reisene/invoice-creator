@@ -3,6 +3,7 @@
 import { Fira_Mono } from 'next/font/google';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import type { ReactNode } from 'react';
 import { Container, Nav, Navbar } from 'react-bootstrap';
 import { IconType } from 'react-icons';
 import {
@@ -50,7 +51,7 @@ const navLinks: {
   },
 ];
 
-export default function AppNavbar() {
+export default function AppNavbar({ authButtons }: { authButtons: ReactNode }) {
   const pathname = usePathname();
   const isLinkActive = (href: string) => {
     if (href === '/') {
@@ -95,6 +96,7 @@ export default function AppNavbar() {
             );
           })}
         </Nav>
+        {authButtons}
       </Container>
     </Navbar>
   );

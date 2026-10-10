@@ -2,16 +2,19 @@ import type { InvoiceData } from '@/types/invoice';
 import type { InvoiceFormData } from '@/types/invoiceForm';
 import type { TaxParams } from '@/types/taxParams';
 
+const round2 = (value: number): number =>
+  Math.round((value + Number.EPSILON) * 100) / 100;
+
 export function calculateInvoice(
   data: InvoiceFormData,
   P: TaxParams,
-  yearToDateIncome: number = 0,
 ): InvoiceData {
   // 1. Brutto
-  const gross =
+  const gross = round2(
     data.contractType === 'monthly'
       ? (data.grossAmount ?? 0)
-      : (data.hourlyRate ?? 0) * (data.hoursWorked ?? 0);
+      : (data.hourlyRate ?? 0) * (data.hoursWorked ?? 0),
+  );
 
   // 2. Składki społeczne
   const hasSocialContributions =
@@ -19,71 +22,79 @@ export function calculateInvoice(
     data.contractorStatus === 'with_employment';
 
   const pensionContribution = hasSocialContributions
-    ? gross * P.pensionRate
+    ? round2(gross * P.pensionRate)
     : 0;
 
-  const rentContribution = hasSocialContributions ? gross * P.rentRate : 0;
+  const rentContribution = hasSocialContributions
+    ? round2(gross * P.rentRate)
+    : 0;
 
   const sicknessContribution =
     hasSocialContributions && data.voluntarySickness
-      ? gross * P.sicknessRate
+      ? round2(gross * P.sicknessRate)
       : 0;
 
-  const totalSocialContributions =
-    pensionContribution + rentContribution + sicknessContribution;
+  const totalSocialContributions = round2(
+    pensionContribution + rentContribution + sicknessContribution,
+  );
 
   // 3. Podstawa składki zdrowotnej
-  const healthContributionBase = gross - totalSocialContributions;
+  const healthContributionBase = round2(gross - totalSocialContributions);
 
   // 4. Składka zdrowotna (9%)
-  const healthContribution = healthContributionBase * P.healthRate;
+  const healthContribution = round2(healthContributionBase * P.healthRate);
 
-  // 5. Koszty uzyskania przychodu
+  // 5. Apply the annual young-relief exemption to qualifying gross revenue.
+  const remainingYoungReliefLimit = Math.max(
+    0,
+    P.yearlyYoungReliefLimit - data.yearToDateYoungReliefIncome,
+  );
+  const youngReliefIncomeApplied = data.youngRelief
+    ? Math.min(gross, remainingYoungReliefLimit)
+    : 0;
+  const taxableGross = round2(gross - youngReliefIncomeApplied);
+  const taxableSocialContributions =
+    gross > 0 ? round2(totalSocialContributions * (taxableGross / gross)) : 0;
+  const taxableIncomeBeforeCosts = Math.max(
+    0,
+    round2(taxableGross - taxableSocialContributions),
+  );
+
+  // 6. Koszty uzyskania przychodu
   const costRate =
     data.costType === '50' ? P.costRateArtistic : P.costRateStandard;
-  const taxDeductibleCosts = healthContributionBase * costRate;
+  const taxDeductibleCosts = round2(taxableIncomeBeforeCosts * costRate);
 
-  // 6. Podstawa opodatkowania
-  const taxableBaseUnrounded = healthContributionBase - taxDeductibleCosts;
+  // 7. Podstawa opodatkowania
+  const taxableBaseUnrounded = round2(
+    taxableIncomeBeforeCosts - taxDeductibleCosts,
+  );
   const taxableBase = Math.round(taxableBaseUnrounded);
 
-  // 7. Zaliczka na PIT (12% do progu, 32% powyżej)
-  const projectedYearlyIncome = yearToDateIncome + gross;
-  const taxRate =
-    projectedYearlyIncome <= P.taxThreshold ? P.taxRate1 : P.taxRate2;
+  // 8. PIT using the marginal rate for the part crossing the annual threshold.
+  const taxableIncomeAfterInvoice = data.yearToDateTaxableIncome + taxableBase;
+  const incomeAtFirstRate = Math.max(
+    0,
+    Math.min(taxableIncomeAfterInvoice, P.taxThreshold) -
+      Math.min(data.yearToDateTaxableIncome, P.taxThreshold),
+  );
+  const incomeAtSecondRate = Math.max(0, taxableBase - incomeAtFirstRate);
+  const taxBeforeReduction = Math.round(
+    incomeAtFirstRate * P.taxRate1 + incomeAtSecondRate * P.taxRate2,
+  );
 
-  const taxBeforeReduction = Math.round(taxableBase * taxRate);
-
-  // 8. Ulga podatkowa (300 zł miesięcznie, proporcjonalnie)
+  // 9. Ulga podatkowa (300 zł miesięcznie, proporcjonalnie)
   const taxReductionAmountApplied = data.taxReduction
     ? Math.min(data.taxReductionAmount, P.monthlyTaxReduction)
     : 0;
 
-  // 9. Zaliczka na PIT po uldze
-  const taxBeforeYoungRelief = Math.max(
-    0,
-    taxBeforeReduction - taxReductionAmountApplied,
-  );
-
-  // 10. Ulga dla młodych (do 26 r.ż.)
-  const isEligibleForYoungRelief =
-    data.youngRelief &&
-    data.contractorStatus === 'standard' &&
-    !data.voluntarySickness; // uproszczenie
-
-  let youngReliefApplied = 0;
-  if (isEligibleForYoungRelief) {
-    const remainingLimit = Math.max(
-      0,
-      P.yearlyYoungReliefLimit - yearToDateIncome,
-    );
-    youngReliefApplied = Math.min(taxBeforeYoungRelief, remainingLimit);
-  }
-
-  const tax = Math.max(0, taxBeforeYoungRelief - youngReliefApplied);
+  // 10. Zaliczka na PIT po kwocie zmniejszającej podatek.
+  const tax = Math.max(0, taxBeforeReduction - taxReductionAmountApplied);
 
   // 11. Netto
-  const net = gross - totalSocialContributions - healthContribution - tax;
+  const net = round2(
+    gross - totalSocialContributions - healthContribution - tax,
+  );
 
   return {
     client: {
@@ -126,6 +137,7 @@ export function calculateInvoice(
       healthContributionBase,
       healthContribution,
       taxDeductibleCosts,
+      youngReliefIncomeApplied,
       taxableBaseUnrounded,
       taxableBase,
       taxBeforeReduction,

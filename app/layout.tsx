@@ -1,4 +1,5 @@
 import AppNavbar from '@/components/AppNavbar';
+import AuthButtons from '@/components/AuthButtons';
 import Footer from '@/components/Footer';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import type { Metadata, Viewport } from 'next';
@@ -57,7 +58,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       data-bs-theme='dark'
     >
       <body className='min-vh-100 d-flex flex-column'>
-        <AppNavbar />
+        <AppNavbar authButtons={<AuthButtons />} />
         <main className={'py-5'}>{children}</main>
         <Footer author={author} />
       </body>

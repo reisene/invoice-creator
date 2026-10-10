@@ -274,6 +274,12 @@ export default function createInvoicePdfDocument(data: InvoiceData) {
             label='Składka zdrowotna'
             value={formatCurrency(calculations.healthContribution)}
           />
+          {calculations.youngReliefIncomeApplied > 0 ? (
+            <PdfRow
+              label='Przychód zwolniony (ulga dla młodych)'
+              value={formatCurrency(calculations.youngReliefIncomeApplied)}
+            />
+          ) : null}
           <PdfRow
             label='Koszty uzyskania przychodu'
             value={formatCurrency(calculations.taxDeductibleCosts)}

@@ -1,16 +1,28 @@
 import { numberToWords } from '@/lib/toWords';
 import type { InvoiceData } from '@/types/invoice';
+import type { TaxParams } from '@/types/taxParams';
 import { Col, Row, Table } from 'react-bootstrap';
 
 interface InvoicePreviewProps {
   data: InvoiceData;
+  taxParams: TaxParams;
 }
 
 function formatCurrency(value: number): string {
   return `${value.toFixed(2)} zł`;
 }
 
-export default function InvoicePreview({ data }: InvoicePreviewProps) {
+function formatRate(rate: number): string {
+  return `${(rate * 100)
+    .toFixed(2)
+    .replace(/\.?0+$/, '')
+    .replace('.', ',')}%`;
+}
+
+export default function InvoicePreview({
+  data,
+  taxParams,
+}: InvoicePreviewProps) {
   const { client, contractor, contract, remuneration, calculations } = data;
 
   return (
@@ -87,13 +99,13 @@ export default function InvoicePreview({ data }: InvoicePreviewProps) {
               </td>
             </tr>
             <tr>
-              <td>– emerytalna (9,76%)</td>
+              <td>– emerytalna ({formatRate(taxParams.pensionRate)})</td>
               <td className='text-end'>
                 {formatCurrency(calculations.pensionContribution)}
               </td>
             </tr>
             <tr>
-              <td>– rentowa (1,5%)</td>
+              <td>– rentowa ({formatRate(taxParams.rentRate)})</td>
               <td className='text-end'>
                 {formatCurrency(calculations.rentContribution)}
               </td>
@@ -123,11 +135,20 @@ export default function InvoicePreview({ data }: InvoicePreviewProps) {
             </tr>
 
             <tr>
-              <td>Składka zdrowotna (9%)</td>
+              <td>Składka zdrowotna ({formatRate(taxParams.healthRate)})</td>
               <td className='text-end'>
                 {formatCurrency(calculations.healthContribution)}
               </td>
             </tr>
+
+            {calculations.youngReliefIncomeApplied > 0 ? (
+              <tr>
+                <td>Przychód zwolniony (ulga dla młodych)</td>
+                <td className='text-end'>
+                  {formatCurrency(calculations.youngReliefIncomeApplied)}
+                </td>
+              </tr>
+            ) : null}
 
             <tr>
               <td className='pt-3'>Koszty uzyskania przychodu</td>

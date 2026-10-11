@@ -137,14 +137,15 @@ export default function GeneratorClient({
         ]);
 
       let number = invoiceNumber;
-      let reservation = numberReservation;
       if (!number) {
         const result = await reserveInvoiceNumber(new Date().getFullYear());
-        if (!result.ok) throw new Error(result.error);
+        if (!result.ok) {
+          setPdfError(result.error);
+          return;
+        }
         number = result.data.number;
-        reservation = result.data;
         setInvoiceNumber(number);
-        setNumberReservation(reservation);
+        setNumberReservation(result.data);
       }
 
       const blob = await pdf(

@@ -222,7 +222,9 @@ export function DeleteAccountForm() {
       <h2 className='h5 text-danger mb-3'>Usuń konto</h2>
       <p className='small text-muted'>
         Usunięcie konta jest nieodwracalne. Razem z nim zostaną trwale skasowane
-        wszystkie zapisane rachunki, dane stron i dane konta bankowego.
+        wszystkie zapisane rachunki, dane stron i dane konta bankowego. Jeśli
+        usunięcie konta się nie powiedzie, dane mogą już zostać skasowane; wtedy
+        ponów operację. Przed usunięciem możesz pobrać eksport danych.
       </p>
       <Form action={formAction}>
         <Form.Group className='mb-3' controlId='deletePassword'>

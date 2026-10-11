@@ -190,31 +190,70 @@ export async function confirmEmailChange(
   return { ok: true, message: 'Adres e-mail został zmieniony.' };
 }
 
-export async function revokeSessionById(formData: FormData) {
-  if (!(await getCurrentUserId())) return;
+export async function revokeSessionById(
+  id: string,
+): Promise<{ ok: boolean; message: string }> {
+  if (!(await getCurrentUserId())) return { ok: false, message: NOT_SIGNED_IN };
+  if (typeof id !== 'string' || id.length === 0 || id.length > 200) {
+    return { ok: false, message: 'Nieprawidłowy identyfikator sesji.' };
+  }
 
-  const id = String(formData.get('id') ?? '');
   const { data: sessions } = await auth.listSessions();
   const target = sessions?.find((item) => item.id === id);
-  if (!target) return;
+  if (!target) {
+    return { ok: false, message: 'Nie znaleziono sesji. Odśwież stronę.' };
+  }
 
-  await auth.revokeSession({ token: target.token });
+  const { error } = await auth.revokeSession({ token: target.token });
+  if (error) {
+    return {
+      ok: false,
+      message: authErrorMessage(error, 'Nie udało się wylogować sesji.'),
+    };
+  }
   revalidatePath('/account');
+  return { ok: true, message: 'Sesja została wylogowana.' };
 }
 
-export async function revokeOtherSessions() {
-  if (!(await getCurrentUserId())) return;
+export async function revokeOtherSessions(): Promise<{
+  ok: boolean;
+  message: string;
+}> {
+  if (!(await getCurrentUserId())) return { ok: false, message: NOT_SIGNED_IN };
 
-  await auth.revokeOtherSessions();
+  const { error } = await auth.revokeOtherSessions();
+  if (error) {
+    return {
+      ok: false,
+      message: authErrorMessage(
+        error,
+        'Nie udało się wylogować z pozostałych urządzeń.',
+      ),
+    };
+  }
   revalidatePath('/account');
+  return { ok: true, message: 'Wylogowano z pozostałych urządzeń.' };
 }
 
-export async function revokeAllSessions() {
-  if (!(await getCurrentUserId())) return;
+export async function revokeAllSessions(): Promise<{
+  ok: boolean;
+  message: string;
+}> {
+  if (!(await getCurrentUserId())) return { ok: false, message: NOT_SIGNED_IN };
 
-  await auth.revokeSessions();
+  const { error } = await auth.revokeSessions();
+  if (error) {
+    return {
+      ok: false,
+      message: authErrorMessage(
+        error,
+        'Nie udało się wylogować ze wszystkich urządzeń.',
+      ),
+    };
+  }
   redirect('/auth/sign-in');
 }
+
 export async function deleteAccount(
   _prev: AccountFormState,
   formData: FormData,

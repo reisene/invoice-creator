@@ -115,7 +115,9 @@ export function validateInvoiceForm(
   }
 
   if (!data.paymentMethod) {
-    errors.push('Wybierz formę wypłaty wynagrodzenia.');
+    errors.push(
+      'Wybierz formę wypłaty wynagrodzenia (gotówka lub przelew) — starsze rachunki jej nie zawierają.',
+    );
   } else if (data.paymentMethod === 'CASH' && data.transferTarget) {
     errors.push('Usuń sposób przelewu dla wypłaty gotówką.');
   } else if (

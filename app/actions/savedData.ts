@@ -17,6 +17,7 @@ import {
   validateInvoiceForm,
 } from '@/lib/validateInvoiceForm';
 import type { ActionResult, InvoiceNumberReservation } from '@/types/savedData';
+import { revalidatePath } from 'next/cache';
 
 const NOT_SIGNED_IN = 'Zaloguj się, aby zapisywać dane.';
 
@@ -130,7 +131,9 @@ export async function saveInvoice(
   };
 }
 
-export async function deleteInvoice(invoiceId: string): Promise<ActionResult> {
+export async function deleteInvoice(
+  invoiceId: string,
+): Promise<ActionResult<number>> {
   const userId = await getCurrentUserId();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
   if (
@@ -141,8 +144,12 @@ export async function deleteInvoice(invoiceId: string): Promise<ActionResult> {
     return { ok: false, error: 'Nieprawidłowy identyfikator rachunku.' };
   }
 
-  await prisma.invoice.deleteMany({ where: { id: invoiceId, userId } });
-  return { ok: true, data: undefined };
+  const { count } = await prisma.invoice.deleteMany({
+    where: { id: invoiceId, userId },
+  });
+  if (count === 0) return { ok: false, error: 'Nie znaleziono rachunku.' };
+  revalidatePath('/account/invoices');
+  return { ok: true, data: count };
 }
 
 type ValidParty = {
@@ -270,7 +277,9 @@ export async function updateParty(
   return { ok: true, data: undefined };
 }
 
-export async function deleteParty(partyId: string): Promise<ActionResult> {
+export async function deleteParty(
+  partyId: string,
+): Promise<ActionResult<number>> {
   const userId = await getCurrentUserId();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
   if (
@@ -281,8 +290,12 @@ export async function deleteParty(partyId: string): Promise<ActionResult> {
     return { ok: false, error: 'Nieprawidłowy identyfikator danych strony.' };
   }
 
-  await prisma.savedParty.deleteMany({ where: { id: partyId, userId } });
-  return { ok: true, data: undefined };
+  const { count } = await prisma.savedParty.deleteMany({
+    where: { id: partyId, userId },
+  });
+  if (count === 0) return { ok: false, error: 'Nie znaleziono wpisu.' };
+  revalidatePath('/account/invoices');
+  return { ok: true, data: count };
 }
 
 export async function deleteAllInvoices(): Promise<ActionResult<number>> {
@@ -290,6 +303,7 @@ export async function deleteAllInvoices(): Promise<ActionResult<number>> {
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
 
   const { count } = await prisma.invoice.deleteMany({ where: { userId } });
+  revalidatePath('/account/invoices');
   return { ok: true, data: count };
 }
 
@@ -298,5 +312,6 @@ export async function deleteAllParties(): Promise<ActionResult<number>> {
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
 
   const { count } = await prisma.savedParty.deleteMany({ where: { userId } });
+  revalidatePath('/account/invoices');
   return { ok: true, data: count };
 }

@@ -1,46 +1,15 @@
-import {
-  deleteAllInvoices,
-  deleteAllParties,
-  deleteInvoice,
-  deleteParty,
-} from '@/app/actions/savedData';
 import { getCurrentUserId } from '@/lib/currentUser';
 import {
   getSavedInvoicesForUser,
   getSavedPartiesForUser,
 } from '@/lib/savedDataAccess';
-import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { Button, Container, Table } from 'react-bootstrap';
-import ConfirmButton from './ConfirmButton';
+import DeleteSavedDataButton from './DeleteSavedDataButton';
 import PartyEditor from './PartyEditor';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-async function removeInvoice(formData: FormData) {
-  'use server';
-  await deleteInvoice(String(formData.get('id')));
-  revalidatePath('/account/invoices');
-}
-
-async function removeParty(formData: FormData) {
-  'use server';
-  await deleteParty(String(formData.get('id')));
-  revalidatePath('/account/invoices');
-}
-
-async function removeAllInvoices() {
-  'use server';
-  await deleteAllInvoices();
-  revalidatePath('/account/invoices');
-}
-
-async function removeAllParties() {
-  'use server';
-  await deleteAllParties();
-  revalidatePath('/account/invoices');
-}
 
 export default async function AccountPage() {
   const userId = await getCurrentUserId();
@@ -60,17 +29,14 @@ export default async function AccountPage() {
 
       <div className='d-flex justify-content-between align-items-center mb-2'>
         <h2 className='h4 mb-0'>Zapisane rachunki</h2>
-        {invoices.length > 0 ? (
-          <form action={removeAllInvoices}>
-            <ConfirmButton
-              size='sm'
-              variant='danger'
-              confirmMessage='Usunąć wszystkie zapisane rachunki? Nie można tego cofnąć.'
-            >
-              Usuń wszystkie
-            </ConfirmButton>
-          </form>
-        ) : null}
+        <DeleteSavedDataButton
+          target='allInvoices'
+          label='Usuń wszystkie'
+          confirmMessage='Usunąć wszystkie zapisane rachunki? Nie można tego cofnąć.'
+          size='sm'
+          variant='danger'
+          showButton={invoices.length > 0}
+        />
       </div>
       {invoices.length === 0 ? (
         <p className='text-muted'>
@@ -116,16 +82,13 @@ export default async function AccountPage() {
                   >
                     Duplikuj
                   </Button>
-                  <form action={removeInvoice} className='d-inline'>
-                    <input type='hidden' name='id' value={invoice.id} />
-                    <ConfirmButton
-                      size='sm'
-                      variant='outline-danger'
-                      confirmMessage='Usunąć ten wpis? Nie można tego cofnąć.'
-                    >
-                      Usuń
-                    </ConfirmButton>
-                  </form>
+                  <DeleteSavedDataButton
+                    target='invoice'
+                    id={invoice.id}
+                    label='Usuń'
+                    confirmMessage='Usunąć ten rachunek? Nie można tego cofnąć.'
+                    size='sm'
+                  />
                 </td>
               </tr>
             ))}
@@ -137,17 +100,14 @@ export default async function AccountPage() {
         <h2 className='h4 mb-0'>Zapisane dane stron</h2>
         <div className='d-flex gap-2'>
           <PartyEditor />
-          {parties.length > 0 ? (
-            <form action={removeAllParties}>
-              <ConfirmButton
-                size='sm'
-                variant='danger'
-                confirmMessage='Usunąć wszystkie zapisane dane stron? Nie można tego cofnąć.'
-              >
-                Usuń wszystkie
-              </ConfirmButton>
-            </form>
-          ) : null}
+          <DeleteSavedDataButton
+            target='allParties'
+            label='Usuń wszystkie'
+            confirmMessage='Usunąć wszystkie zapisane dane stron? Nie można tego cofnąć.'
+            size='sm'
+            variant='danger'
+            showButton={parties.length > 0}
+          />
         </div>
       </div>
       {parties.length === 0 ? (
@@ -174,16 +134,13 @@ export default async function AccountPage() {
                 <td>{party.address}</td>
                 <td className='text-end'>
                   <PartyEditor party={party} />
-                  <form action={removeParty} className='d-inline'>
-                    <input type='hidden' name='id' value={party.id} />
-                    <ConfirmButton
-                      size='sm'
-                      variant='outline-danger'
-                      confirmMessage='Usunąć ten wpis? Nie można tego cofnąć.'
-                    >
-                      Usuń
-                    </ConfirmButton>
-                  </form>
+                  <DeleteSavedDataButton
+                    target='party'
+                    id={party.id}
+                    label='Usuń'
+                    confirmMessage='Usunąć te zapisane dane strony? Nie można tego cofnąć.'
+                    size='sm'
+                  />
                 </td>
               </tr>
             ))}

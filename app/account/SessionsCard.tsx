@@ -1,10 +1,6 @@
 import { auth } from '@/lib/auth/server';
-import { Badge, Button, Card, Table } from 'react-bootstrap';
-import {
-  revokeAllSessions,
-  revokeOtherSessions,
-  revokeSessionById,
-} from './actions';
+import { Badge, Card, Table } from 'react-bootstrap';
+import { SessionActionButton } from './SessionActions';
 
 function describeDevice(userAgent?: string | null) {
   if (!userAgent) return 'Nieznane urządzenie';
@@ -66,31 +62,32 @@ export default async function SessionsCard() {
               <td>{item.createdAt.toLocaleString('pl-PL')}</td>
               <td className='text-end'>
                 {item.id !== currentId && (
-                  <form action={revokeSessionById}>
-                    <input type='hidden' name='id' value={item.id} />
-                    <Button size='sm' variant='outline-danger' type='submit'>
-                      Wyloguj
-                    </Button>
-                  </form>
+                  <SessionActionButton
+                    kind='one'
+                    sessionId={item.id}
+                    label='Wyloguj'
+                    variant='outline-danger'
+                    size='sm'
+                  />
                 )}
               </td>
             </tr>
           ))}
         </tbody>
       </Table>
-      <div className='d-flex gap-2'>
+      <div className='d-flex flex-wrap gap-2'>
         {list.length > 1 && (
-          <form action={revokeOtherSessions}>
-            <Button variant='outline-secondary' type='submit'>
-              Wyloguj z pozostałych urządzeń
-            </Button>
-          </form>
+          <SessionActionButton
+            kind='others'
+            label='Wyloguj z pozostałych urządzeń'
+            variant='outline-secondary'
+          />
         )}
-        <form action={revokeAllSessions}>
-          <Button variant='outline-danger' type='submit'>
-            Wyloguj ze wszystkich urządzeń
-          </Button>
-        </form>
+        <SessionActionButton
+          kind='all'
+          label='Wyloguj ze wszystkich urządzeń'
+          variant='outline-danger'
+        />
       </div>
     </Card>
   );

@@ -364,6 +364,13 @@ export default function InvoiceForm({
               <option value='CASH'>Gotówka</option>
               <option value='TRANSFER'>Przelew</option>
             </Form.Select>
+            {!data.paymentMethod && (
+              <Form.Text className='text-warning-emphasis'>
+                Ten rachunek nie ma wybranej formy wypłaty (np. został zapisany
+                w starszej wersji). Wybierz ją, aby wygenerować PDF lub zapisać
+                zmiany.
+              </Form.Text>
+            )}
           </Form.Group>
         </Col>
       </Row>

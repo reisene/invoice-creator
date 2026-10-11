@@ -1,11 +1,15 @@
 import { deleteInvoice, deleteParty } from '@/app/actions/savedData';
 import { getCurrentUserId } from '@/lib/currentUser';
-import { prisma } from '@/lib/db';
+import {
+  getSavedInvoicesForUser,
+  getSavedPartiesForUser,
+} from '@/lib/savedDataAccess';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { Button, Container, Table } from 'react-bootstrap';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 async function removeInvoice(formData: FormData) {
   'use server';
@@ -24,14 +28,8 @@ export default async function AccountPage() {
   if (!userId) redirect('/auth/sign-in');
 
   const [invoices, parties] = await Promise.all([
-    prisma.invoice.findMany({
-      where: { userId },
-      orderBy: { updatedAt: 'desc' },
-    }),
-    prisma.savedParty.findMany({
-      where: { userId },
-      orderBy: [{ kind: 'asc' }, { label: 'asc' }],
-    }),
+    getSavedInvoicesForUser(userId),
+    getSavedPartiesForUser(userId),
   ]);
 
   return (
@@ -61,7 +59,7 @@ export default async function AccountPage() {
                 <td>{invoice.title}</td>
                 <td>{invoice.periodStart}</td>
                 <td className='text-end'>
-                  {invoice.net.toNumber().toFixed(2).replace('.', ',')} zł
+                  {Number(invoice.net).toFixed(2).replace('.', ',')} zł
                 </td>
                 <td>{invoice.updatedAt.toLocaleDateString('pl-PL')}</td>
                 <td className='text-end'>

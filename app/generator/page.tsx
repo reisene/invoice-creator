@@ -1,11 +1,15 @@
 import GeneratorClient from '@/components/generator/GeneratorClient';
 import { getCurrentUserId } from '@/lib/currentUser';
-import { prisma } from '@/lib/db';
-import { sanitizeInvoiceForm } from '@/lib/sanitizeInvoiceForm';
+import {
+  getSavedInvoiceForUser,
+  getSavedPartiesForUser,
+} from '@/lib/savedDataAccess';
 import { getAllTaxParams } from '@/lib/taxParams';
+import type { InvoiceFormData } from '@/types/invoiceForm';
 import type { SavedPartyDto } from '@/types/savedData';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 interface GeneratorPageProps {
   searchParams: Promise<{ invoice?: string | string[] }>;
@@ -21,33 +25,16 @@ export default async function GeneratorPage({
   ]);
 
   let parties: SavedPartyDto[] = [];
-  let initialInvoice:
-    | { id: string; data: NonNullable<ReturnType<typeof sanitizeInvoiceForm>> }
-    | undefined;
+  let initialInvoice: { id: string; data: InvoiceFormData } | undefined;
 
   if (userId) {
-    parties = (await prisma.savedParty.findMany({
-      where: { userId },
-      orderBy: { label: 'asc' },
-      select: {
-        id: true,
-        kind: true,
-        label: true,
-        clientType: true,
-        name: true,
-        address: true,
-        nip: true,
-        pesel: true,
-      },
-    })) as SavedPartyDto[];
+    parties = await getSavedPartiesForUser(userId);
 
     if (typeof invoiceId === 'string' && invoiceId.length <= 100) {
-      const saved = await prisma.invoice.findFirst({
-        where: { id: invoiceId, userId },
-        select: { id: true, data: true },
-      });
-      const data = saved ? sanitizeInvoiceForm(saved.data) : null;
-      if (saved && data) initialInvoice = { id: saved.id, data };
+      const saved = await getSavedInvoiceForUser(userId, invoiceId);
+      if (saved?.data) {
+        initialInvoice = { id: saved.id, data: saved.data };
+      }
     }
   }
 

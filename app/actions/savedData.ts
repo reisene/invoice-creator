@@ -4,6 +4,7 @@ import { calculateInvoice } from '@/lib/calculateInvoice';
 import { getCurrentUserId } from '@/lib/currentUser';
 import { prisma } from '@/lib/db';
 import { sanitizeInvoiceForm } from '@/lib/sanitizeInvoiceForm';
+import { encryptJson, encryptText } from '@/lib/savedDataCrypto';
 import { getAllTaxParams } from '@/lib/taxParams';
 import {
   isValidNip,
@@ -40,11 +41,15 @@ export async function saveInvoice(
 
   const { calculations } = calculateInvoice(form, params);
   const values = {
-    title: form.contractNumber?.trim() || `Rachunek ${form.periodStart}`,
-    contractNumber: form.contractNumber ?? null,
+    title: encryptText(
+      form.contractNumber?.trim() || `Rachunek ${form.periodStart}`,
+    ),
+    contractNumber: form.contractNumber
+      ? encryptText(form.contractNumber)
+      : null,
     periodStart: form.periodStart,
     net: calculations.net,
-    data: JSON.parse(JSON.stringify(form)),
+    data: encryptJson(form),
   };
 
   if (invoiceId) {
@@ -131,7 +136,16 @@ export async function saveParty(
   }
 
   const created = await prisma.savedParty.create({
-    data: { userId, kind, label: name, clientType, name, address, nip, pesel },
+    data: {
+      userId,
+      kind,
+      label: encryptText(name),
+      clientType,
+      name: encryptText(name),
+      address: encryptText(address),
+      nip: nip === null ? null : encryptText(nip),
+      pesel: pesel === null ? null : encryptText(pesel),
+    },
   });
   return { ok: true, data: { id: created.id } };
 }

@@ -19,6 +19,7 @@ import {
 } from '@/lib/validateInvoiceForm';
 import type { ActionResult } from '@/types/savedData';
 import { revalidatePath } from 'next/cache';
+import { randomUUID } from 'node:crypto';
 
 const MAX_FILE_CHARS = 5_000_000;
 const MAX_INVOICES = 500;
@@ -84,14 +85,14 @@ export async function importUserData(
     problems,
   };
 
-  const existingNumbers = new Set(
-    (
-      await prisma.invoice.findMany({
-        where: { userId, invoiceNumber: { not: null } },
-        select: { invoiceNumber: true },
-      })
-    ).map((row) => row.invoiceNumber),
-  );
+  const existingInvoices = await prisma.invoice.findMany({
+    where: { userId },
+    select: { invoiceNumber: true, uid: true },
+  });
+  const existingNumbers = new Set(existingInvoices.map((r) => r.invoiceNumber));
+  const existingUids = new Set(existingInvoices.map((r) => r.uid));
+  const UUID_RE =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
   const invoiceRows: Prisma.InvoiceCreateManyInput[] = [];
   const maxPerYear = new Map<number, number>();
@@ -114,6 +115,14 @@ export async function importUserData(
       return;
     }
 
+    const rawUid =
+      isRecord(item) && typeof item.uid === 'string' ? item.uid.trim() : '';
+    const uid = UUID_RE.test(rawUid) ? rawUid.toLowerCase() : randomUUID();
+    if (existingUids.has(uid)) {
+      summary.invoices.duplicates++;
+      return;
+    }
+
     const rawNumber =
       isRecord(item) && typeof item.invoiceNumber === 'string'
         ? item.invoiceNumber.trim()
@@ -125,6 +134,7 @@ export async function importUserData(
       return;
     }
     if (invoiceNumber) existingNumbers.add(invoiceNumber);
+    existingUids.add(uid);
 
     if (match) {
       const year = Number(match[2]);
@@ -139,6 +149,7 @@ export async function importUserData(
     const { calculations } = calculateInvoice(form, params);
     invoiceRows.push({
       userId,
+      uid,
       invoiceNumber,
       title: encryptText(
         form.contractNumber?.trim() || `Rachunek ${form.periodStart}`,

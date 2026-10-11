@@ -15,6 +15,7 @@ import { getAllTaxParams } from '@/lib/taxParams';
 import { validateInvoiceForm } from '@/lib/validateInvoiceForm';
 import type { ActionResult, InvoiceNumberReservation } from '@/types/savedData';
 import { revalidatePath } from 'next/cache';
+import { randomUUID } from 'node:crypto';
 
 const NOT_SIGNED_IN = 'Zaloguj się, aby zapisywać dane.';
 
@@ -118,6 +119,7 @@ export async function saveInvoice(
     data: {
       ...values,
       userId,
+      uid: randomUUID(),
       invoiceNumber: assigned.number,
     },
     select: { id: true, invoiceNumber: true },

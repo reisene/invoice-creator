@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth/server';
 import { getUserBankAccount } from '@/lib/savedDataAccess';
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { Button, Card, Container } from 'react-bootstrap';
 import {
@@ -11,6 +12,8 @@ import {
 } from './AccountForms';
 import { ImportDataCard } from './ImportDataCard';
 import SessionsCard from './SessionsCard';
+
+export const metadata: Metadata = { title: 'Moje konto' };
 
 export const dynamic = 'force-dynamic';
 

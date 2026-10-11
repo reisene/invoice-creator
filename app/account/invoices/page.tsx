@@ -3,10 +3,13 @@ import {
   getSavedInvoicesForUser,
   getSavedPartiesForUser,
 } from '@/lib/savedDataAccess';
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { Button, Container, Table } from 'react-bootstrap';
 import DeleteSavedDataButton from './DeleteSavedDataButton';
 import PartyEditor from './PartyEditor';
+
+export const metadata: Metadata = { title: 'Moje rachunki i dane stron' };
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

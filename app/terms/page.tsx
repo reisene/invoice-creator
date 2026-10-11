@@ -1,4 +1,7 @@
+import type { Metadata } from 'next';
 import { Container } from 'react-bootstrap';
+
+export const metadata: Metadata = { title: 'Regulamin' };
 
 export default function TermsPage() {
   return (

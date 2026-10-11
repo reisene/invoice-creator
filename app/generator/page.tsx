@@ -8,6 +8,9 @@ import {
 import { getAllTaxParams } from '@/lib/taxParams';
 import type { InvoiceFormData } from '@/types/invoiceForm';
 import type { SavedPartyDto } from '@/types/savedData';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = { title: 'Generator rachunku' };
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';

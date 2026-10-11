@@ -61,11 +61,23 @@
       "skillPath": "skills/resend-integration-skills/SKILL.md",
       "computedHash": "c5a75810da769677c0aac070bb0b542391801b02b7e3dd0442068afc2f4fe376"
     },
+    "ui-builder": {
+      "source": "johnfattore/fattorestreet",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/ui-builder/SKILL.md",
+      "computedHash": "28f50b4e09e8bf501dc6e5341fcff400be62f21487bafd39f7945e8b149ad36a"
+    },
     "upstash-vector-db-skills": {
       "source": "gocallum/nextjs16-agent-skills",
       "sourceType": "github",
       "skillPath": "skills/upstash-vector-db-skills/SKILL.md",
       "computedHash": "f7a77594f2a1ddc1c700aae363dad958d59408f5117d24d9e1a7e1306ff5edd8"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "computedHash": "ca7b0c0c6e5f2750043f7f0cd72d16ac4e2abc48f9b5500d047a4b77a2506212"
     }
   }
 }

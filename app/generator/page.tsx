@@ -3,6 +3,7 @@ import { getCurrentUserId } from '@/lib/currentUser';
 import {
   getSavedInvoiceForUser,
   getSavedPartiesForUser,
+  getUserBankAccount,
 } from '@/lib/savedDataAccess';
 import { getAllTaxParams } from '@/lib/taxParams';
 import type { InvoiceFormData } from '@/types/invoiceForm';
@@ -25,12 +26,16 @@ export default async function GeneratorPage({
     await Promise.all([getAllTaxParams(), getCurrentUserId(), searchParams]);
 
   let parties: SavedPartyDto[] = [];
+  let bankAccount = null;
   let duplicateData: InvoiceFormData | undefined;
   let initialInvoice:
     { id: string; invoiceNumber: string; data: InvoiceFormData } | undefined;
 
   if (userId) {
-    parties = await getSavedPartiesForUser(userId);
+    [parties, bankAccount] = await Promise.all([
+      getSavedPartiesForUser(userId),
+      getUserBankAccount(userId),
+    ]);
 
     if (typeof duplicateId === 'string' && duplicateId.length <= 100) {
       duplicateData =
@@ -53,6 +58,7 @@ export default async function GeneratorPage({
       taxParams={taxParams}
       signedIn={Boolean(userId)}
       initialParties={parties}
+      bankAccount={bankAccount}
       initialInvoice={initialInvoice}
       duplicateData={duplicateData}
     />

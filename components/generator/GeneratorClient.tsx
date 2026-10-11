@@ -11,6 +11,7 @@ import type { InvoiceFormData } from '@/types/invoiceForm';
 import type {
   InvoiceNumberReservation,
   SavedPartyDto,
+  UserBankAccountDto,
 } from '@/types/savedData';
 import type { TaxParams } from '@/types/taxParams';
 import { useMemo, useState } from 'react';
@@ -54,6 +55,8 @@ function getInitialData(): InvoiceFormData {
 
     taxReduction: true,
     taxReductionAmount: 300,
+    paymentMethod: '',
+    transferTarget: '',
   };
 }
 
@@ -61,6 +64,7 @@ interface GeneratorClientProps {
   taxParams: TaxParams[];
   signedIn: boolean;
   initialParties: SavedPartyDto[];
+  bankAccount: UserBankAccountDto | null;
   initialInvoice?: {
     id: string;
     invoiceNumber: string;
@@ -73,6 +77,7 @@ export default function GeneratorClient({
   taxParams,
   signedIn,
   initialParties,
+  bankAccount,
   initialInvoice,
   duplicateData,
 }: GeneratorClientProps) {
@@ -188,6 +193,7 @@ export default function GeneratorClient({
             data={formData}
             onChange={setFormData}
             taxParams={selectedTaxParams}
+            bankAccount={bankAccount}
           />
         </Col>
 

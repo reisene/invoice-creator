@@ -321,6 +321,37 @@ export default function createInvoicePdfDocument(
         </View>
 
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Forma wypłaty</Text>
+          {data.payment.method === 'CASH' ? (
+            <Text>Gotówka</Text>
+          ) : data.payment.method === 'TRANSFER' &&
+            data.payment.transferTarget === 'DECLARATION' ? (
+            <Text>
+              Przelew na rachunek bankowy zgodnie ze złożonym oświadczeniem.
+            </Text>
+          ) : data.payment.method === 'TRANSFER' ? (
+            <>
+              <Text style={styles.line}>Przelew na rachunek bankowy</Text>
+              {data.payment.accountHolder ? (
+                <Text style={styles.line}>
+                  Właściciel: {data.payment.accountHolder}
+                </Text>
+              ) : null}
+              {data.payment.bankName ? (
+                <Text style={styles.line}>Bank: {data.payment.bankName}</Text>
+              ) : null}
+              {data.payment.accountNumber ? (
+                <Text style={styles.line}>
+                  Numer rachunku: {data.payment.accountNumber}
+                </Text>
+              ) : null}
+            </>
+          ) : (
+            <Text>Nie wybrano formy wypłaty.</Text>
+          )}
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Uwagi</Text>
           <Text>{data.notes || '—'}</Text>
         </View>

@@ -88,6 +88,35 @@ export default function InvoicePreview({
           )}
       </div>
 
+      <div className='mb-4'>
+        <h4 className='fw-bold mb-2'>Forma wypłaty</h4>
+        {data.payment.method === 'CASH' ? (
+          <p className='mb-0'>Gotówka</p>
+        ) : data.payment.method === 'TRANSFER' &&
+          data.payment.transferTarget === 'DECLARATION' ? (
+          <p className='mb-0'>
+            Przelew na rachunek bankowy zgodnie ze złożonym oświadczeniem.
+          </p>
+        ) : data.payment.method === 'TRANSFER' ? (
+          <>
+            <p className='mb-0'>Przelew na rachunek bankowy</p>
+            {data.payment.accountHolder && (
+              <p className='mb-0'>Właściciel: {data.payment.accountHolder}</p>
+            )}
+            {data.payment.bankName && (
+              <p className='mb-0'>Bank: {data.payment.bankName}</p>
+            )}
+            {data.payment.accountNumber && (
+              <p className='mb-0'>
+                Numer rachunku: {data.payment.accountNumber}
+              </p>
+            )}
+          </>
+        ) : (
+          <p className='mb-0 text-danger'>Wybierz formę wypłaty.</p>
+        )}
+      </div>
+
       {/* Rozliczenie */}
       <div className='mb-4'>
         <h4 className='fw-bold mb-2'>Rozliczenie</h4>

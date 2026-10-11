@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth/server';
 import {
   getSavedInvoicesForUser,
   getSavedPartiesForUser,
+  getUserBankAccount,
 } from '@/lib/savedDataAccess';
 import { decryptJson } from '@/lib/savedDataCrypto';
 
@@ -13,14 +14,16 @@ export async function GET() {
   const user = session?.user;
   if (!user) return new Response('Unauthorized', { status: 401 });
 
-  const [invoices, parties] = await Promise.all([
+  const [invoices, parties, bankAccount] = await Promise.all([
     getSavedInvoicesForUser(user.id),
     getSavedPartiesForUser(user.id),
+    getUserBankAccount(user.id),
   ]);
 
   const body = {
     exportedAt: new Date().toISOString(),
     account: { name: user.name, email: user.email },
+    bankAccount,
     invoices: invoices.map((invoice) => ({
       id: invoice.id,
       invoiceNumber: invoice.invoiceNumber,

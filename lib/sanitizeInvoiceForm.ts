@@ -40,6 +40,14 @@ export function sanitizeInvoiceForm(input: unknown): InvoiceFormData | null {
   const taxReductionAmount = oneOf(v.taxReductionAmount, [
     0, 150, 300,
   ] as const);
+  const paymentMethod =
+    v.paymentMethod === undefined
+      ? ''
+      : oneOf(v.paymentMethod, ['CASH', 'TRANSFER', ''] as const);
+  const transferTarget =
+    v.transferTarget === undefined
+      ? ''
+      : oneOf(v.transferTarget, ['SAVED_ACCOUNT', 'DECLARATION', ''] as const);
 
   const clientName = text(v.clientName, 200);
   const clientAddress = text(v.clientAddress, 300);
@@ -59,6 +67,9 @@ export function sanitizeInvoiceForm(input: unknown): InvoiceFormData | null {
   const yearToDateTaxableIncome = num(v.yearToDateTaxableIncome);
   const yearToDateYoungReliefIncome = num(v.yearToDateYoungReliefIncome);
   const notes = optionalText(v.notes, 2000);
+  const bankAccountHolder = optionalText(v.bankAccountHolder, 200);
+  const bankName = optionalText(v.bankName, 100);
+  const bankAccountNumber = optionalText(v.bankAccountNumber, 34);
 
   if (
     !clientType ||
@@ -66,6 +77,8 @@ export function sanitizeInvoiceForm(input: unknown): InvoiceFormData | null {
     !contractorStatus ||
     !costType ||
     taxReductionAmount === null ||
+    paymentMethod === null ||
+    transferTarget === null ||
     clientName === null ||
     clientAddress === null ||
     clientNip === null ||
@@ -84,6 +97,9 @@ export function sanitizeInvoiceForm(input: unknown): InvoiceFormData | null {
     yearToDateTaxableIncome === null ||
     yearToDateYoungReliefIncome === null ||
     notes === null ||
+    bankAccountHolder === null ||
+    bankName === null ||
+    bankAccountNumber === null ||
     typeof v.voluntarySickness !== 'boolean' ||
     typeof v.youngRelief !== 'boolean' ||
     typeof v.taxReduction !== 'boolean'
@@ -117,6 +133,11 @@ export function sanitizeInvoiceForm(input: unknown): InvoiceFormData | null {
     yearToDateYoungReliefIncome,
     taxReduction: v.taxReduction,
     taxReductionAmount,
+    paymentMethod,
+    transferTarget,
+    bankAccountHolder,
+    bankName,
+    bankAccountNumber,
     notes,
   };
 }

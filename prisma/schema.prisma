@@ -74,3 +74,11 @@ model SavedParty {
 
   @@index([userId, kind])
 }
+
+model UserBankAccount {
+  id            String @id @default(cuid())
+  userId        String @unique
+  accountHolder String
+  bankName      String
+  accountNumber String
+}

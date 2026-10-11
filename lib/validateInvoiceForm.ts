@@ -31,6 +31,20 @@ export function isValidNip(value: string): boolean {
   return control !== 10 && control === Number(nip[9]);
 }
 
+export function isValidPolishBankAccount(value: string): boolean {
+  const accountNumber = value
+    .replace(/[\s-]/g, '')
+    .toUpperCase()
+    .replace(/^PL/, '');
+  if (!/^\d{26}$/.test(accountNumber)) return false;
+
+  let remainder = 0;
+  for (const digit of accountNumber) {
+    remainder = (remainder * 10 + Number(digit)) % 97;
+  }
+  return remainder === 1;
+}
+
 export function birthDateFromPesel(value: string): string | null {
   const pesel = digitsOnly(value);
   if (!isValidPesel(pesel)) return null;
@@ -98,6 +112,32 @@ export function validateInvoiceForm(
 
   if (data.contractorNip?.trim() && !isValidNip(data.contractorNip)) {
     errors.push('NIP zleceniobiorcy jest nieprawidłowy.');
+  }
+
+  if (!data.paymentMethod) {
+    errors.push('Wybierz formę wypłaty wynagrodzenia.');
+  } else if (data.paymentMethod === 'CASH' && data.transferTarget) {
+    errors.push('Usuń sposób przelewu dla wypłaty gotówką.');
+  } else if (
+    data.paymentMethod === 'TRANSFER' &&
+    data.transferTarget !== 'SAVED_ACCOUNT' &&
+    data.transferTarget !== 'DECLARATION'
+  ) {
+    errors.push('Wybierz rachunek do przelewu.');
+  } else if (
+    data.paymentMethod === 'TRANSFER' &&
+    data.transferTarget === 'SAVED_ACCOUNT' &&
+    (!data.bankAccountHolder?.trim() ||
+      !data.bankName?.trim() ||
+      !data.bankAccountNumber?.trim())
+  ) {
+    errors.push('Uzupełnij dane rachunku bankowego do przelewu.');
+  } else if (
+    data.paymentMethod === 'TRANSFER' &&
+    data.transferTarget === 'SAVED_ACCOUNT' &&
+    !isValidPolishBankAccount(data.bankAccountNumber ?? '')
+  ) {
+    errors.push('Numer rachunku bankowego jest nieprawidłowy.');
   }
 
   const datesValid = [

@@ -6,6 +6,7 @@ import type {
   InvoiceFormData,
   TaxReductionAmount,
 } from '@/types/invoiceForm';
+import type { UserBankAccountDto } from '@/types/savedData';
 import type { TaxParams } from '@/types/taxParams';
 import { Col, Form, Row } from 'react-bootstrap';
 
@@ -13,6 +14,7 @@ interface InvoiceFormProps {
   data: InvoiceFormData;
   onChange: (data: InvoiceFormData) => void;
   taxParams?: TaxParams;
+  bankAccount: UserBankAccountDto | null;
 }
 
 const percent = (rate: number) => `${Math.round(rate * 10000) / 100}%`;
@@ -21,6 +23,7 @@ export default function InvoiceForm({
   data,
   onChange,
   taxParams,
+  bankAccount,
 }: InvoiceFormProps) {
   const fullReduction = taxParams?.monthlyTaxReduction ?? 300;
   const updateField = <K extends keyof InvoiceFormData>(
@@ -331,6 +334,112 @@ export default function InvoiceForm({
           </Col>
         </Row>
       )}
+
+      <h3 className='mb-3 mt-4'>Forma wypłaty</h3>
+      <Row className='mb-3'>
+        <Col md={8}>
+          <Form.Group>
+            <Form.Label>Sposób wypłaty wynagrodzenia</Form.Label>
+            <Form.Select
+              value={data.paymentMethod}
+              onChange={(e) => {
+                const paymentMethod = e.target
+                  .value as InvoiceFormData['paymentMethod'];
+                if (paymentMethod === 'CASH') {
+                  onChange({
+                    ...data,
+                    paymentMethod,
+                    transferTarget: '',
+                    bankAccountHolder: undefined,
+                    bankName: undefined,
+                    bankAccountNumber: undefined,
+                  });
+                } else {
+                  updateField('paymentMethod', paymentMethod);
+                }
+              }}
+              required
+            >
+              <option value=''>Wybierz formę wypłaty</option>
+              <option value='CASH'>Gotówka</option>
+              <option value='TRANSFER'>Przelew</option>
+            </Form.Select>
+          </Form.Group>
+        </Col>
+      </Row>
+
+      {data.paymentMethod === 'TRANSFER' && (
+        <Row className='mb-3'>
+          <Col md={8}>
+            <Form.Group>
+              <Form.Label>Rachunek do przelewu</Form.Label>
+              <Form.Select
+                value={data.transferTarget}
+                onChange={(e) => {
+                  const transferTarget = e.target
+                    .value as InvoiceFormData['transferTarget'];
+                  onChange({
+                    ...data,
+                    transferTarget,
+                    bankAccountHolder:
+                      transferTarget === 'SAVED_ACCOUNT'
+                        ? bankAccount?.accountHolder
+                        : undefined,
+                    bankName:
+                      transferTarget === 'SAVED_ACCOUNT'
+                        ? bankAccount?.bankName
+                        : undefined,
+                    bankAccountNumber:
+                      transferTarget === 'SAVED_ACCOUNT'
+                        ? bankAccount?.accountNumber
+                        : undefined,
+                  });
+                }}
+                required
+              >
+                <option value=''>Wybierz rachunek</option>
+                {bankAccount && (
+                  <option value='SAVED_ACCOUNT'>
+                    Zapisany rachunek bankowy
+                  </option>
+                )}
+                <option value='DECLARATION'>
+                  Rachunek zgodnie ze złożonym oświadczeniem
+                </option>
+              </Form.Select>
+              {!bankAccount && (
+                <Form.Text>
+                  Możesz dodać rachunek bankowy w ustawieniach konta.
+                </Form.Text>
+              )}
+            </Form.Group>
+          </Col>
+        </Row>
+      )}
+      {data.paymentMethod === 'TRANSFER' &&
+        data.transferTarget === 'SAVED_ACCOUNT' &&
+        bankAccount && (
+          <Row className='mb-3'>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label>Właściciel rachunku</Form.Label>
+                <Form.Control value={bankAccount.accountHolder} readOnly />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label>Bank</Form.Label>
+                <Form.Control value={bankAccount.bankName} readOnly />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label>Numer rachunku</Form.Label>
+                <Form.Control value={bankAccount.accountNumber} readOnly />
+              </Form.Group>
+            </Col>
+          </Row>
+        )}
 
       {/* Opcje */}
       <h3 className='mb-3 mt-4'>Status i opcje</h3>

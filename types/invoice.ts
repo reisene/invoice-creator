@@ -23,6 +23,14 @@ export interface InvoiceData {
     type: 'monthly' | 'hourly';
   };
 
+  payment: {
+    method: 'CASH' | 'TRANSFER' | '';
+    transferTarget: 'SAVED_ACCOUNT' | 'DECLARATION' | '';
+    accountHolder?: string;
+    bankName?: string;
+    accountNumber?: string;
+  };
+
   // Wynagrodzenie
   remuneration: {
     gross: number;

@@ -117,6 +117,13 @@ export function calculateInvoice(
       periodEnd: data.periodEnd,
       type: data.contractType,
     },
+    payment: {
+      method: data.paymentMethod,
+      transferTarget: data.transferTarget,
+      accountHolder: data.bankAccountHolder,
+      bankName: data.bankName,
+      accountNumber: data.bankAccountNumber,
+    },
     remuneration: {
       gross,
       hourlyRate: data.hourlyRate,

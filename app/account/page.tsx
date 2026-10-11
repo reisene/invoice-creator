@@ -1,7 +1,9 @@
 import { auth } from '@/lib/auth/server';
+import { getUserBankAccount } from '@/lib/savedDataAccess';
 import { redirect } from 'next/navigation';
 import { Button, Card, Container } from 'react-bootstrap';
 import {
+  BankAccountForm,
   DeleteAccountForm,
   EmailChangeForm,
   PasswordForm,
@@ -15,6 +17,7 @@ export default async function AccountPage() {
   const { data: session } = await auth.getSession();
   const user = session?.user;
   if (!user) redirect('/auth/sign-in');
+  const bankAccount = await getUserBankAccount(user.id);
 
   return (
     <Container className='py-4' style={{ maxWidth: 720 }}>
@@ -27,11 +30,13 @@ export default async function AccountPage() {
       />
       <EmailChangeForm />
       <PasswordForm />
+      <BankAccountForm bankAccount={bankAccount} />
 
       <Card body className='shadow-sm mb-4'>
         <h2 className='h5 mb-2'>Eksport danych</h2>
         <p className='text-body-secondary small'>
-          Pobierz wszystkie zapisane rachunki i dane stron w pliku JSON.
+          Pobierz zapisane rachunki, dane stron i dane rachunku bankowego w
+          pliku JSON.
         </p>
         <div>
           <Button href='/api/account/export' variant='outline-primary'>

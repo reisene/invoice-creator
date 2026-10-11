@@ -1,12 +1,16 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import type { UserBankAccountDto } from '@/types/savedData';
+import { useRouter } from 'next/navigation';
+import { useActionState, useState, useTransition } from 'react';
 import { Alert, Button, Card, Form } from 'react-bootstrap';
 import {
   changePassword,
   confirmEmailChange,
   deleteAccount,
+  deleteBankAccount,
   requestEmailChange,
+  saveBankAccount,
   updateProfile,
 } from './actions';
 
@@ -120,6 +124,96 @@ export function PasswordForm() {
   );
 }
 
+export function BankAccountForm({
+  bankAccount,
+}: {
+  bankAccount: UserBankAccountDto | null;
+}) {
+  const [saveState, saveAction, saving] = useActionState(saveBankAccount, null);
+  const [deleteState, setDeleteState] = useState<{
+    ok: boolean;
+    message: string;
+  } | null>(null);
+  const [deleting, startDelete] = useTransition();
+  const router = useRouter();
+
+  return (
+    <Card body className='shadow-sm mb-4'>
+      <h2 className='h5 mb-2'>Rachunek bankowy</h2>
+      <p className='text-body-secondary small'>
+        Zapisany rachunek możesz wybrać jako formę wypłaty w generatorze.
+        Szczegóły są przechowywane w postaci zaszyfrowanej.
+      </p>
+      <Form action={saveAction}>
+        <Form.Group className='mb-3' controlId='bankAccountHolder'>
+          <Form.Label>Właściciel rachunku</Form.Label>
+          <Form.Control
+            name='accountHolder'
+            defaultValue={bankAccount?.accountHolder ?? ''}
+            required
+            maxLength={200}
+          />
+        </Form.Group>
+        <Form.Group className='mb-3' controlId='bankName'>
+          <Form.Label>Nazwa banku</Form.Label>
+          <Form.Control
+            name='bankName'
+            defaultValue={bankAccount?.bankName ?? ''}
+            required
+            maxLength={100}
+          />
+        </Form.Group>
+        <Form.Group className='mb-3' controlId='bankAccountNumber'>
+          <Form.Label>Numer rachunku</Form.Label>
+          <Form.Control
+            name='accountNumber'
+            defaultValue={bankAccount?.accountNumber ?? ''}
+            required
+            inputMode='numeric'
+            maxLength={34}
+            autoComplete='off'
+          />
+          <Form.Text>
+            Polski numer rachunku (26 cyfr), opcjonalnie z PL.
+          </Form.Text>
+        </Form.Group>
+        {saveState && (
+          <Alert variant={saveState.ok ? 'success' : 'danger'}>
+            {saveState.message}
+          </Alert>
+        )}
+        <Button type='submit' disabled={saving}>
+          {saving ? 'Zapisywanie…' : 'Zapisz rachunek bankowy'}
+        </Button>
+      </Form>
+      {bankAccount && (
+        <div className='mt-3'>
+          {deleteState && (
+            <Alert variant={deleteState.ok ? 'success' : 'danger'}>
+              {deleteState.message}
+            </Alert>
+          )}
+          <Button
+            type='button'
+            variant='outline-danger'
+            disabled={deleting}
+            onClick={() => {
+              if (!window.confirm('Usunąć zapisany rachunek bankowy?')) return;
+              startDelete(async () => {
+                const result = await deleteBankAccount();
+                setDeleteState(result);
+                if (result.ok) router.refresh();
+              });
+            }}
+          >
+            {deleting ? 'Usuwanie…' : 'Usuń zapisany rachunek'}
+          </Button>
+        </div>
+      )}
+    </Card>
+  );
+}
+
 export function DeleteAccountForm() {
   const [state, formAction, isPending] = useActionState(deleteAccount, null);
 
@@ -128,7 +222,7 @@ export function DeleteAccountForm() {
       <h2 className='h5 text-danger mb-3'>Usuń konto</h2>
       <p className='small text-muted'>
         Usunięcie konta jest nieodwracalne. Razem z nim zostaną trwale skasowane
-        wszystkie zapisane rachunki i dane stron.
+        wszystkie zapisane rachunki, dane stron i dane konta bankowego.
       </p>
       <Form action={formAction}>
         <Form.Group className='mb-3' controlId='deletePassword'>

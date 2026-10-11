@@ -5,12 +5,71 @@ import { authErrorMessage } from '@/lib/authErrors';
 import { getCurrentUserId } from '@/lib/currentUser';
 import { prisma } from '@/lib/db';
 import { getInvoiceNumberScope } from '@/lib/invoiceNumbering';
+import { encryptText } from '@/lib/savedDataCrypto';
+import { isValidPolishBankAccount } from '@/lib/validateInvoiceForm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 export type AccountFormState = { ok: boolean; message: string } | null;
 
 const NOT_SIGNED_IN = 'Zaloguj się, aby edytować konto.';
+
+export async function saveBankAccount(
+  _prev: AccountFormState,
+  formData: FormData,
+): Promise<AccountFormState> {
+  const userId = await getCurrentUserId();
+  if (!userId) return { ok: false, message: NOT_SIGNED_IN };
+
+  const accountHolder = String(formData.get('accountHolder') ?? '').trim();
+  const bankName = String(formData.get('bankName') ?? '').trim();
+  const accountNumber = String(formData.get('accountNumber') ?? '')
+    .replace(/[\s-]/g, '')
+    .toUpperCase();
+
+  if (!accountHolder || accountHolder.length > 200) {
+    return { ok: false, message: 'Podaj nazwę właściciela rachunku.' };
+  }
+  if (!bankName || bankName.length > 100) {
+    return { ok: false, message: 'Podaj nazwę banku.' };
+  }
+  if (!isValidPolishBankAccount(accountNumber)) {
+    return {
+      ok: false,
+      message: 'Podaj prawidłowy polski numer rachunku bankowego.',
+    };
+  }
+
+  await prisma.userBankAccount.upsert({
+    where: { userId },
+    create: {
+      userId,
+      accountHolder: encryptText(accountHolder),
+      bankName: encryptText(bankName),
+      accountNumber: encryptText(accountNumber),
+    },
+    update: {
+      accountHolder: encryptText(accountHolder),
+      bankName: encryptText(bankName),
+      accountNumber: encryptText(accountNumber),
+    },
+  });
+  revalidatePath('/account');
+  revalidatePath('/generator');
+  return { ok: true, message: 'Dane rachunku bankowego zapisane.' };
+}
+
+export async function deleteBankAccount(): Promise<{
+  ok: boolean;
+  message: string;
+}> {
+  const userId = await getCurrentUserId();
+  if (!userId) return { ok: false, message: NOT_SIGNED_IN };
+  await prisma.userBankAccount.deleteMany({ where: { userId } });
+  revalidatePath('/account');
+  revalidatePath('/generator');
+  return { ok: true, message: 'Zapisany rachunek bankowy usunięty.' };
+}
 
 export async function updateProfile(
   _prev: AccountFormState,
@@ -187,6 +246,7 @@ export async function deleteAccount(
     await prisma.$transaction([
       prisma.invoice.deleteMany({ where: { userId } }),
       prisma.savedParty.deleteMany({ where: { userId } }),
+      prisma.userBankAccount.deleteMany({ where: { userId } }),
       prisma.invoiceSequence.deleteMany({
         where: { scope: getInvoiceNumberScope(userId) },
       }),

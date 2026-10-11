@@ -9,6 +9,9 @@ export type CostType = '20' | '50';
 
 export type TaxReductionAmount = 0 | 150 | 300;
 
+export type PaymentMethod = 'CASH' | 'TRANSFER' | '';
+export type TransferTarget = 'SAVED_ACCOUNT' | 'DECLARATION' | '';
+
 export interface InvoiceFormData {
   // Zleceniodawca
   clientType: ClientType;
@@ -46,6 +49,13 @@ export interface InvoiceFormData {
   // Ulga podatkowa
   taxReduction: boolean;
   taxReductionAmount: TaxReductionAmount;
+
+  // Wypłata wynagrodzenia
+  paymentMethod: PaymentMethod;
+  transferTarget: TransferTarget;
+  bankAccountHolder?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
 
   // Dodatkowe informacje
   notes?: string;

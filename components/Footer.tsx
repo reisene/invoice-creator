@@ -55,12 +55,9 @@ export default function Footer({
             href={author.url}
             target={'_blank'}
             rel={'noopener noreferrer'}
-            className={'text-decoration-none text-reset fw-bold small'}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.25rem',
-            }}
+            className={
+              'd-inline-flex align-items-center gap-1 text-decoration-none text-reset fw-bold small'
+            }
           >
             <Icon aria-hidden={true} size={16} />
             {author.name}

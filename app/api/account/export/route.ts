@@ -14,7 +14,9 @@ export const runtime = 'nodejs';
 export async function GET() {
   const { data: session } = await auth.getSession();
   const user = session?.user;
-  if (!user) return new Response('Unauthorized', { status: 401 });
+  if (!user) {
+    return new Response('Zaloguj się, aby pobrać dane.', { status: 401 });
+  }
 
   const [rawInvoices, parties, bankAccount] = await Promise.all([
     getSavedInvoicesForUser(user.id),

@@ -28,7 +28,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: {
     default: 'Invoice Creator',
-    template: '% | Invoice Creator',
+    template: '%s | Invoice Creator',
   },
   description:
     'Invoice Creator is for creating invoices for contracts of mandate',
@@ -53,13 +53,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html
-      lang='en'
-      className={`${geistSans.variable} ${geistMono.variable} vh-100`}
+      lang='pl'
+      className={`${geistSans.variable} ${geistMono.variable}`}
       data-bs-theme='dark'
     >
       <body className='min-vh-100 d-flex flex-column'>
         <AppNavbar authButtons={<AuthButtons />} />
-        <main className={'py-5'}>{children}</main>
+        <main className='py-5 flex-grow-1'>{children}</main>
         <Footer author={author} />
       </body>
     </html>

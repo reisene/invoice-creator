@@ -28,7 +28,7 @@ export default function InvoicePreview({
   const { client, contractor, contract, remuneration, calculations } = data;
 
   return (
-    <div className='border p-4 shadow-sm' style={{ minHeight: '800px' }}>
+    <div className='border p-4 shadow-sm invoice-preview'>
       {/* Nagłówek */}
       <h2 className='text-center fw-bold mb-4'>RACHUNEK do umowy zlecenia</h2>
       <p className='text-center mb-4'>

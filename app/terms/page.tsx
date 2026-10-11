@@ -2,7 +2,7 @@ import { Container } from 'react-bootstrap';
 
 export default function TermsPage() {
   return (
-    <Container className='py-5' style={{ maxWidth: 800 }}>
+    <Container className='py-5 page-wide'>
       <h1 className='mb-4'>Regulamin</h1>
       <p className='lead'>Strona w przygotowaniu.</p>
       <p>

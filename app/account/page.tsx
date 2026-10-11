@@ -21,7 +21,7 @@ export default async function AccountPage() {
   const bankAccount = await getUserBankAccount(user.id);
 
   return (
-    <Container className='py-4' style={{ maxWidth: 720 }}>
+    <Container className='py-4 page-medium'>
       <h1 className='mb-4'>Moje konto</h1>
 
       <ProfileForm

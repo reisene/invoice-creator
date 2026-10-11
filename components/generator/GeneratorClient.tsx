@@ -118,15 +118,23 @@ export default function GeneratorClient({
     if (isSaving || validationErrors.length > 0) return;
     setIsSaving(true);
     setSaveMessage(null);
-    const result = await saveInvoice(formData, invoiceId, numberReservation);
-    setIsSaving(false);
-    if (result.ok) {
-      setInvoiceId(result.data.id);
-      setInvoiceNumber(result.data.invoiceNumber);
-      setNumberReservation(undefined);
-      setSaveMessage({ variant: 'success', text: 'Rachunek zapisany.' });
-    } else {
-      setSaveMessage({ variant: 'danger', text: result.error });
+    try {
+      const result = await saveInvoice(formData, invoiceId, numberReservation);
+      if (result.ok) {
+        setInvoiceId(result.data.id);
+        setInvoiceNumber(result.data.invoiceNumber);
+        setNumberReservation(undefined);
+        setSaveMessage({ variant: 'success', text: 'Rachunek zapisany.' });
+      } else {
+        setSaveMessage({ variant: 'danger', text: result.error });
+      }
+    } catch {
+      setSaveMessage({
+        variant: 'danger',
+        text: 'Nie udało się zapisać rachunku. Spróbuj ponownie.',
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 

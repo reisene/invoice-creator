@@ -18,7 +18,7 @@ function VerifyEmailForm() {
   );
 
   return (
-    <Container className='py-5' style={{ maxWidth: 440 }}>
+    <Container className='py-5 page-narrow'>
       <Card body className='shadow-sm'>
         <h1 className='h4 text-center mb-3'>Potwierdź adres e-mail</h1>
         <p className='text-body-secondary small'>

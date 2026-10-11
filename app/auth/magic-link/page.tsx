@@ -11,7 +11,7 @@ function MagicLinkFormInner() {
   const [state, formAction, isPending] = useActionState(requestMagicLink, null);
 
   return (
-    <Container className='py-5' style={{ maxWidth: 440 }}>
+    <Container className='py-5 page-narrow'>
       <Card body className='shadow-sm'>
         <h1 className='h4 text-center mb-4'>
           {isSignUp ? 'Rejestracja linkiem' : 'Logowanie linkiem'}

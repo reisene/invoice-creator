@@ -9,7 +9,7 @@ export default function SignUpForm() {
   const [state, formAction, isPending] = useActionState(signUpWithEmail, null);
 
   return (
-    <Container className='py-5' style={{ maxWidth: 440 }}>
+    <Container className='py-5 page-narrow'>
       <Card body className='shadow-sm'>
         <h1 className='h4 text-center mb-4'>Utwórz konto</h1>
 

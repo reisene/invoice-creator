@@ -43,3 +43,7 @@ next-env.d.ts
 
 # prisma generated files
 generated/prisma
+
+# From EnvUi
+.env
+workspace.xml

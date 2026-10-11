@@ -145,14 +145,20 @@ export async function deleteInvoice(invoiceId: string): Promise<ActionResult> {
   return { ok: true, data: undefined };
 }
 
-export async function saveParty(
-  input: unknown,
-): Promise<ActionResult<{ id: string }>> {
-  const userId = await getCurrentUserId();
-  if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+type ValidParty = {
+  kind: 'CLIENT' | 'CONTRACTOR';
+  clientType: 'company' | 'private' | null;
+  name: string;
+  address: string;
+  nip: string | null;
+  pesel: string | null;
+};
 
+function parseParty(
+  input: unknown,
+): { ok: true; party: ValidParty } | { ok: false; error: string } {
   if (typeof input !== 'object' || input === null) {
-    return { ok: false, error: 'Nieprawidłowe dane strony.' };
+    return { ok: false as const, error: 'Nieprawidłowe dane strony.' };
   }
 
   const value = input as Record<string, unknown>;
@@ -168,7 +174,7 @@ export async function saveParty(
     (value.nip !== undefined && typeof value.nip !== 'string') ||
     (value.pesel !== undefined && typeof value.pesel !== 'string')
   ) {
-    return { ok: false, error: 'Nieprawidłowe dane strony.' };
+    return { ok: false as const, error: 'Nieprawidłowe dane strony.' };
   }
 
   const name = value.name.trim();
@@ -179,19 +185,36 @@ export async function saveParty(
   const clientType = kind === 'CLIENT' ? (value.clientType ?? 'company') : null;
 
   if (nip && nip.length > 20) {
-    return { ok: false, error: 'NIP jest zbyt długi.' };
+    return { ok: false as const, error: 'NIP jest zbyt długi.' };
   }
   if (pesel && pesel.length > 20) {
-    return { ok: false, error: 'PESEL jest zbyt długi.' };
+    return { ok: false as const, error: 'PESEL jest zbyt długi.' };
   }
 
-  if (!name || !address) return { ok: false, error: 'Podaj nazwę i adres.' };
+  if (!name || !address)
+    return { ok: false as const, error: 'Podaj nazwę i adres.' };
   if (nip && !isValidNip(nip)) {
-    return { ok: false, error: 'NIP jest nieprawidłowy.' };
+    return { ok: false as const, error: 'NIP jest nieprawidłowy.' };
   }
   if (pesel && !isValidPesel(pesel)) {
-    return { ok: false, error: 'PESEL jest nieprawidłowy.' };
+    return { ok: false as const, error: 'PESEL jest nieprawidłowy.' };
   }
+
+  return {
+    ok: true,
+    party: { kind, clientType, name, address, nip, pesel },
+  };
+}
+
+export async function saveParty(
+  input: unknown,
+): Promise<ActionResult<{ id: string }>> {
+  const userId = await getCurrentUserId();
+  if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+
+  const parsed = parseParty(input);
+  if (!parsed.ok) return parsed;
+  const { kind, clientType, name, address, nip, pesel } = parsed.party;
 
   const existing = await prisma.savedParty.count({ where: { userId } });
   if (existing >= 100) {
@@ -211,6 +234,40 @@ export async function saveParty(
     },
   });
   return { ok: true, data: { id: created.id } };
+}
+
+export async function updateParty(
+  partyId: string,
+  input: unknown,
+): Promise<ActionResult> {
+  const userId = await getCurrentUserId();
+  if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+  if (
+    typeof partyId !== 'string' ||
+    partyId.length === 0 ||
+    partyId.length > 100
+  ) {
+    return { ok: false, error: 'Nieprawidłowy identyfikator danych strony.' };
+  }
+
+  const parsed = parseParty(input);
+  if (!parsed.ok) return parsed;
+  const { kind, clientType, name, address, nip, pesel } = parsed.party;
+
+  const result = await prisma.savedParty.updateMany({
+    where: { id: partyId, userId },
+    data: {
+      kind,
+      label: encryptText(name),
+      clientType,
+      name: encryptText(name),
+      address: encryptText(address),
+      nip: nip === null ? null : encryptText(nip),
+      pesel: pesel === null ? null : encryptText(pesel),
+    },
+  });
+  if (result.count === 0) return { ok: false, error: 'Nie znaleziono wpisu.' };
+  return { ok: true, data: undefined };
 }
 
 export async function deleteParty(partyId: string): Promise<ActionResult> {

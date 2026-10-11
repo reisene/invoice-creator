@@ -13,6 +13,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { Button, Container, Table } from 'react-bootstrap';
 import ConfirmButton from './ConfirmButton';
+import PartyEditor from './PartyEditor';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -126,21 +127,24 @@ export default async function AccountPage() {
 
       <div className='d-flex justify-content-between align-items-center mb-2'>
         <h2 className='h4 mb-0'>Zapisane dane stron</h2>
-        {parties.length > 0 ? (
-          <form action={removeAllParties}>
-            <ConfirmButton
-              size='sm'
-              variant='danger'
-              confirmMessage='Usunąć wszystkie zapisane dane stron? Nie można tego cofnąć.'
-            >
-              Usuń wszystkie
-            </ConfirmButton>
-          </form>
-        ) : null}
+        <div className='d-flex gap-2'>
+          <PartyEditor />
+          {parties.length > 0 ? (
+            <form action={removeAllParties}>
+              <ConfirmButton
+                size='sm'
+                variant='danger'
+                confirmMessage='Usunąć wszystkie zapisane dane stron? Nie można tego cofnąć.'
+              >
+                Usuń wszystkie
+              </ConfirmButton>
+            </form>
+          ) : null}
+        </div>
       </div>
       {parties.length === 0 ? (
         <p className='text-muted'>
-          Brak zapisanych danych. Zapiszesz je w generatorze.
+          Brak zapisanych danych. Dodaj je tutaj lub zapisz w generatorze.
         </p>
       ) : (
         <Table responsive hover className='align-middle'>
@@ -161,6 +165,7 @@ export default async function AccountPage() {
                 <td>{party.name}</td>
                 <td>{party.address}</td>
                 <td className='text-end'>
+                  <PartyEditor party={party} />
                   <form action={removeParty} className='d-inline'>
                     <input type='hidden' name='id' value={party.id} />
                     <ConfirmButton

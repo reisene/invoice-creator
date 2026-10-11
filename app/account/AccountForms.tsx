@@ -1,8 +1,14 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { Alert, Button, Card, Form } from 'react-bootstrap';
-import { changePassword, deleteAccount, updateProfile } from './actions';
+import {
+  changePassword,
+  confirmEmailChange,
+  deleteAccount,
+  requestEmailChange,
+  updateProfile,
+} from './actions';
 
 export function ProfileForm({
   name,
@@ -35,7 +41,15 @@ export function ProfileForm({
           <Form.Control value={email} readOnly disabled />
           <Form.Text>
             {emailVerified ? 'Adres zweryfikowany.' : 'Adres niezweryfikowany.'}{' '}
-            Zmiana adresu e-mail nie jest jeszcze dostępna.
+            {!emailVerified && (
+              <>
+                <a
+                  href={`/auth/verify-email?email=${encodeURIComponent(email)}`}
+                >
+                  Zweryfikuj adres e-mail.
+                </a>{' '}
+              </>
+            )}
           </Form.Text>
         </Form.Group>
 
@@ -141,6 +155,80 @@ export function DeleteAccountForm() {
           {isPending ? 'Usuwanie…' : 'Usuń konto i dane'}
         </Button>
       </Form>
+    </Card>
+  );
+}
+
+export function EmailChangeForm() {
+  const [requestState, requestAction, requesting] = useActionState(
+    requestEmailChange,
+    null,
+  );
+  const [confirmState, confirmAction, confirming] = useActionState(
+    confirmEmailChange,
+    null,
+  );
+  const [newEmail, setNewEmail] = useState('');
+
+  return (
+    <Card body className='shadow-sm mb-4'>
+      <h2 className='h5 mb-3'>Zmiana adresu e-mail</h2>
+      {confirmState?.ok ? (
+        <Alert variant='success'>{confirmState.message}</Alert>
+      ) : (
+        <>
+          <Form action={requestAction}>
+            <Form.Group className='mb-3' controlId='newEmail'>
+              <Form.Label>Nowy adres e-mail</Form.Label>
+              <Form.Control
+                name='newEmail'
+                type='email'
+                required
+                autoComplete='email'
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+              />
+            </Form.Group>
+            <Button
+              type='submit'
+              variant='outline-primary'
+              disabled={requesting}
+            >
+              {requesting ? 'Wysyłanie…' : 'Wyślij kod'}
+            </Button>
+          </Form>
+
+          {requestState && (
+            <Alert
+              variant={requestState.ok ? 'success' : 'danger'}
+              className='mt-3 mb-0'
+            >
+              {requestState.message}
+            </Alert>
+          )}
+
+          {requestState?.ok && (
+            <Form action={confirmAction} className='mt-3'>
+              <input type='hidden' name='newEmail' value={newEmail} />
+              <Form.Group className='mb-3' controlId='emailChangeOtp'>
+                <Form.Label>Kod z wiadomości</Form.Label>
+                <Form.Control
+                  name='otp'
+                  required
+                  inputMode='numeric'
+                  autoComplete='one-time-code'
+                />
+              </Form.Group>
+              {confirmState && (
+                <Alert variant='danger'>{confirmState.message}</Alert>
+              )}
+              <Button type='submit' disabled={confirming}>
+                {confirming ? 'Sprawdzanie…' : 'Potwierdź zmianę'}
+              </Button>
+            </Form>
+          )}
+        </>
+      )}
     </Card>
   );
 }

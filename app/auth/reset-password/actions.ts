@@ -1,6 +1,7 @@
 'use server';
 
 import { auth } from '@/lib/auth/server';
+import { authErrorMessage } from '@/lib/authErrors';
 import { redirect } from 'next/navigation';
 
 export async function resetPassword(
@@ -21,7 +22,7 @@ export async function resetPassword(
   const { error } = await auth.resetPassword({ newPassword, token });
 
   if (error) {
-    return { error: error.message || 'Nie udało się zmienić hasła.' };
+    return { error: authErrorMessage(error, 'Nie udało się zmienić hasła.') };
   }
 
   redirect('/auth/sign-in?reset=1');

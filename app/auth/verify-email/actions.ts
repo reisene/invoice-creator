@@ -1,6 +1,7 @@
 'use server';
 
 import { auth } from '@/lib/auth/server';
+import { authErrorMessage } from '@/lib/authErrors';
 
 export type VerifyState = { ok: boolean; message: string } | null;
 
@@ -24,7 +25,10 @@ export async function verifyEmailCode(
   if (error) {
     return {
       ok: false,
-      message: 'Kod jest nieprawidłowy lub wygasł. Wyślij nowy kod.',
+      message: authErrorMessage(
+        error,
+        'Kod jest nieprawidłowy lub wygasł. Wyślij nowy kod.',
+      ),
     };
   }
   return {
@@ -47,7 +51,10 @@ export async function resendVerificationCode(
   if (error) {
     return {
       ok: false,
-      message: 'Nie udało się wysłać kodu. Spróbuj za chwilę.',
+      message: authErrorMessage(
+        error,
+        'Nie udało się wysłać kodu. Spróbuj za chwilę.',
+      ),
     };
   }
   return { ok: true, message: 'Jeśli konto istnieje, wysłaliśmy nowy kod.' };

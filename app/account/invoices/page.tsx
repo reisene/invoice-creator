@@ -108,6 +108,14 @@ export default async function AccountPage() {
                   >
                     Otwórz
                   </Button>
+                  <Button
+                    size='sm'
+                    variant='outline-secondary'
+                    href={`/generator?duplicate=${invoice.id}`}
+                    className='me-2'
+                  >
+                    Duplikuj
+                  </Button>
                   <form action={removeInvoice} className='d-inline'>
                     <input type='hidden' name='id' value={invoice.id} />
                     <ConfirmButton

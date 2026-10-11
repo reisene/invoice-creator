@@ -1,6 +1,7 @@
 'use server';
 
 import { auth } from '@/lib/auth/server';
+import { authErrorMessage } from '@/lib/authErrors';
 import { redirect } from 'next/navigation';
 
 export async function signUpWithEmail(
@@ -10,7 +11,7 @@ export async function signUpWithEmail(
   const email = formData.get('email') as string;
 
   if (!email) {
-    return { error: 'Email address must be provided.' };
+    return { error: 'Podaj adres e-mail.' };
   }
 
   // Optionally restrict sign ups based on email address
@@ -25,7 +26,7 @@ export async function signUpWithEmail(
   });
 
   if (error) {
-    return { error: error.message || 'Failed to create account' };
+    return { error: authErrorMessage(error, 'Nie udało się utworzyć konta.') };
   }
 
   redirect(`/auth/verify-email?email=${encodeURIComponent(email)}`);

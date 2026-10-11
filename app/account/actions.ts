@@ -1,6 +1,7 @@
 'use server';
 
 import { auth } from '@/lib/auth/server';
+import { authErrorMessage } from '@/lib/authErrors';
 import { getCurrentUserId } from '@/lib/currentUser';
 import { prisma } from '@/lib/db';
 import { getInvoiceNumberScope } from '@/lib/invoiceNumbering';
@@ -26,7 +27,7 @@ export async function updateProfile(
   if (error) {
     return {
       ok: false,
-      message: error.message || 'Nie udało się zapisać zmian.',
+      message: authErrorMessage(error, 'Nie udało się zapisać zmian.'),
     };
   }
 
@@ -62,7 +63,7 @@ export async function changePassword(
   if (error) {
     return {
       ok: false,
-      message: error.message || 'Nie udało się zmienić hasła.',
+      message: authErrorMessage(error, 'Nie udało się zmienić hasła.'),
     };
   }
 
@@ -72,6 +73,89 @@ export async function changePassword(
   };
 }
 
+export async function requestEmailChange(
+  _prev: AccountFormState,
+  formData: FormData,
+): Promise<AccountFormState> {
+  if (!(await getCurrentUserId())) return { ok: false, message: NOT_SIGNED_IN };
+
+  const newEmail = String(formData.get('newEmail') ?? '')
+    .trim()
+    .toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail) || newEmail.length > 254) {
+    return { ok: false, message: 'Podaj poprawny adres e-mail.' };
+  }
+
+  const { error } = await auth.emailOtp.requestEmailChange({ newEmail });
+  if (error) {
+    return {
+      ok: false,
+      message: authErrorMessage(
+        error,
+        'Nie udało się wysłać kodu. Spróbuj za chwilę.',
+      ),
+    };
+  }
+  return {
+    ok: true,
+    message: `Wysłaliśmy kod na adres ${newEmail}. Wpisz go poniżej.`,
+  };
+}
+
+export async function confirmEmailChange(
+  _prev: AccountFormState,
+  formData: FormData,
+): Promise<AccountFormState> {
+  if (!(await getCurrentUserId())) return { ok: false, message: NOT_SIGNED_IN };
+
+  const newEmail = String(formData.get('newEmail') ?? '')
+    .trim()
+    .toLowerCase();
+  const otp = String(formData.get('otp') ?? '').trim();
+  if (!newEmail || !otp) {
+    return { ok: false, message: 'Podaj nowy adres e-mail i kod.' };
+  }
+
+  const { error } = await auth.emailOtp.changeEmail({ newEmail, otp });
+  if (error) {
+    return {
+      ok: false,
+      message: authErrorMessage(
+        error,
+        'Kod jest nieprawidłowy lub wygasł. Wyślij nowy kod.',
+      ),
+    };
+  }
+
+  revalidatePath('/account');
+  return { ok: true, message: 'Adres e-mail został zmieniony.' };
+}
+
+export async function revokeSessionById(formData: FormData) {
+  if (!(await getCurrentUserId())) return;
+
+  const id = String(formData.get('id') ?? '');
+  const { data: sessions } = await auth.listSessions();
+  const target = sessions?.find((item) => item.id === id);
+  if (!target) return;
+
+  await auth.revokeSession({ token: target.token });
+  revalidatePath('/account');
+}
+
+export async function revokeOtherSessions() {
+  if (!(await getCurrentUserId())) return;
+
+  await auth.revokeOtherSessions();
+  revalidatePath('/account');
+}
+
+export async function revokeAllSessions() {
+  if (!(await getCurrentUserId())) return;
+
+  await auth.revokeSessions();
+  redirect('/auth/sign-in');
+}
 export async function deleteAccount(
   _prev: AccountFormState,
   formData: FormData,
@@ -92,7 +176,10 @@ export async function deleteAccount(
   // Verify the password before touching any data.
   const { error: passwordError } = await auth.signIn.email({ email, password });
   if (passwordError) {
-    return { ok: false, message: 'Nieprawidłowe hasło.' };
+    return {
+      ok: false,
+      message: authErrorMessage(passwordError, 'Nieprawidłowe hasło.'),
+    };
   }
 
   // Data goes first: if this fails the account still exists and the user can retry.

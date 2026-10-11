@@ -1,6 +1,7 @@
 'use server';
 
 import { auth } from '@/lib/auth/server';
+import { authErrorMessage } from '@/lib/authErrors';
 import { redirect } from 'next/navigation';
 
 export async function signInWithEmail(
@@ -14,10 +15,18 @@ export async function signInWithEmail(
   });
 
   if (error) {
-    if (/verif/i.test(error.message ?? '')) {
+    if (
+      error.code === 'EMAIL_NOT_VERIFIED' ||
+      /verif/i.test(error.message ?? '')
+    ) {
       redirect(`/auth/verify-email?email=${encodeURIComponent(email)}`);
     }
-    return { error: error.message || 'Failed to sign in. Try again' };
+    return {
+      error: authErrorMessage(
+        error,
+        'Nie udało się zalogować. Spróbuj ponownie.',
+      ),
+    };
   }
 
   redirect('/');

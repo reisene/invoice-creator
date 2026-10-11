@@ -66,6 +66,7 @@ interface GeneratorClientProps {
     invoiceNumber: string;
     data: InvoiceFormData;
   };
+  duplicateData?: InvoiceFormData;
 }
 
 export default function GeneratorClient({
@@ -73,9 +74,10 @@ export default function GeneratorClient({
   signedIn,
   initialParties,
   initialInvoice,
+  duplicateData,
 }: GeneratorClientProps) {
   const [formData, setFormData] = useState<InvoiceFormData>(
-    initialInvoice?.data ?? getInitialData(),
+    initialInvoice?.data ?? duplicateData ?? getInitialData(),
   );
   const [parties, setParties] = useState(initialParties);
   const [invoiceId, setInvoiceId] = useState(initialInvoice?.id);
@@ -161,12 +163,8 @@ export default function GeneratorClient({
       downloadLink.click();
       downloadLink.remove();
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-    } catch (error: unknown) {
-      setPdfError(
-        error instanceof Error
-          ? error.message
-          : 'Nie udało się wygenerować pliku PDF.',
-      );
+    } catch {
+      setPdfError('Nie udało się wygenerować pliku PDF.');
     } finally {
       setIsGeneratingPdf(false);
     }

@@ -9,5 +9,10 @@ export interface SavedPartyDto {
   pesel: string | null;
 }
 
+export interface InvoiceNumberReservation {
+  number: string;
+  token: string;
+}
+
 export type ActionResult<T = undefined> =
   { ok: true; data: T } | { ok: false; error: string };

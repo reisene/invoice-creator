@@ -1,6 +1,6 @@
 'use client';
 
-import { saveInvoice } from '@/app/actions/savedData';
+import { reserveInvoiceNumber, saveInvoice } from '@/app/actions/savedData';
 import InvoiceForm from '@/components/generator/InvoiceForm';
 import InvoicePreview from '@/components/generator/InvoicePreview';
 import SavedPartiesPanel from '@/components/generator/SavedPartiesPanel';
@@ -8,7 +8,10 @@ import { calculateInvoice } from '@/lib/calculateInvoice';
 import { validateInvoiceForm } from '@/lib/validateInvoiceForm';
 import type { InvoiceData } from '@/types/invoice';
 import type { InvoiceFormData } from '@/types/invoiceForm';
-import type { SavedPartyDto } from '@/types/savedData';
+import type {
+  InvoiceNumberReservation,
+  SavedPartyDto,
+} from '@/types/savedData';
 import type { TaxParams } from '@/types/taxParams';
 import { useMemo, useState } from 'react';
 import { Alert, Button, Col, Container, Row } from 'react-bootstrap';
@@ -58,7 +61,11 @@ interface GeneratorClientProps {
   taxParams: TaxParams[];
   signedIn: boolean;
   initialParties: SavedPartyDto[];
-  initialInvoice?: { id: string; data: InvoiceFormData };
+  initialInvoice?: {
+    id: string;
+    invoiceNumber: string;
+    data: InvoiceFormData;
+  };
 }
 
 export default function GeneratorClient({
@@ -72,6 +79,11 @@ export default function GeneratorClient({
   );
   const [parties, setParties] = useState(initialParties);
   const [invoiceId, setInvoiceId] = useState(initialInvoice?.id);
+  const [invoiceNumber, setInvoiceNumber] = useState(
+    initialInvoice?.invoiceNumber,
+  );
+  const [numberReservation, setNumberReservation] =
+    useState<InvoiceNumberReservation>();
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{
     variant: 'success' | 'danger';
@@ -99,10 +111,12 @@ export default function GeneratorClient({
     if (isSaving || validationErrors.length > 0) return;
     setIsSaving(true);
     setSaveMessage(null);
-    const result = await saveInvoice(formData, invoiceId);
+    const result = await saveInvoice(formData, invoiceId, numberReservation);
     setIsSaving(false);
     if (result.ok) {
       setInvoiceId(result.data.id);
+      setInvoiceNumber(result.data.invoiceNumber);
+      setNumberReservation(undefined);
       setSaveMessage({ variant: 'success', text: 'Rachunek zapisany.' });
     } else {
       setSaveMessage({ variant: 'danger', text: result.error });
@@ -122,12 +136,23 @@ export default function GeneratorClient({
           import('./InvoicePdfDocument'),
         ]);
 
-      const blob = await pdf(createInvoicePdfDocument(invoiceData)).toBlob();
+      let number = invoiceNumber;
+      let reservation = numberReservation;
+      if (!number) {
+        const result = await reserveInvoiceNumber(new Date().getFullYear());
+        if (!result.ok) throw new Error(result.error);
+        number = result.data.number;
+        reservation = result.data;
+        setInvoiceNumber(number);
+        setNumberReservation(reservation);
+      }
+
+      const blob = await pdf(
+        createInvoicePdfDocument(invoiceData, number),
+      ).toBlob();
       const objectUrl = URL.createObjectURL(blob);
       const downloadLink = document.createElement('a');
-      const filenamePart = (
-        invoiceData.contract.number || invoiceData.contract.periodStart
-      ).replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filenamePart = number.replace(/[^a-zA-Z0-9_-]/g, '_');
 
       downloadLink.href = objectUrl;
       downloadLink.download = `rachunek-${filenamePart}.pdf`;
@@ -173,6 +198,7 @@ export default function GeneratorClient({
               <InvoicePreview
                 data={invoiceData}
                 taxParams={selectedTaxParams}
+                invoiceNumber={invoiceNumber}
               />
               <div className='mt-3 d-flex justify-content-end gap-2'>
                 {signedIn ? (

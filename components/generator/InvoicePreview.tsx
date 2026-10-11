@@ -6,6 +6,7 @@ import { Col, Row, Table } from 'react-bootstrap';
 interface InvoicePreviewProps {
   data: InvoiceData;
   taxParams: TaxParams;
+  invoiceNumber?: string;
 }
 
 function formatCurrency(value: number): string {
@@ -22,6 +23,7 @@ function formatRate(rate: number): string {
 export default function InvoicePreview({
   data,
   taxParams,
+  invoiceNumber,
 }: InvoicePreviewProps) {
   const { client, contractor, contract, remuneration, calculations } = data;
 
@@ -29,6 +31,9 @@ export default function InvoicePreview({
     <div className='border p-4 shadow-sm' style={{ minHeight: '800px' }}>
       {/* Nagłówek */}
       <h2 className='text-center fw-bold mb-4'>RACHUNEK do umowy zlecenia</h2>
+      <p className='text-center mb-4'>
+        Numer rachunku: {invoiceNumber ?? 'zostanie nadany przy pobieraniu PDF'}
+      </p>
 
       {/* Dane stron */}
       <div className='row mb-4'>
@@ -56,9 +61,9 @@ export default function InvoicePreview({
       {/* Dane umowy */}
       <div className='mb-4'>
         <h4 className='fw-bold mb-2'>Dane umowy</h4>
-        <p className='mb-0'>
-          Numer umowy: {contract.number ? contract.number : '—'}
-        </p>
+        {contract.number ? (
+          <p className='mb-0'>Numer umowy: {contract.number}</p>
+        ) : null}
         <p className='mb-0'>Data zawarcia: {contract.date}</p>
         <p className='mb-0'>
           Okres rozliczeniowy: {contract.periodStart} – {contract.periodEnd}

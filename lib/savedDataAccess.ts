@@ -1,4 +1,8 @@
 import { prisma } from '@/lib/db';
+import {
+  getInvoiceNumberScope,
+  reserveInvoiceNumberForScope,
+} from '@/lib/invoiceNumbering';
 import { sanitizeInvoiceForm } from '@/lib/sanitizeInvoiceForm';
 import {
   decryptJson,
@@ -71,7 +75,7 @@ export async function getSavedPartiesForUser(
 export async function getSavedInvoiceForUser(userId: string, id: string) {
   const row = await prisma.invoice.findFirst({
     where: { id, userId },
-    select: { id: true, data: true, updatedAt: true },
+    select: { id: true, data: true, updatedAt: true, invoiceNumber: true },
   });
   if (!row) return null;
 
@@ -83,8 +87,24 @@ export async function getSavedInvoiceForUser(userId: string, id: string) {
     });
   }
 
+  const invoiceNumber =
+    row.invoiceNumber ??
+    (
+      await reserveInvoiceNumberForScope(
+        getInvoiceNumberScope(userId),
+        new Date().getFullYear(),
+      )
+    ).number;
+  if (!row.invoiceNumber) {
+    await prisma.invoice.updateMany({
+      where: { id, userId, invoiceNumber: null },
+      data: { invoiceNumber },
+    });
+  }
+
   return {
     id: row.id,
+    invoiceNumber,
     data: sanitizeInvoiceForm(decrypted.data),
   };
 }
@@ -100,6 +120,20 @@ export async function getSavedInvoicesForUser(userId: string) {
       const title = decryptLegacyText(row.title);
       const contractNumber = decryptLegacyText(row.contractNumber);
       const storedData = decryptJson(row.data);
+      const invoiceNumber =
+        row.invoiceNumber ??
+        (
+          await reserveInvoiceNumberForScope(
+            getInvoiceNumberScope(userId),
+            new Date().getFullYear(),
+          )
+        ).number;
+      if (!row.invoiceNumber) {
+        await prisma.invoice.updateMany({
+          where: { id: row.id, userId, invoiceNumber: null },
+          data: { invoiceNumber },
+        });
+      }
       const dataNeedsEncryption =
         storedData.needsEncryption &&
         typeof storedData.data === 'object' &&
@@ -128,6 +162,7 @@ export async function getSavedInvoicesForUser(userId: string) {
 
       return {
         ...row,
+        invoiceNumber,
         title: title.data ?? '',
         contractNumber: contractNumber.data,
       };

@@ -1,4 +1,10 @@
-import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHmac,
+  randomBytes,
+  timingSafeEqual,
+} from 'node:crypto';
 import 'server-only';
 
 const ENCRYPTED_PREFIX = 'enc:v1:';
@@ -74,4 +80,20 @@ export function decryptLegacyText(value: string | null): {
     return { data: decryptText(value), needsEncryption: false };
   }
   return { data: value, needsEncryption: true };
+}
+
+export function signInvoiceNumberReservation(payload: string): string {
+  return createHmac('sha256', getEncryptionKey())
+    .update(`invoice-number-reservation:v1:${payload}`)
+    .digest('hex');
+}
+
+export function verifyInvoiceNumberReservation(
+  payload: string,
+  token: string,
+): boolean {
+  if (!/^[\da-f]{64}$/.test(token)) return false;
+  const expected = Buffer.from(signInvoiceNumberReservation(payload), 'hex');
+  const actual = Buffer.from(token, 'hex');
+  return timingSafeEqual(expected, actual);
 }

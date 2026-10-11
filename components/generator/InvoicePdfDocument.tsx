@@ -188,17 +188,23 @@ function PdfRow({
   );
 }
 
-export default function createInvoicePdfDocument(data: InvoiceData) {
+export default function createInvoicePdfDocument(
+  data: InvoiceData,
+  invoiceNumber: string,
+) {
   const { client, contractor, contract, remuneration, calculations } = data;
 
   return (
     <Document
-      title={`Rachunek ${contract.number ?? contract.periodStart}`}
+      title={`Rachunek nr ${invoiceNumber}`}
       author='Invoice Creator'
       language='pl-PL'
     >
       <Page size='A4' style={styles.page} wrap>
         <Text style={styles.title}>RACHUNEK DO UMOWY ZLECENIA</Text>
+        <Text style={[styles.line, { textAlign: 'center', marginBottom: 16 }]}>
+          Numer rachunku: {invoiceNumber}
+        </Text>
 
         <View style={styles.columns}>
           <View style={styles.column}>
@@ -226,7 +232,9 @@ export default function createInvoicePdfDocument(data: InvoiceData) {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Dane umowy</Text>
-          <Text style={styles.line}>Numer umowy: {contract.number || '—'}</Text>
+          {contract.number ? (
+            <Text style={styles.line}>Numer umowy: {contract.number}</Text>
+          ) : null}
           <Text style={styles.line}>Data zawarcia: {contract.date}</Text>
           <Text style={styles.line}>
             Okres rozliczeniowy: {contract.periodStart} – {contract.periodEnd}

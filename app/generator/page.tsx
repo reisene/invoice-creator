@@ -25,7 +25,8 @@ export default async function GeneratorPage({
   ]);
 
   let parties: SavedPartyDto[] = [];
-  let initialInvoice: { id: string; data: InvoiceFormData } | undefined;
+  let initialInvoice:
+    { id: string; invoiceNumber: string; data: InvoiceFormData } | undefined;
 
   if (userId) {
     parties = await getSavedPartiesForUser(userId);
@@ -33,7 +34,11 @@ export default async function GeneratorPage({
     if (typeof invoiceId === 'string' && invoiceId.length <= 100) {
       const saved = await getSavedInvoiceForUser(userId, invoiceId);
       if (saved?.data) {
-        initialInvoice = { id: saved.id, data: saved.data };
+        initialInvoice = {
+          id: saved.id,
+          invoiceNumber: saved.invoiceNumber,
+          data: saved.data,
+        };
       }
     }
   }

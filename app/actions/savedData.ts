@@ -3,6 +3,11 @@
 import { calculateInvoice } from '@/lib/calculateInvoice';
 import { getCurrentUserId } from '@/lib/currentUser';
 import { prisma } from '@/lib/db';
+import {
+  getInvoiceNumberScope,
+  isReservationForScope,
+  reserveInvoiceNumberForScope,
+} from '@/lib/invoiceNumbering';
 import { sanitizeInvoiceForm } from '@/lib/sanitizeInvoiceForm';
 import { encryptJson, encryptText } from '@/lib/savedDataCrypto';
 import { getAllTaxParams } from '@/lib/taxParams';
@@ -11,14 +16,30 @@ import {
   isValidPesel,
   validateInvoiceForm,
 } from '@/lib/validateInvoiceForm';
-import type { ActionResult } from '@/types/savedData';
+import type { ActionResult, InvoiceNumberReservation } from '@/types/savedData';
 
 const NOT_SIGNED_IN = 'Zaloguj się, aby zapisywać dane.';
+
+export async function reserveInvoiceNumber(
+  year: number,
+): Promise<ActionResult<InvoiceNumberReservation>> {
+  if (!Number.isInteger(year) || year < 2000 || year > 9999) {
+    return { ok: false, error: 'Nieprawidłowy rok numeracji.' };
+  }
+
+  const userId = await getCurrentUserId();
+  const reservation = await reserveInvoiceNumberForScope(
+    getInvoiceNumberScope(userId),
+    year,
+  );
+  return { ok: true, data: reservation };
+}
 
 export async function saveInvoice(
   input: unknown,
   invoiceId?: string,
-): Promise<ActionResult<{ id: string }>> {
+  reservation?: InvoiceNumberReservation,
+): Promise<ActionResult<{ id: string; invoiceNumber: string }>> {
   const userId = await getCurrentUserId();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
 
@@ -40,6 +61,7 @@ export async function saveInvoice(
   if (errors.length > 0) return { ok: false, error: errors[0] };
 
   const { calculations } = calculateInvoice(form, params);
+  const scope = getInvoiceNumberScope(userId);
   const values = {
     title: encryptText(
       form.contractNumber?.trim() || `Rachunek ${form.periodStart}`,
@@ -53,18 +75,59 @@ export async function saveInvoice(
   };
 
   if (invoiceId) {
+    if (typeof invoiceId !== 'string' || invoiceId.length > 100) {
+      return { ok: false, error: 'Nieprawidłowy identyfikator rachunku.' };
+    }
+    const existing = await prisma.invoice.findFirst({
+      where: { id: invoiceId, userId },
+      select: { invoiceNumber: true },
+    });
+    if (!existing) return { ok: false, error: 'Nie znaleziono rachunku.' };
+    const invoiceNumber =
+      existing.invoiceNumber ??
+      (await reserveInvoiceNumberForScope(scope, new Date().getFullYear()))
+        .number;
     const updated = await prisma.invoice.updateMany({
       where: { id: invoiceId, userId },
-      data: values,
+      data: { ...values, invoiceNumber },
     });
     if (updated.count === 0) {
       return { ok: false, error: 'Nie znaleziono rachunku.' };
     }
-    return { ok: true, data: { id: invoiceId } };
+    return { ok: true, data: { id: invoiceId, invoiceNumber } };
   }
 
-  const created = await prisma.invoice.create({ data: { ...values, userId } });
-  return { ok: true, data: { id: created.id } };
+  const reservationNumber =
+    typeof reservation === 'object' &&
+    reservation !== null &&
+    typeof reservation.number === 'string'
+      ? reservation.number
+      : null;
+  const reservationYear = reservationNumber
+    ? Number(reservationNumber.match(/\/(\d{4})$/)?.[1])
+    : new Date().getFullYear();
+  if (
+    reservation &&
+    (!Number.isInteger(reservationYear) ||
+      !isReservationForScope(reservation, scope, reservationYear))
+  ) {
+    return { ok: false, error: 'Numer rachunku jest nieprawidłowy.' };
+  }
+  const assigned =
+    reservation ??
+    (await reserveInvoiceNumberForScope(scope, new Date().getFullYear()));
+  const created = await prisma.invoice.create({
+    data: {
+      ...values,
+      userId,
+      invoiceNumber: assigned.number,
+    },
+    select: { id: true, invoiceNumber: true },
+  });
+  return {
+    ok: true,
+    data: { id: created.id, invoiceNumber: assigned.number },
+  };
 }
 
 export async function deleteInvoice(invoiceId: string): Promise<ActionResult> {

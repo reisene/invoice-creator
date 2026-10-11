@@ -38,6 +38,7 @@ enum PartyKind {
 model Invoice {
   id             String   @id @default(cuid())
   userId         String
+  invoiceNumber  String?
   title          String
   contractNumber String?
   periodStart    String
@@ -46,7 +47,17 @@ model Invoice {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  @@unique([userId, invoiceNumber])
   @@index([userId, updatedAt])
+}
+
+model InvoiceSequence {
+  id    Int    @id @default(autoincrement())
+  scope String
+  year  Int
+  value Int    @default(0)
+
+  @@unique([scope, year])
 }
 
 model SavedParty {

@@ -47,6 +47,7 @@ export default async function AccountPage() {
           <thead>
             <tr>
               <th>Rachunek</th>
+              <th>Numer rachunku</th>
               <th>Okres od</th>
               <th className='text-end'>Netto</th>
               <th>Zmieniono</th>
@@ -57,6 +58,7 @@ export default async function AccountPage() {
             {invoices.map((invoice) => (
               <tr key={invoice.id}>
                 <td>{invoice.title}</td>
+                <td>{invoice.invoiceNumber}</td>
                 <td>{invoice.periodStart}</td>
                 <td className='text-end'>
                   {Number(invoice.net).toFixed(2).replace('.', ',')} zł

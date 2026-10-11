@@ -31,11 +31,23 @@
       "skillPath": "skills/mcp-server-skills/SKILL.md",
       "computedHash": "988e12b18cc9a1907596b5719defe129bb8003f688ca0534c34a41dac0d4b9cb"
     },
+    "neon": {
+      "source": "neondatabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/neon/SKILL.md",
+      "computedHash": "d684e62509ddab4e39743186875fa8344e115dcf10db07d8b251cdd4af02bede"
+    },
     "nextjs16-skills": {
       "source": "gocallum/nextjs16-agent-skills",
       "sourceType": "github",
       "skillPath": "skills/nextjs16-skills/SKILL.md",
       "computedHash": "80fe177f4f80c22606a16952a65e06f73c87d40f5d082d0f9cec4725f103dd41"
+    },
+    "prisma-cli": {
+      "source": "prisma/skills",
+      "sourceType": "github",
+      "skillPath": "prisma-cli/SKILL.md",
+      "computedHash": "f1e28c22e9dd3457eebc05c53a7921f96f8b9fdcf50edb93a0b1de73b78fa2c5"
     },
     "prisma-orm-v7-skills": {
       "source": "gocallum/nextjs16-agent-skills",

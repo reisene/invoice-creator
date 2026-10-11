@@ -21,6 +21,7 @@ export async function GET() {
   ]);
 
   const body = {
+    version: 1,
     exportedAt: new Date().toISOString(),
     account: { name: user.name, email: user.email },
     bankAccount,

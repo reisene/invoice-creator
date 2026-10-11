@@ -9,6 +9,7 @@ import {
   PasswordForm,
   ProfileForm,
 } from './AccountForms';
+import { ImportDataCard } from './ImportDataCard';
 import SessionsCard from './SessionsCard';
 
 export const dynamic = 'force-dynamic';
@@ -44,6 +45,7 @@ export default async function AccountPage() {
           </Button>
         </div>
       </Card>
+      <ImportDataCard />
       <SessionsCard />
       <DeleteAccountForm />
 

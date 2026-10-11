@@ -227,3 +227,19 @@ export async function deleteParty(partyId: string): Promise<ActionResult> {
   await prisma.savedParty.deleteMany({ where: { id: partyId, userId } });
   return { ok: true, data: undefined };
 }
+
+export async function deleteAllInvoices(): Promise<ActionResult<number>> {
+  const userId = await getCurrentUserId();
+  if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+
+  const { count } = await prisma.invoice.deleteMany({ where: { userId } });
+  return { ok: true, data: count };
+}
+
+export async function deleteAllParties(): Promise<ActionResult<number>> {
+  const userId = await getCurrentUserId();
+  if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+
+  const { count } = await prisma.savedParty.deleteMany({ where: { userId } });
+  return { ok: true, data: count };
+}

@@ -1,6 +1,7 @@
 'use server';
 
 import { auth } from '@/lib/auth/server';
+import { redirect } from 'next/navigation';
 
 export async function signUpWithEmail(
   _prevState: { error?: string; success?: boolean } | null,
@@ -27,5 +28,5 @@ export async function signUpWithEmail(
     return { error: error.message || 'Failed to create account' };
   }
 
-  return { success: true };
+  redirect(`/auth/verify-email?email=${encodeURIComponent(email)}`);
 }

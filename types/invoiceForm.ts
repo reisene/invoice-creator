@@ -7,7 +7,7 @@ export type ClientType = 'company' | 'private';
 
 export type CostType = '20' | '50';
 
-export type TaxReductionAmount = 0 | 150 | 300;
+export type TaxReductionAmount = 0 | 100 | 150 | 300;
 
 export type PaymentMethod = 'CASH' | 'TRANSFER' | '';
 export type TransferTarget = 'SAVED_ACCOUNT' | 'DECLARATION' | '';

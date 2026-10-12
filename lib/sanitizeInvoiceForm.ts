@@ -38,7 +38,7 @@ export function sanitizeInvoiceForm(input: unknown): InvoiceFormData | null {
   ] as const);
   const costType = oneOf(v.costType, ['20', '50'] as const);
   const taxReductionAmount = oneOf(v.taxReductionAmount, [
-    0, 150, 300,
+    0, 100, 150, 300,
   ] as const);
   const paymentMethod =
     v.paymentMethod === undefined

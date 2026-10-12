@@ -172,13 +172,25 @@ export function validateInvoiceForm(
     errors.push('Dochód od początku roku nie może być ujemny.');
   }
 
+  if (data.contractorStatus === 'student_under_26') {
+    const birthDate = birthDateFromPesel(data.contractorPesel);
+    if (birthDate && isValidDate(data.periodEnd)) {
+      const turns26 = `${Number(birthDate.slice(0, 4)) + 26}${birthDate.slice(4)}`;
+      if (data.periodEnd > turns26) {
+        errors.push(
+          'Status studenta do 26 lat (zwolnienie ze składek ZUS) przysługuje do dnia 26. urodzin włącznie.',
+        );
+      }
+    }
+  }
+
   if (data.youngRelief) {
     const birthDate = birthDateFromPesel(data.contractorPesel);
     if (birthDate && isValidDate(data.periodEnd)) {
       const turns26 = `${Number(birthDate.slice(0, 4)) + 26}${birthDate.slice(4)}`;
-      if (data.periodEnd >= turns26) {
+      if (data.periodEnd > turns26) {
         errors.push(
-          'Ulga dla młodych przysługuje do ukończenia 26 lat – zleceniobiorca skończy/skończył 26 lat w okresie rozliczeniowym lub wcześniej.',
+          'Ulga dla młodych przysługuje do dnia 26. urodzin włącznie – zleceniobiorca ukończył 26 lat przed końcem okresu rozliczeniowego.',
         );
       }
     }

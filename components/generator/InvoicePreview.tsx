@@ -201,14 +201,14 @@ export default function InvoicePreview({
             {data.taxReduction && (
               <>
                 <tr>
-                  <td>Zaliczka na PIT przed ulgą</td>
+                  <td>Zaliczka na PIT przed zmniejszeniem</td>
                   <td className='text-end'>
                     {formatCurrency(calculations.taxBeforeReduction)}
                   </td>
                 </tr>
 
                 <tr>
-                  <td>Ulga podatkowa</td>
+                  <td>Kwota zmniejszająca podatek</td>
                   <td className='text-end'>
                     {formatCurrency(calculations.taxReductionAmountApplied)}
                   </td>

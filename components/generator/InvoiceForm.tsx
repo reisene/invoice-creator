@@ -457,12 +457,25 @@ export default function InvoiceForm({
             <Form.Label>Status zleceniobiorcy</Form.Label>
             <Form.Select
               value={data.contractorStatus}
-              onChange={(e) =>
-                updateField(
-                  'contractorStatus',
-                  e.target.value as ContractorStatus,
-                )
-              }
+              onChange={(e) => {
+                const status = e.target.value as ContractorStatus;
+                if (status === 'student_under_26') {
+                  onChange({
+                    ...data,
+                    contractorStatus: status,
+                    voluntarySickness: false,
+                    youngRelief: true,
+                  });
+                } else if (status === 'with_employment') {
+                  onChange({
+                    ...data,
+                    contractorStatus: status,
+                    voluntarySickness: false,
+                  });
+                } else {
+                  updateField('contractorStatus', status);
+                }
+              }}
               required
             >
               <option value='standard'>Zwykłe zlecenie</option>
@@ -525,11 +538,21 @@ export default function InvoiceForm({
             <Form.Check
               type='checkbox'
               label='Dobrowolna składka chorobowa'
-              checked={data.voluntarySickness}
+              checked={
+                data.voluntarySickness && data.contractorStatus === 'standard'
+              }
+              disabled={data.contractorStatus !== 'standard'}
               onChange={(e) =>
                 updateField('voluntarySickness', e.target.checked)
               }
             />
+            {data.contractorStatus !== 'standard' && (
+              <Form.Text muted>
+                {data.contractorStatus === 'student_under_26'
+                  ? 'Student do 26 lat jest zwolniony ze składek ZUS i NFZ.'
+                  : 'Przy zbiegu z etatem opłacana jest wyłącznie składka zdrowotna.'}
+              </Form.Text>
+            )}
           </Form.Group>
         </Col>
         <Col md={6}>
@@ -553,10 +576,13 @@ export default function InvoiceForm({
           <Form.Group>
             <Form.Check
               type='checkbox'
-              label='Stosuję ulgę podatkową (koszty uzyskania przychodu)'
+              label='Kwota zmniejszająca podatek (oświadczenie PIT-2)'
               checked={data.taxReduction}
               onChange={(e) => updateField('taxReduction', e.target.checked)}
             />
+            <Form.Text muted>
+              Możesz złożyć PIT-2 maksymalnie 3 płatnikom w danym miesiącu.
+            </Form.Text>
           </Form.Group>
         </Col>
       </Row>
@@ -565,7 +591,7 @@ export default function InvoiceForm({
         <Row className='mb-3'>
           <Col md={6}>
             <Form.Group>
-              <Form.Label>Wysokość ulgi</Form.Label>
+              <Form.Label>Wysokość kwoty zmniejszającej</Form.Label>
               <Form.Select
                 value={data.taxReductionAmount}
                 onChange={(e) =>
@@ -576,9 +602,16 @@ export default function InvoiceForm({
                 }
                 required={data.taxReduction}
               >
-                <option value={300}>{fullReduction} zł (jedna umowa)</option>
-                <option value={150}>{fullReduction / 2} zł (dwie umowy)</option>
-                <option value={0}>0 zł (trzy lub więcej umów)</option>
+                <option value={300}>
+                  {fullReduction} zł (1/12 kwoty rocznej – 1 płatnik)
+                </option>
+                <option value={150}>
+                  {fullReduction / 2} zł (1/24 kwoty rocznej – 2 płatników)
+                </option>
+                <option value={100}>
+                  100 zł (1/36 kwoty rocznej – 3 płatników)
+                </option>
+                <option value={0}>0 zł</option>
               </Form.Select>
             </Form.Group>
           </Col>

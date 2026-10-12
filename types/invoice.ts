@@ -44,7 +44,7 @@ export interface InvoiceData {
   costType: '20' | '50';
   youngRelief: boolean;
   taxReduction: boolean;
-  taxReductionAmount: 0 | 150 | 300;
+  taxReductionAmount: 0 | 100 | 150 | 300;
 
   // Wyliczenia
   calculations: {

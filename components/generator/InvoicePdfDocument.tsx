@@ -299,11 +299,11 @@ export default function createInvoicePdfDocument(
           {data.taxReduction ? (
             <>
               <PdfRow
-                label='Zaliczka na PIT przed ulgą'
+                label='Zaliczka na PIT przed zmniejszeniem'
                 value={formatCurrency(calculations.taxBeforeReduction)}
               />
               <PdfRow
-                label='Ulga podatkowa'
+                label='Kwota zmniejszająca podatek'
                 value={formatCurrency(calculations.taxReductionAmountApplied)}
               />
             </>

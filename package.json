@@ -43,6 +43,7 @@
     "prepare": "husky",
     "typecheck": "tsc --noEmit",
     "typecheck:ts6": "tsc6 --noEmit",
+    "test": "tsx --test tests/**/*.test.ts",
     "db:seed": "prisma db seed",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

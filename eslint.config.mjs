@@ -11,6 +11,8 @@ export default defineConfig([
     'build/**',
     'next-env.d.ts',
     'node_modules/**',
+    '.agents/**',
+    'generated/**',
   ]),
 
   eslint.configs.recommended,

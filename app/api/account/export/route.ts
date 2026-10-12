@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth/server';
 import { prisma } from '@/lib/db';
+import { checkRateLimit } from '@/lib/rateLimit';
 import {
   getSavedInvoicesForUser,
   getSavedPartiesForUser,
@@ -17,6 +18,8 @@ export async function GET() {
   if (!user) {
     return new Response('Zaloguj się, aby pobrać dane.', { status: 401 });
   }
+  const limit = await checkRateLimit('exportData', user.id);
+  if (!limit.ok) return new Response(limit.message, { status: 429 });
 
   const [rawInvoices, parties, bankAccount] = await Promise.all([
     getSavedInvoicesForUser(user.id),

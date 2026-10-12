@@ -9,6 +9,7 @@ import {
   reserveInvoiceNumberForScope,
 } from '@/lib/invoiceNumbering';
 import { parseParty } from '@/lib/parseParty';
+import { checkRateLimit } from '@/lib/rateLimit';
 import { sanitizeInvoiceForm } from '@/lib/sanitizeInvoiceForm';
 import { encryptJson, encryptText } from '@/lib/savedDataCrypto';
 import { getAllTaxParams } from '@/lib/taxParams';
@@ -27,6 +28,8 @@ export async function reserveInvoiceNumber(
   }
 
   const userId = await getCurrentUserId();
+  const limit = await checkRateLimit('reserveNumber', userId);
+  if (!limit.ok) return { ok: false, error: limit.message };
   const reservation = await reserveInvoiceNumberForScope(
     getInvoiceNumberScope(userId),
     year,
@@ -41,6 +44,8 @@ export async function saveInvoice(
 ): Promise<ActionResult<{ id: string; invoiceNumber: string }>> {
   const userId = await getCurrentUserId();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+  const limit = await checkRateLimit('saveInvoice', userId);
+  if (!limit.ok) return { ok: false, error: limit.message };
 
   const form = sanitizeInvoiceForm(input);
   if (!form) return { ok: false, error: 'Nieprawidłowe dane formularza.' };
@@ -156,6 +161,8 @@ export async function saveParty(
 ): Promise<ActionResult<{ id: string }>> {
   const userId = await getCurrentUserId();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+  const limit = await checkRateLimit('saveParty', userId);
+  if (!limit.ok) return { ok: false, error: limit.message };
 
   const parsed = parseParty(input);
   if (!parsed.ok) return parsed;

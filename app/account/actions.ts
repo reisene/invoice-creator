@@ -5,6 +5,7 @@ import { authErrorMessage } from '@/lib/authErrors';
 import { getCurrentUserId } from '@/lib/currentUser';
 import { prisma } from '@/lib/db';
 import { getInvoiceNumberScope } from '@/lib/invoiceNumbering';
+import { checkRateLimit } from '@/lib/rateLimit';
 import { encryptText } from '@/lib/savedDataCrypto';
 import { isValidPolishBankAccount } from '@/lib/validateInvoiceForm';
 import { revalidatePath } from 'next/cache';
@@ -98,7 +99,10 @@ export async function changePassword(
   _prev: AccountFormState,
   formData: FormData,
 ): Promise<AccountFormState> {
-  if (!(await getCurrentUserId())) return { ok: false, message: NOT_SIGNED_IN };
+  const userId = await getCurrentUserId();
+  if (!userId) return { ok: false, message: NOT_SIGNED_IN };
+  const limit = await checkRateLimit('accountSensitive', userId);
+  if (!limit.ok) return { ok: false, message: limit.message };
 
   const currentPassword = String(formData.get('currentPassword') ?? '');
   const newPassword = String(formData.get('newPassword') ?? '');
@@ -136,7 +140,10 @@ export async function requestEmailChange(
   _prev: AccountFormState,
   formData: FormData,
 ): Promise<AccountFormState> {
-  if (!(await getCurrentUserId())) return { ok: false, message: NOT_SIGNED_IN };
+  const userId = await getCurrentUserId();
+  if (!userId) return { ok: false, message: NOT_SIGNED_IN };
+  const limit = await checkRateLimit('accountSensitive', userId);
+  if (!limit.ok) return { ok: false, message: limit.message };
 
   const newEmail = String(formData.get('newEmail') ?? '')
     .trim()
@@ -165,7 +172,10 @@ export async function confirmEmailChange(
   _prev: AccountFormState,
   formData: FormData,
 ): Promise<AccountFormState> {
-  if (!(await getCurrentUserId())) return { ok: false, message: NOT_SIGNED_IN };
+  const userId = await getCurrentUserId();
+  if (!userId) return { ok: false, message: NOT_SIGNED_IN };
+  const limit = await checkRateLimit('accountSensitive', userId);
+  if (!limit.ok) return { ok: false, message: limit.message };
 
   const newEmail = String(formData.get('newEmail') ?? '')
     .trim()
@@ -260,6 +270,8 @@ export async function deleteAccount(
 ): Promise<AccountFormState> {
   const userId = await getCurrentUserId();
   if (!userId) return { ok: false, message: NOT_SIGNED_IN };
+  const limit = await checkRateLimit('accountSensitive', userId);
+  if (!limit.ok) return { ok: false, message: limit.message };
 
   if (formData.get('confirm') !== 'on') {
     return { ok: false, message: 'Potwierdź, że rozumiesz skutki usunięcia.' };

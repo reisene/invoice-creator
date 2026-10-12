@@ -6,6 +6,7 @@ import { getCurrentUserId } from '@/lib/currentUser';
 import { prisma } from '@/lib/db';
 import { getInvoiceNumberScope } from '@/lib/invoiceNumbering';
 import { parseParty } from '@/lib/parseParty';
+import { checkRateLimit } from '@/lib/rateLimit';
 import { sanitizeInvoiceForm } from '@/lib/sanitizeInvoiceForm';
 import {
   getSavedPartiesForUser,
@@ -43,6 +44,8 @@ export async function importUserData(
 ): Promise<ActionResult<ImportSummary>> {
   const userId = await getCurrentUserId();
   if (!userId) return { ok: false, error: 'Zaloguj się, aby importować dane.' };
+  const limit = await checkRateLimit('importData', userId);
+  if (!limit.ok) return { ok: false, error: limit.message };
   if (typeof raw !== 'string' || raw.length === 0) {
     return { ok: false, error: 'Plik jest pusty.' };
   }

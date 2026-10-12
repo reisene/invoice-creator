@@ -14,6 +14,7 @@ export const config: VercelConfig = {
     deploymentEnabled: {
       'experiment/*': false,
       'test/*': false,
+      '*/test': false,
     },
   },
 };

@@ -1,6 +1,7 @@
 'use server';
 
 import { auth } from '@/lib/auth/server';
+import { authErrorMessage } from '@/lib/authErrors';
 import { headers } from 'next/headers';
 
 export async function requestMagicLink(
@@ -23,7 +24,7 @@ export async function requestMagicLink(
   });
 
   if (error) {
-    return { error: error.message || 'Nie udało się wysłać linku.' };
+    return { error: authErrorMessage(error, 'Nie udało się wysłać linku.') };
   }
 
   return { success: true };

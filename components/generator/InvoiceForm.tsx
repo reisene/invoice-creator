@@ -6,6 +6,7 @@ import type {
   InvoiceFormData,
   TaxReductionAmount,
 } from '@/types/invoiceForm';
+import type { UserBankAccountDto } from '@/types/savedData';
 import type { TaxParams } from '@/types/taxParams';
 import { Col, Form, Row } from 'react-bootstrap';
 
@@ -13,6 +14,7 @@ interface InvoiceFormProps {
   data: InvoiceFormData;
   onChange: (data: InvoiceFormData) => void;
   taxParams?: TaxParams;
+  bankAccount: UserBankAccountDto | null;
 }
 
 const percent = (rate: number) => `${Math.round(rate * 10000) / 100}%`;
@@ -21,6 +23,7 @@ export default function InvoiceForm({
   data,
   onChange,
   taxParams,
+  bankAccount,
 }: InvoiceFormProps) {
   const fullReduction = taxParams?.monthlyTaxReduction ?? 300;
   const updateField = <K extends keyof InvoiceFormData>(
@@ -332,6 +335,119 @@ export default function InvoiceForm({
         </Row>
       )}
 
+      <h3 className='mb-3 mt-4'>Forma wypłaty</h3>
+      <Row className='mb-3'>
+        <Col md={8}>
+          <Form.Group>
+            <Form.Label>Sposób wypłaty wynagrodzenia</Form.Label>
+            <Form.Select
+              value={data.paymentMethod}
+              onChange={(e) => {
+                const paymentMethod = e.target
+                  .value as InvoiceFormData['paymentMethod'];
+                if (paymentMethod === 'CASH') {
+                  onChange({
+                    ...data,
+                    paymentMethod,
+                    transferTarget: '',
+                    bankAccountHolder: undefined,
+                    bankName: undefined,
+                    bankAccountNumber: undefined,
+                  });
+                } else {
+                  updateField('paymentMethod', paymentMethod);
+                }
+              }}
+              required
+            >
+              <option value=''>Wybierz formę wypłaty</option>
+              <option value='CASH'>Gotówka</option>
+              <option value='TRANSFER'>Przelew</option>
+            </Form.Select>
+            {!data.paymentMethod && (
+              <Form.Text className='text-warning-emphasis'>
+                Ten rachunek nie ma wybranej formy wypłaty (np. został zapisany
+                w starszej wersji). Wybierz ją, aby wygenerować PDF lub zapisać
+                zmiany.
+              </Form.Text>
+            )}
+          </Form.Group>
+        </Col>
+      </Row>
+
+      {data.paymentMethod === 'TRANSFER' && (
+        <Row className='mb-3'>
+          <Col md={8}>
+            <Form.Group>
+              <Form.Label>Rachunek do przelewu</Form.Label>
+              <Form.Select
+                value={data.transferTarget}
+                onChange={(e) => {
+                  const transferTarget = e.target
+                    .value as InvoiceFormData['transferTarget'];
+                  onChange({
+                    ...data,
+                    transferTarget,
+                    bankAccountHolder:
+                      transferTarget === 'SAVED_ACCOUNT'
+                        ? bankAccount?.accountHolder
+                        : undefined,
+                    bankName:
+                      transferTarget === 'SAVED_ACCOUNT'
+                        ? bankAccount?.bankName
+                        : undefined,
+                    bankAccountNumber:
+                      transferTarget === 'SAVED_ACCOUNT'
+                        ? bankAccount?.accountNumber
+                        : undefined,
+                  });
+                }}
+                required
+              >
+                <option value=''>Wybierz rachunek</option>
+                {bankAccount && (
+                  <option value='SAVED_ACCOUNT'>
+                    Zapisany rachunek bankowy
+                  </option>
+                )}
+                <option value='DECLARATION'>
+                  Rachunek zgodnie ze złożonym oświadczeniem
+                </option>
+              </Form.Select>
+              {!bankAccount && (
+                <Form.Text>
+                  Możesz dodać rachunek bankowy w ustawieniach konta.
+                </Form.Text>
+              )}
+            </Form.Group>
+          </Col>
+        </Row>
+      )}
+      {data.paymentMethod === 'TRANSFER' &&
+        data.transferTarget === 'SAVED_ACCOUNT' &&
+        bankAccount && (
+          <Row className='mb-3'>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label>Właściciel rachunku</Form.Label>
+                <Form.Control value={bankAccount.accountHolder} readOnly />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label>Bank</Form.Label>
+                <Form.Control value={bankAccount.bankName} readOnly />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group>
+                <Form.Label>Numer rachunku</Form.Label>
+                <Form.Control value={bankAccount.accountNumber} readOnly />
+              </Form.Group>
+            </Col>
+          </Row>
+        )}
+
       {/* Opcje */}
       <h3 className='mb-3 mt-4'>Status i opcje</h3>
 
@@ -341,12 +457,25 @@ export default function InvoiceForm({
             <Form.Label>Status zleceniobiorcy</Form.Label>
             <Form.Select
               value={data.contractorStatus}
-              onChange={(e) =>
-                updateField(
-                  'contractorStatus',
-                  e.target.value as ContractorStatus,
-                )
-              }
+              onChange={(e) => {
+                const status = e.target.value as ContractorStatus;
+                if (status === 'student_under_26') {
+                  onChange({
+                    ...data,
+                    contractorStatus: status,
+                    voluntarySickness: false,
+                    youngRelief: true,
+                  });
+                } else if (status === 'with_employment') {
+                  onChange({
+                    ...data,
+                    contractorStatus: status,
+                    voluntarySickness: false,
+                  });
+                } else {
+                  updateField('contractorStatus', status);
+                }
+              }}
               required
             >
               <option value='standard'>Zwykłe zlecenie</option>
@@ -409,11 +538,21 @@ export default function InvoiceForm({
             <Form.Check
               type='checkbox'
               label='Dobrowolna składka chorobowa'
-              checked={data.voluntarySickness}
+              checked={
+                data.voluntarySickness && data.contractorStatus === 'standard'
+              }
+              disabled={data.contractorStatus !== 'standard'}
               onChange={(e) =>
                 updateField('voluntarySickness', e.target.checked)
               }
             />
+            {data.contractorStatus !== 'standard' && (
+              <Form.Text muted>
+                {data.contractorStatus === 'student_under_26'
+                  ? 'Student do 26 lat jest zwolniony ze składek ZUS i NFZ.'
+                  : 'Przy zbiegu z etatem opłacana jest wyłącznie składka zdrowotna.'}
+              </Form.Text>
+            )}
           </Form.Group>
         </Col>
         <Col md={6}>
@@ -437,10 +576,13 @@ export default function InvoiceForm({
           <Form.Group>
             <Form.Check
               type='checkbox'
-              label='Stosuję ulgę podatkową (koszty uzyskania przychodu)'
+              label='Kwota zmniejszająca podatek (oświadczenie PIT-2)'
               checked={data.taxReduction}
               onChange={(e) => updateField('taxReduction', e.target.checked)}
             />
+            <Form.Text muted>
+              Możesz złożyć PIT-2 maksymalnie 3 płatnikom w danym miesiącu.
+            </Form.Text>
           </Form.Group>
         </Col>
       </Row>
@@ -449,7 +591,7 @@ export default function InvoiceForm({
         <Row className='mb-3'>
           <Col md={6}>
             <Form.Group>
-              <Form.Label>Wysokość ulgi</Form.Label>
+              <Form.Label>Wysokość kwoty zmniejszającej</Form.Label>
               <Form.Select
                 value={data.taxReductionAmount}
                 onChange={(e) =>
@@ -460,9 +602,16 @@ export default function InvoiceForm({
                 }
                 required={data.taxReduction}
               >
-                <option value={300}>{fullReduction} zł (jedna umowa)</option>
-                <option value={150}>{fullReduction / 2} zł (dwie umowy)</option>
-                <option value={0}>0 zł (trzy lub więcej umów)</option>
+                <option value={300}>
+                  {fullReduction} zł (1/12 kwoty rocznej – 1 płatnik)
+                </option>
+                <option value={150}>
+                  {fullReduction / 2} zł (1/24 kwoty rocznej – 2 płatników)
+                </option>
+                <option value={100}>
+                  100 zł (1/36 kwoty rocznej – 3 płatników)
+                </option>
+                <option value={0}>0 zł</option>
               </Form.Select>
             </Form.Group>
           </Col>

@@ -38,6 +38,7 @@ enum PartyKind {
 model Invoice {
   id             String   @id @default(cuid())
   userId         String
+  uid            String?
   invoiceNumber  String?
   title          String
   contractNumber String?
@@ -48,6 +49,7 @@ model Invoice {
   updatedAt      DateTime @updatedAt
 
   @@unique([userId, invoiceNumber])
+  @@unique([userId, uid])
   @@index([userId, updatedAt])
 }
 
@@ -73,4 +75,12 @@ model SavedParty {
   createdAt  DateTime  @default(now())
 
   @@index([userId, kind])
+}
+
+model UserBankAccount {
+  id            String @id @default(cuid())
+  userId        String @unique
+  accountHolder String
+  bankName      String
+  accountNumber String
 }

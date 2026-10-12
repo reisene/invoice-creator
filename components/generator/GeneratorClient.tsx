@@ -11,6 +11,7 @@ import type { InvoiceFormData } from '@/types/invoiceForm';
 import type {
   InvoiceNumberReservation,
   SavedPartyDto,
+  UserBankAccountDto,
 } from '@/types/savedData';
 import type { TaxParams } from '@/types/taxParams';
 import { useMemo, useState } from 'react';
@@ -54,6 +55,8 @@ function getInitialData(): InvoiceFormData {
 
     taxReduction: true,
     taxReductionAmount: 300,
+    paymentMethod: '',
+    transferTarget: '',
   };
 }
 
@@ -61,21 +64,25 @@ interface GeneratorClientProps {
   taxParams: TaxParams[];
   signedIn: boolean;
   initialParties: SavedPartyDto[];
+  bankAccount: UserBankAccountDto | null;
   initialInvoice?: {
     id: string;
     invoiceNumber: string;
     data: InvoiceFormData;
   };
+  duplicateData?: InvoiceFormData;
 }
 
 export default function GeneratorClient({
   taxParams,
   signedIn,
   initialParties,
+  bankAccount,
   initialInvoice,
+  duplicateData,
 }: GeneratorClientProps) {
   const [formData, setFormData] = useState<InvoiceFormData>(
-    initialInvoice?.data ?? getInitialData(),
+    initialInvoice?.data ?? duplicateData ?? getInitialData(),
   );
   const [parties, setParties] = useState(initialParties);
   const [invoiceId, setInvoiceId] = useState(initialInvoice?.id);
@@ -111,15 +118,23 @@ export default function GeneratorClient({
     if (isSaving || validationErrors.length > 0) return;
     setIsSaving(true);
     setSaveMessage(null);
-    const result = await saveInvoice(formData, invoiceId, numberReservation);
-    setIsSaving(false);
-    if (result.ok) {
-      setInvoiceId(result.data.id);
-      setInvoiceNumber(result.data.invoiceNumber);
-      setNumberReservation(undefined);
-      setSaveMessage({ variant: 'success', text: 'Rachunek zapisany.' });
-    } else {
-      setSaveMessage({ variant: 'danger', text: result.error });
+    try {
+      const result = await saveInvoice(formData, invoiceId, numberReservation);
+      if (result.ok) {
+        setInvoiceId(result.data.id);
+        setInvoiceNumber(result.data.invoiceNumber);
+        setNumberReservation(undefined);
+        setSaveMessage({ variant: 'success', text: 'Rachunek zapisany.' });
+      } else {
+        setSaveMessage({ variant: 'danger', text: result.error });
+      }
+    } catch {
+      setSaveMessage({
+        variant: 'danger',
+        text: 'Nie udało się zapisać rachunku. Spróbuj ponownie.',
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -161,12 +176,8 @@ export default function GeneratorClient({
       downloadLink.click();
       downloadLink.remove();
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-    } catch (error: unknown) {
-      setPdfError(
-        error instanceof Error
-          ? error.message
-          : 'Nie udało się wygenerować pliku PDF.',
-      );
+    } catch {
+      setPdfError('Nie udało się wygenerować pliku PDF.');
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -190,6 +201,7 @@ export default function GeneratorClient({
             data={formData}
             onChange={setFormData}
             taxParams={selectedTaxParams}
+            bankAccount={bankAccount}
           />
         </Col>
 

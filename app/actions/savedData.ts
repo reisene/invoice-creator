@@ -8,15 +8,15 @@ import {
   isReservationForScope,
   reserveInvoiceNumberForScope,
 } from '@/lib/invoiceNumbering';
+import { parseParty } from '@/lib/parseParty';
+import { checkRateLimit } from '@/lib/rateLimit';
 import { sanitizeInvoiceForm } from '@/lib/sanitizeInvoiceForm';
 import { encryptJson, encryptText } from '@/lib/savedDataCrypto';
 import { getAllTaxParams } from '@/lib/taxParams';
-import {
-  isValidNip,
-  isValidPesel,
-  validateInvoiceForm,
-} from '@/lib/validateInvoiceForm';
+import { validateInvoiceForm } from '@/lib/validateInvoiceForm';
 import type { ActionResult, InvoiceNumberReservation } from '@/types/savedData';
+import { revalidatePath } from 'next/cache';
+import { randomUUID } from 'node:crypto';
 
 const NOT_SIGNED_IN = 'Zaloguj się, aby zapisywać dane.';
 
@@ -28,6 +28,8 @@ export async function reserveInvoiceNumber(
   }
 
   const userId = await getCurrentUserId();
+  const limit = await checkRateLimit('reserveNumber', userId);
+  if (!limit.ok) return { ok: false, error: limit.message };
   const reservation = await reserveInvoiceNumberForScope(
     getInvoiceNumberScope(userId),
     year,
@@ -42,6 +44,8 @@ export async function saveInvoice(
 ): Promise<ActionResult<{ id: string; invoiceNumber: string }>> {
   const userId = await getCurrentUserId();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+  const limit = await checkRateLimit('saveInvoice', userId);
+  if (!limit.ok) return { ok: false, error: limit.message };
 
   const form = sanitizeInvoiceForm(input);
   if (!form) return { ok: false, error: 'Nieprawidłowe dane formularza.' };
@@ -120,6 +124,7 @@ export async function saveInvoice(
     data: {
       ...values,
       userId,
+      uid: randomUUID(),
       invoiceNumber: assigned.number,
     },
     select: { id: true, invoiceNumber: true },
@@ -130,7 +135,9 @@ export async function saveInvoice(
   };
 }
 
-export async function deleteInvoice(invoiceId: string): Promise<ActionResult> {
+export async function deleteInvoice(
+  invoiceId: string,
+): Promise<ActionResult<number>> {
   const userId = await getCurrentUserId();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
   if (
@@ -141,8 +148,12 @@ export async function deleteInvoice(invoiceId: string): Promise<ActionResult> {
     return { ok: false, error: 'Nieprawidłowy identyfikator rachunku.' };
   }
 
-  await prisma.invoice.deleteMany({ where: { id: invoiceId, userId } });
-  return { ok: true, data: undefined };
+  const { count } = await prisma.invoice.deleteMany({
+    where: { id: invoiceId, userId },
+  });
+  if (count === 0) return { ok: false, error: 'Nie znaleziono rachunku.' };
+  revalidatePath('/account/invoices');
+  return { ok: true, data: count };
 }
 
 export async function saveParty(
@@ -150,48 +161,12 @@ export async function saveParty(
 ): Promise<ActionResult<{ id: string }>> {
   const userId = await getCurrentUserId();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+  const limit = await checkRateLimit('saveParty', userId);
+  if (!limit.ok) return { ok: false, error: limit.message };
 
-  if (typeof input !== 'object' || input === null) {
-    return { ok: false, error: 'Nieprawidłowe dane strony.' };
-  }
-
-  const value = input as Record<string, unknown>;
-  if (
-    (value.kind !== 'CLIENT' && value.kind !== 'CONTRACTOR') ||
-    (value.clientType !== undefined &&
-      value.clientType !== 'company' &&
-      value.clientType !== 'private') ||
-    typeof value.name !== 'string' ||
-    value.name.length > 200 ||
-    typeof value.address !== 'string' ||
-    value.address.length > 300 ||
-    (value.nip !== undefined && typeof value.nip !== 'string') ||
-    (value.pesel !== undefined && typeof value.pesel !== 'string')
-  ) {
-    return { ok: false, error: 'Nieprawidłowe dane strony.' };
-  }
-
-  const name = value.name.trim();
-  const address = value.address.trim();
-  const nip = (value.nip ?? '').toString().trim() || null;
-  const pesel = (value.pesel ?? '').toString().trim() || null;
-  const kind = value.kind;
-  const clientType = kind === 'CLIENT' ? (value.clientType ?? 'company') : null;
-
-  if (nip && nip.length > 20) {
-    return { ok: false, error: 'NIP jest zbyt długi.' };
-  }
-  if (pesel && pesel.length > 20) {
-    return { ok: false, error: 'PESEL jest zbyt długi.' };
-  }
-
-  if (!name || !address) return { ok: false, error: 'Podaj nazwę i adres.' };
-  if (nip && !isValidNip(nip)) {
-    return { ok: false, error: 'NIP jest nieprawidłowy.' };
-  }
-  if (pesel && !isValidPesel(pesel)) {
-    return { ok: false, error: 'PESEL jest nieprawidłowy.' };
-  }
+  const parsed = parseParty(input);
+  if (!parsed.ok) return parsed;
+  const { kind, clientType, name, address, nip, pesel } = parsed.party;
 
   const existing = await prisma.savedParty.count({ where: { userId } });
   if (existing >= 100) {
@@ -213,7 +188,10 @@ export async function saveParty(
   return { ok: true, data: { id: created.id } };
 }
 
-export async function deleteParty(partyId: string): Promise<ActionResult> {
+export async function updateParty(
+  partyId: string,
+  input: unknown,
+): Promise<ActionResult> {
   const userId = await getCurrentUserId();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
   if (
@@ -224,6 +202,61 @@ export async function deleteParty(partyId: string): Promise<ActionResult> {
     return { ok: false, error: 'Nieprawidłowy identyfikator danych strony.' };
   }
 
-  await prisma.savedParty.deleteMany({ where: { id: partyId, userId } });
+  const parsed = parseParty(input);
+  if (!parsed.ok) return parsed;
+  const { kind, clientType, name, address, nip, pesel } = parsed.party;
+
+  const result = await prisma.savedParty.updateMany({
+    where: { id: partyId, userId },
+    data: {
+      kind,
+      label: encryptText(name),
+      clientType,
+      name: encryptText(name),
+      address: encryptText(address),
+      nip: nip === null ? null : encryptText(nip),
+      pesel: pesel === null ? null : encryptText(pesel),
+    },
+  });
+  if (result.count === 0) return { ok: false, error: 'Nie znaleziono wpisu.' };
   return { ok: true, data: undefined };
+}
+
+export async function deleteParty(
+  partyId: string,
+): Promise<ActionResult<number>> {
+  const userId = await getCurrentUserId();
+  if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+  if (
+    typeof partyId !== 'string' ||
+    partyId.length === 0 ||
+    partyId.length > 100
+  ) {
+    return { ok: false, error: 'Nieprawidłowy identyfikator danych strony.' };
+  }
+
+  const { count } = await prisma.savedParty.deleteMany({
+    where: { id: partyId, userId },
+  });
+  if (count === 0) return { ok: false, error: 'Nie znaleziono wpisu.' };
+  revalidatePath('/account/invoices');
+  return { ok: true, data: count };
+}
+
+export async function deleteAllInvoices(): Promise<ActionResult<number>> {
+  const userId = await getCurrentUserId();
+  if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+
+  const { count } = await prisma.invoice.deleteMany({ where: { userId } });
+  revalidatePath('/account/invoices');
+  return { ok: true, data: count };
+}
+
+export async function deleteAllParties(): Promise<ActionResult<number>> {
+  const userId = await getCurrentUserId();
+  if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+
+  const { count } = await prisma.savedParty.deleteMany({ where: { userId } });
+  revalidatePath('/account/invoices');
+  return { ok: true, data: count };
 }

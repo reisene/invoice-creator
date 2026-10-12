@@ -57,7 +57,7 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Container className='py-5' style={{ maxWidth: 440 }}>
+    <Container className='py-5 page-narrow'>
       <Suspense>
         <ResetPasswordForm />
       </Suspense>

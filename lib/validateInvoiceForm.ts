@@ -31,6 +31,20 @@ export function isValidNip(value: string): boolean {
   return control !== 10 && control === Number(nip[9]);
 }
 
+export function isValidPolishBankAccount(value: string): boolean {
+  const accountNumber = value
+    .replace(/[\s-]/g, '')
+    .toUpperCase()
+    .replace(/^PL/, '');
+  if (!/^\d{26}$/.test(accountNumber)) return false;
+
+  let remainder = 0;
+  for (const digit of accountNumber) {
+    remainder = (remainder * 10 + Number(digit)) % 97;
+  }
+  return remainder === 1;
+}
+
 export function birthDateFromPesel(value: string): string | null {
   const pesel = digitsOnly(value);
   if (!isValidPesel(pesel)) return null;
@@ -100,6 +114,34 @@ export function validateInvoiceForm(
     errors.push('NIP zleceniobiorcy jest nieprawidłowy.');
   }
 
+  if (!data.paymentMethod) {
+    errors.push(
+      'Wybierz formę wypłaty wynagrodzenia (gotówka lub przelew) — starsze rachunki jej nie zawierają.',
+    );
+  } else if (data.paymentMethod === 'CASH' && data.transferTarget) {
+    errors.push('Usuń sposób przelewu dla wypłaty gotówką.');
+  } else if (
+    data.paymentMethod === 'TRANSFER' &&
+    data.transferTarget !== 'SAVED_ACCOUNT' &&
+    data.transferTarget !== 'DECLARATION'
+  ) {
+    errors.push('Wybierz rachunek do przelewu.');
+  } else if (
+    data.paymentMethod === 'TRANSFER' &&
+    data.transferTarget === 'SAVED_ACCOUNT' &&
+    (!data.bankAccountHolder?.trim() ||
+      !data.bankName?.trim() ||
+      !data.bankAccountNumber?.trim())
+  ) {
+    errors.push('Uzupełnij dane rachunku bankowego do przelewu.');
+  } else if (
+    data.paymentMethod === 'TRANSFER' &&
+    data.transferTarget === 'SAVED_ACCOUNT' &&
+    !isValidPolishBankAccount(data.bankAccountNumber ?? '')
+  ) {
+    errors.push('Numer rachunku bankowego jest nieprawidłowy.');
+  }
+
   const datesValid = [
     data.contractDate,
     data.periodStart,
@@ -130,13 +172,25 @@ export function validateInvoiceForm(
     errors.push('Dochód od początku roku nie może być ujemny.');
   }
 
+  if (data.contractorStatus === 'student_under_26') {
+    const birthDate = birthDateFromPesel(data.contractorPesel);
+    if (birthDate && isValidDate(data.periodEnd)) {
+      const turns26 = `${Number(birthDate.slice(0, 4)) + 26}${birthDate.slice(4)}`;
+      if (data.periodEnd > turns26) {
+        errors.push(
+          'Status studenta do 26 lat (zwolnienie ze składek ZUS) przysługuje do dnia 26. urodzin włącznie.',
+        );
+      }
+    }
+  }
+
   if (data.youngRelief) {
     const birthDate = birthDateFromPesel(data.contractorPesel);
     if (birthDate && isValidDate(data.periodEnd)) {
       const turns26 = `${Number(birthDate.slice(0, 4)) + 26}${birthDate.slice(4)}`;
-      if (data.periodEnd >= turns26) {
+      if (data.periodEnd > turns26) {
         errors.push(
-          'Ulga dla młodych przysługuje do ukończenia 26 lat – zleceniobiorca skończy/skończył 26 lat w okresie rozliczeniowym lub wcześniej.',
+          'Ulga dla młodych przysługuje do dnia 26. urodzin włącznie – zleceniobiorca ukończył 26 lat przed końcem okresu rozliczeniowego.',
         );
       }
     }

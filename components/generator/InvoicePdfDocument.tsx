@@ -299,11 +299,11 @@ export default function createInvoicePdfDocument(
           {data.taxReduction ? (
             <>
               <PdfRow
-                label='Zaliczka na PIT przed ulgą'
+                label='Zaliczka na PIT przed zmniejszeniem'
                 value={formatCurrency(calculations.taxBeforeReduction)}
               />
               <PdfRow
-                label='Ulga podatkowa'
+                label='Kwota zmniejszająca podatek'
                 value={formatCurrency(calculations.taxReductionAmountApplied)}
               />
             </>
@@ -318,6 +318,37 @@ export default function createInvoicePdfDocument(
             bold
           />
           <PdfRow label='Słownie' value={numberToWords(calculations.net)} />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Forma wypłaty</Text>
+          {data.payment.method === 'CASH' ? (
+            <Text>Gotówka</Text>
+          ) : data.payment.method === 'TRANSFER' &&
+            data.payment.transferTarget === 'DECLARATION' ? (
+            <Text>
+              Przelew na rachunek bankowy zgodnie ze złożonym oświadczeniem.
+            </Text>
+          ) : data.payment.method === 'TRANSFER' ? (
+            <>
+              <Text style={styles.line}>Przelew na rachunek bankowy</Text>
+              {data.payment.accountHolder ? (
+                <Text style={styles.line}>
+                  Właściciel: {data.payment.accountHolder}
+                </Text>
+              ) : null}
+              {data.payment.bankName ? (
+                <Text style={styles.line}>Bank: {data.payment.bankName}</Text>
+              ) : null}
+              {data.payment.accountNumber ? (
+                <Text style={styles.line}>
+                  Numer rachunku: {data.payment.accountNumber}
+                </Text>
+              ) : null}
+            </>
+          ) : (
+            <Text>Nie wybrano formy wypłaty.</Text>
+          )}
         </View>
 
         <View style={styles.section}>

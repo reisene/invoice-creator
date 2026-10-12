@@ -28,7 +28,7 @@ export default function InvoicePreview({
   const { client, contractor, contract, remuneration, calculations } = data;
 
   return (
-    <div className='border p-4 shadow-sm' style={{ minHeight: '800px' }}>
+    <div className='border p-4 shadow-sm invoice-preview'>
       {/* Nagłówek */}
       <h2 className='text-center fw-bold mb-4'>RACHUNEK do umowy zlecenia</h2>
       <p className='text-center mb-4'>
@@ -86,6 +86,35 @@ export default function InvoicePreview({
               {remuneration.hoursWorked} h
             </p>
           )}
+      </div>
+
+      <div className='mb-4'>
+        <h4 className='fw-bold mb-2'>Forma wypłaty</h4>
+        {data.payment.method === 'CASH' ? (
+          <p className='mb-0'>Gotówka</p>
+        ) : data.payment.method === 'TRANSFER' &&
+          data.payment.transferTarget === 'DECLARATION' ? (
+          <p className='mb-0'>
+            Przelew na rachunek bankowy zgodnie ze złożonym oświadczeniem.
+          </p>
+        ) : data.payment.method === 'TRANSFER' ? (
+          <>
+            <p className='mb-0'>Przelew na rachunek bankowy</p>
+            {data.payment.accountHolder && (
+              <p className='mb-0'>Właściciel: {data.payment.accountHolder}</p>
+            )}
+            {data.payment.bankName && (
+              <p className='mb-0'>Bank: {data.payment.bankName}</p>
+            )}
+            {data.payment.accountNumber && (
+              <p className='mb-0'>
+                Numer rachunku: {data.payment.accountNumber}
+              </p>
+            )}
+          </>
+        ) : (
+          <p className='mb-0 text-danger'>Wybierz formę wypłaty.</p>
+        )}
       </div>
 
       {/* Rozliczenie */}
@@ -172,14 +201,14 @@ export default function InvoicePreview({
             {data.taxReduction && (
               <>
                 <tr>
-                  <td>Zaliczka na PIT przed ulgą</td>
+                  <td>Zaliczka na PIT przed zmniejszeniem</td>
                   <td className='text-end'>
                     {formatCurrency(calculations.taxBeforeReduction)}
                   </td>
                 </tr>
 
                 <tr>
-                  <td>Ulga podatkowa</td>
+                  <td>Kwota zmniejszająca podatek</td>
                   <td className='text-end'>
                     {formatCurrency(calculations.taxReductionAmountApplied)}
                   </td>

@@ -23,6 +23,14 @@ export interface InvoiceData {
     type: 'monthly' | 'hourly';
   };
 
+  payment: {
+    method: 'CASH' | 'TRANSFER' | '';
+    transferTarget: 'SAVED_ACCOUNT' | 'DECLARATION' | '';
+    accountHolder?: string;
+    bankName?: string;
+    accountNumber?: string;
+  };
+
   // Wynagrodzenie
   remuneration: {
     gross: number;
@@ -36,7 +44,7 @@ export interface InvoiceData {
   costType: '20' | '50';
   youngRelief: boolean;
   taxReduction: boolean;
-  taxReductionAmount: 0 | 150 | 300;
+  taxReductionAmount: 0 | 100 | 150 | 300;
 
   // Wyliczenia
   calculations: {

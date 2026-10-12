@@ -16,10 +16,8 @@ export function calculateInvoice(
       : (data.hourlyRate ?? 0) * (data.hoursWorked ?? 0),
   );
 
-  // 2. Składki społeczne
-  const hasSocialContributions =
-    data.contractorStatus === 'standard' ||
-    data.contractorStatus === 'with_employment';
+  // 2. Składki społeczne (obowiązkowe tylko dla statusu standard; zwolnieni: uczeń/student do 26 lat oraz zbieg z etatem z min. wynagrodzeniem)
+  const hasSocialContributions = data.contractorStatus === 'standard';
 
   const pensionContribution = hasSocialContributions
     ? round2(gross * P.pensionRate)
@@ -38,11 +36,31 @@ export function calculateInvoice(
     pensionContribution + rentContribution + sicknessContribution,
   );
 
-  // 3. Podstawa składki zdrowotnej
-  const healthContributionBase = round2(gross - totalSocialContributions);
+  // 3. Podstawa składki zdrowotnej (uczniowie i studenci do 26 lat zwolnieni na podstawie art. 66 ust. 1 pkt 1 lit. e ustawy o świadczeniach opieki zdrowotnej)
+  const hasHealthContribution = data.contractorStatus !== 'student_under_26';
+  const healthContributionBase = hasHealthContribution
+    ? round2(gross - totalSocialContributions)
+    : 0;
 
-  // 4. Składka zdrowotna (9%)
-  const healthContribution = round2(healthContributionBase * P.healthRate);
+  // 4. Składka zdrowotna (9% z ograniczeniem do zaliczki na podatek wg zasad z 31.12.2021 r., art. 83 ust. 1 i 2b ustawy o świadczeniach opieki zdrowotnej)
+  let healthContribution = 0;
+  if (hasHealthContribution && healthContributionBase > 0) {
+    const rawHealthContribution = round2(healthContributionBase * P.healthRate);
+
+    // Hipotetyczna zaliczka na podatek wg stanu na 31.12.2021 r. (stawka 17%, z uwzględnieniem przychodów z ulgi dla młodych)
+    const hypotheticalCostRate =
+      data.costType === '50' ? P.costRateArtistic : P.costRateStandard;
+    const hypotheticalCosts = round2(
+      healthContributionBase * hypotheticalCostRate,
+    );
+    const hypotheticalTaxBase = Math.max(
+      0,
+      Math.round(healthContributionBase - hypotheticalCosts),
+    );
+    const hypotheticalTax2021 = round2(hypotheticalTaxBase * 0.17);
+
+    healthContribution = Math.min(rawHealthContribution, hypotheticalTax2021);
+  }
 
   // 5. Apply the annual young-relief exemption to qualifying gross revenue.
   const remainingYoungReliefLimit = Math.max(
@@ -60,18 +78,22 @@ export function calculateInvoice(
     round2(taxableGross - taxableSocialContributions),
   );
 
-  // 6. Koszty uzyskania przychodu
+  // 6. Koszty uzyskania przychodu (20% lub 50% z limitem rocznym 120 000 zł, art. 22 ust. 9 i 9a ustawy o PIT)
   const costRate =
     data.costType === '50' ? P.costRateArtistic : P.costRateStandard;
-  const taxDeductibleCosts = round2(taxableIncomeBeforeCosts * costRate);
+  const rawTaxDeductibleCosts = round2(taxableIncomeBeforeCosts * costRate);
+  const taxDeductibleCosts =
+    data.costType === '50'
+      ? Math.min(rawTaxDeductibleCosts, P.taxThreshold)
+      : rawTaxDeductibleCosts;
 
-  // 7. Podstawa opodatkowania
+  // 7. Podstawa opodatkowania (zaokrąglona do pełnych zł, art. 63 § 1 Ordynacji podatkowej)
   const taxableBaseUnrounded = round2(
     taxableIncomeBeforeCosts - taxDeductibleCosts,
   );
-  const taxableBase = Math.round(taxableBaseUnrounded);
+  const taxableBase = Math.max(0, Math.round(taxableBaseUnrounded));
 
-  // 8. PIT using the marginal rate for the part crossing the annual threshold.
+  // 8. PIT wg skali podatkowej
   const taxableIncomeAfterInvoice = data.yearToDateTaxableIncome + taxableBase;
   const incomeAtFirstRate = Math.max(
     0,
@@ -79,17 +101,20 @@ export function calculateInvoice(
       Math.min(data.yearToDateTaxableIncome, P.taxThreshold),
   );
   const incomeAtSecondRate = Math.max(0, taxableBase - incomeAtFirstRate);
-  const taxBeforeReduction = Math.round(
+  const taxBeforeReduction = round2(
     incomeAtFirstRate * P.taxRate1 + incomeAtSecondRate * P.taxRate2,
   );
 
-  // 9. Ulga podatkowa (300 zł miesięcznie, proporcjonalnie)
+  // 9. Kwota zmniejszająca podatek (PIT-2, maksymalnie miesięczny limit z parametrów)
   const taxReductionAmountApplied = data.taxReduction
     ? Math.min(data.taxReductionAmount, P.monthlyTaxReduction)
     : 0;
 
-  // 10. Zaliczka na PIT po kwocie zmniejszającej podatek.
-  const tax = Math.max(0, taxBeforeReduction - taxReductionAmountApplied);
+  // 10. Zaliczka na PIT po kwocie zmniejszającej podatek, zaokrąglona do pełnych zł (art. 63 § 1 Ordynacji podatkowej)
+  const tax =
+    taxableBase <= 0
+      ? 0
+      : Math.max(0, Math.round(taxBeforeReduction - taxReductionAmountApplied));
 
   // 11. Netto
   const net = round2(
@@ -116,6 +141,13 @@ export function calculateInvoice(
       periodStart: data.periodStart,
       periodEnd: data.periodEnd,
       type: data.contractType,
+    },
+    payment: {
+      method: data.paymentMethod,
+      transferTarget: data.transferTarget,
+      accountHolder: data.bankAccountHolder,
+      bankName: data.bankName,
+      accountNumber: data.bankAccountNumber,
     },
     remuneration: {
       gross,

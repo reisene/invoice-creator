@@ -36,7 +36,7 @@
     ]
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "doppler run -- next dev",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
@@ -89,7 +89,7 @@
     "release-it": "^21.1.1",
     "tsx": "^4.23.15",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "typescript-eslint": "^8.71.1"
+    "typescript-eslint": "^8.71.2"
   },
   "overrides": {
     "path-to-regexp": "6.3.0"

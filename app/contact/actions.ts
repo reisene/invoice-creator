@@ -2,6 +2,10 @@
 
 import { getCurrentUserId } from '@/lib/currentUser';
 import { prisma } from '@/lib/db';
+import {
+  sendAdminContactNotification,
+  sendUserContactConfirmation,
+} from '@/lib/email';
 import { checkRateLimit } from '@/lib/rateLimit';
 
 export type ContactFormState = {
@@ -90,6 +94,27 @@ export async function submitContactForm(
         message,
       },
     });
+
+    // Wysyłka maili przez Resend (powiadomienie do admina + potwierdzenie dla użytkownika)
+    // Promise.allSettled gwarantuje, że ewentualny błąd wysyłki nie cofnie zapisu w bazie
+    await Promise.allSettled([
+      sendAdminContactNotification({
+        name,
+        email,
+        subject,
+        message,
+        category,
+        userId,
+      }),
+      sendUserContactConfirmation({
+        name,
+        email,
+        subject,
+        message,
+        category,
+        userId,
+      }),
+    ]);
 
     return {
       ok: true,

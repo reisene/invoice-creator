@@ -74,6 +74,7 @@
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
     "remark-mdx-frontmatter": "^6.0.0",
+    "resend": "^6.32.1",
     "to-words": "^7.1.0"
   },
   "devDependencies": {

@@ -140,7 +140,7 @@ export default function HelpIndexClient({ articles }: HelpIndexClientProps) {
 
       {/* Lista artykułów */}
       {filteredArticles.length === 0 ? (
-        <Card className='text-center py-5 shadow-sm border my-4 rounded-4'>
+        <Card className='text-center py-5 shadow-sm border border-secondary-subtle bg-body-tertiary my-4 rounded-4'>
           <Card.Body>
             <p className='fs-5 text-muted mb-3'>
               Nie znaleziono artykułów pasujących do wpisanego hasła.
@@ -163,7 +163,7 @@ export default function HelpIndexClient({ articles }: HelpIndexClientProps) {
             const Icon = categoryIcons[article.category];
             return (
               <Col md={6} key={article.slugPath}>
-                <Card className='h-100 shadow-sm border rounded-4 hover-shadow transition'>
+                <Card className='h-100 shadow-sm border border-secondary-subtle bg-body-tertiary rounded-4 hover-elevate'>
                   <Card.Body className='d-flex flex-column p-4'>
                     <div className='d-flex align-items-center justify-content-between mb-3'>
                       <Badge
@@ -210,7 +210,7 @@ export default function HelpIndexClient({ articles }: HelpIndexClientProps) {
       )}
 
       {/* Dolny baner pomocniczy */}
-      <Card className='border shadow-sm mt-5 p-4 text-center rounded-4'>
+      <Card className='border border-secondary-subtle bg-body-tertiary shadow-sm mt-5 p-4 text-center rounded-4'>
         <Card.Body>
           <h4 className='fw-bold mb-2 text-body'>
             Potrzebujesz wystawić rachunek?

@@ -108,7 +108,7 @@ export default async function HelpSlugPage({ params }: HelpSlugPageProps) {
           </header>
 
           {/* Treść MDX */}
-          <div className='card shadow-sm border rounded-4 mb-5'>
+          <div className='card shadow-sm border border-secondary-subtle rounded-4 mb-5 bg-body'>
             <article className='card-body help-article-container p-4 p-md-5'>
               <MDXContent />
             </article>
@@ -129,7 +129,7 @@ export default async function HelpSlugPage({ params }: HelpSlugPageProps) {
 
           {/* Inne artykuły w tej kategorii */}
           {categoryArticles.length > 0 && (
-            <div className='card border shadow-sm p-4 rounded-4 mb-5'>
+            <div className='card border border-secondary-subtle bg-body-tertiary shadow-sm p-4 rounded-4 mb-5'>
               <h5 className='fw-bold mb-3 d-flex align-items-center gap-2 text-body'>
                 <BsBook className='text-primary' /> Pozostałe artykuły w dziale:{' '}
                 <span className='text-primary'>{article.categoryLabel}</span>
@@ -139,7 +139,7 @@ export default async function HelpSlugPage({ params }: HelpSlugPageProps) {
                   <Link
                     key={item.slugPath}
                     href={`/help/${item.slugPath}` as never}
-                    className='list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3 border mb-2 rounded'
+                    className='list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3 border border-secondary-subtle bg-body mb-2 rounded-3 hover-elevate'
                   >
                     <div>
                       <div className='fw-semibold text-body'>{item.title}</div>
@@ -158,7 +158,7 @@ export default async function HelpSlugPage({ params }: HelpSlugPageProps) {
           <div className='row g-3 mb-5'>
             <div className='col-sm-6'>
               {prev ? (
-                <div className='card h-100 border shadow-sm p-3 position-relative'>
+                <div className='card h-100 border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 p-3 position-relative hover-elevate'>
                   <span className='text-muted small mb-1'>
                     <BsArrowLeft className='me-1' /> Poprzedni artykuł
                   </span>
@@ -173,7 +173,7 @@ export default async function HelpSlugPage({ params }: HelpSlugPageProps) {
             </div>
             <div className='col-sm-6'>
               {next ? (
-                <div className='card h-100 border shadow-sm p-3 text-sm-end position-relative'>
+                <div className='card h-100 border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 p-3 text-sm-end position-relative hover-elevate'>
                   <span className='text-muted small mb-1'>
                     Następny artykuł <BsArrowRight className='ms-1' />
                   </span>
@@ -189,7 +189,7 @@ export default async function HelpSlugPage({ params }: HelpSlugPageProps) {
           </div>
 
           {/* CTA Box */}
-          <div className='card border shadow-sm p-4 text-center rounded-4'>
+          <div className='card border border-secondary-subtle bg-body-tertiary shadow-sm p-4 text-center rounded-4'>
             <div className='card-body'>
               <h5 className='fw-bold mb-2 text-body'>
                 Przetestuj swoje wyliczenia

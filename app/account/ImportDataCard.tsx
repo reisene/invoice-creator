@@ -79,7 +79,10 @@ export function ImportDataCard() {
     preview.bankAccount !== 'add';
 
   return (
-    <Card body className='shadow-sm mb-4'>
+    <Card
+      body
+      className='border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 mb-4'
+    >
       <h2 className='h5 mb-2'>Import danych</h2>
       <p className='text-body-secondary small'>
         Wczytaj plik JSON wyeksportowany wcześniej z tej aplikacji. Najpierw

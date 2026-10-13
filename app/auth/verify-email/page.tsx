@@ -19,7 +19,10 @@ function VerifyEmailForm() {
 
   return (
     <Container className='py-5 page-narrow'>
-      <Card body className='shadow-sm'>
+      <Card
+        body
+        className='border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 p-3 p-sm-4'
+      >
         <h1 className='h4 text-center mb-3'>Potwierdź adres e-mail</h1>
         <p className='text-body-secondary small'>
           Wysłaliśmy kod weryfikacyjny na Twój adres e-mail. Wpisz go poniżej.

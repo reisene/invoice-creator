@@ -64,19 +64,33 @@ export default function Tools() {
           const Icon: IconType = tool.icon;
           return (
             <Col md={4} key={tool.href}>
-              <Card className={'h-100 border-0 shadow-sm'}>
-                <CardBody className={'text-center'}>
-                  <Icon className={'mb-3 fs-3 text-primary'} />
-                  <CardTitle as={'h3'} className={'fw-bold mb-2'}>
+              <Card
+                className={
+                  'h-100 border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 hover-elevate'
+                }
+              >
+                <CardBody className={'text-center p-4 d-flex flex-column'}>
+                  <div
+                    className={
+                      'mx-auto mb-3 d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary'
+                    }
+                    style={{ width: 56, height: 56 }}
+                  >
+                    <Icon className={'fs-4'} />
+                  </div>
+                  <CardTitle
+                    as={'h3'}
+                    className={'h5 fw-bold mb-2 text-body-emphasis'}
+                  >
                     {tool.title}
                   </CardTitle>
-                  <CardText className={'text-muted flex-grow-1'}>
+                  <CardText className={'text-body-secondary small flex-grow-1'}>
                     {tool.text}
                   </CardText>
                   <Button
                     href={tool.href}
                     variant={'outline-primary'}
-                    className={'mt-3'}
+                    className={'mt-3 rounded-pill'}
                   >
                     {tool.label}
                   </Button>

@@ -47,56 +47,58 @@ export default async function AccountPage() {
           <a href='/generator'>Utwórz pierwszy</a>.
         </p>
       ) : (
-        <Table responsive hover className='mb-5 align-middle'>
-          <thead>
-            <tr>
-              <th>Rachunek</th>
-              <th>Numer rachunku</th>
-              <th>Okres od</th>
-              <th className='text-end'>Netto</th>
-              <th>Zmieniono</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {invoices.map((invoice) => (
-              <tr key={invoice.id}>
-                <td>{invoice.title}</td>
-                <td>{invoice.invoiceNumber}</td>
-                <td>{invoice.periodStart}</td>
-                <td className='text-end'>
-                  {Number(invoice.net).toFixed(2).replace('.', ',')} zł
-                </td>
-                <td>{invoice.updatedAt.toLocaleDateString('pl-PL')}</td>
-                <td className='text-end'>
-                  <Button
-                    size='sm'
-                    variant='outline-primary'
-                    href={`/generator?invoice=${invoice.id}`}
-                    className='me-2'
-                  >
-                    Otwórz
-                  </Button>
-                  <Button
-                    size='sm'
-                    variant='outline-secondary'
-                    href={`/generator?duplicate=${invoice.id}`}
-                    className='me-2'
-                  >
-                    Duplikuj
-                  </Button>
-                  <DeleteSavedDataButton
-                    target='invoice'
-                    id={invoice.id}
-                    label='Usuń'
-                    confirmMessage='Usunąć ten rachunek? Nie można tego cofnąć.'
-                    size='sm'
-                  />
-                </td>
+        <div className='card border border-secondary-subtle bg-body-tertiary rounded-4 shadow-sm overflow-hidden mb-5'>
+          <Table responsive hover className='mb-0 align-middle'>
+            <thead>
+              <tr>
+                <th className='ps-3'>Rachunek</th>
+                <th>Numer rachunku</th>
+                <th>Okres od</th>
+                <th className='text-end'>Netto</th>
+                <th>Zmieniono</th>
+                <th className='pe-3' />
               </tr>
-            ))}
-          </tbody>
-        </Table>
+            </thead>
+            <tbody>
+              {invoices.map((invoice) => (
+                <tr key={invoice.id}>
+                  <td className='ps-3 fw-medium'>{invoice.title}</td>
+                  <td>{invoice.invoiceNumber}</td>
+                  <td>{invoice.periodStart}</td>
+                  <td className='text-end fw-semibold text-primary'>
+                    {Number(invoice.net).toFixed(2).replace('.', ',')} zł
+                  </td>
+                  <td>{invoice.updatedAt.toLocaleDateString('pl-PL')}</td>
+                  <td className='text-end pe-3'>
+                    <Button
+                      size='sm'
+                      variant='outline-primary'
+                      href={`/generator?invoice=${invoice.id}`}
+                      className='me-2'
+                    >
+                      Otwórz
+                    </Button>
+                    <Button
+                      size='sm'
+                      variant='outline-secondary'
+                      href={`/generator?duplicate=${invoice.id}`}
+                      className='me-2'
+                    >
+                      Duplikuj
+                    </Button>
+                    <DeleteSavedDataButton
+                      target='invoice'
+                      id={invoice.id}
+                      label='Usuń'
+                      confirmMessage='Usunąć ten rachunek? Nie można tego cofnąć.'
+                      size='sm'
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </div>
       )}
 
       <div className='d-flex justify-content-between align-items-center mb-2'>
@@ -118,37 +120,43 @@ export default async function AccountPage() {
           Brak zapisanych danych. Dodaj je tutaj lub zapisz w generatorze.
         </p>
       ) : (
-        <Table responsive hover className='align-middle'>
-          <thead>
-            <tr>
-              <th>Rola</th>
-              <th>Nazwa</th>
-              <th>Adres</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {parties.map((party) => (
-              <tr key={party.id}>
-                <td>
-                  {party.kind === 'CLIENT' ? 'Zleceniodawca' : 'Zleceniobiorca'}
-                </td>
-                <td>{party.name}</td>
-                <td>{party.address}</td>
-                <td className='text-end'>
-                  <PartyEditor party={party} />
-                  <DeleteSavedDataButton
-                    target='party'
-                    id={party.id}
-                    label='Usuń'
-                    confirmMessage='Usunąć te zapisane dane strony? Nie można tego cofnąć.'
-                    size='sm'
-                  />
-                </td>
+        <div className='card border border-secondary-subtle bg-body-tertiary rounded-4 shadow-sm overflow-hidden'>
+          <Table responsive hover className='mb-0 align-middle'>
+            <thead>
+              <tr>
+                <th className='ps-3'>Rola</th>
+                <th>Nazwa</th>
+                <th>Adres</th>
+                <th className='pe-3' />
               </tr>
-            ))}
-          </tbody>
-        </Table>
+            </thead>
+            <tbody>
+              {parties.map((party) => (
+                <tr key={party.id}>
+                  <td className='ps-3'>
+                    <span className='badge bg-secondary-subtle text-secondary-emphasis border'>
+                      {party.kind === 'CLIENT'
+                        ? 'Zleceniodawca'
+                        : 'Zleceniobiorca'}
+                    </span>
+                  </td>
+                  <td className='fw-medium'>{party.name}</td>
+                  <td className='text-muted small'>{party.address}</td>
+                  <td className='text-end pe-3'>
+                    <PartyEditor party={party} />
+                    <DeleteSavedDataButton
+                      target='party'
+                      id={party.id}
+                      label='Usuń'
+                      confirmMessage='Usunąć te zapisane dane strony? Nie można tego cofnąć.'
+                      size='sm'
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </div>
       )}
     </Container>
   );

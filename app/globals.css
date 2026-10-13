@@ -17,6 +17,46 @@
 
 .invoice-preview {
   min-height: 800px;
+  background-color: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+}
+
+/* Interactive card hover */
+.hover-elevate {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.hover-elevate:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.3) !important;
+  border-color: var(--bs-primary-border-subtle) !important;
+}
+
+/* Sticky column wrapper for generator / preview */
+@media (min-width: 992px) {
+  .preview-sticky-wrapper {
+    position: sticky;
+    top: 5.25rem;
+    max-height: calc(100vh - 6.5rem);
+    overflow-y: auto;
+    padding-right: 0.25rem;
+  }
+
+  .preview-sticky-wrapper::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .preview-sticky-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .preview-sticky-wrapper::-webkit-scrollbar-thumb {
+    background-color: var(--bs-border-color);
+    border-radius: 3px;
+  }
 }
 
 /* ==========================================================================

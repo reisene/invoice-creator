@@ -71,32 +71,38 @@ export default function AppNavbar({ authButtons }: { authButtons: ReactNode }) {
         <Navbar.Brand
           as={Link}
           href={'/'}
-          className={'d-flex align-items-center'}
+          className={'d-flex align-items-center fw-bold'}
         >
           Invoice Creator
         </Navbar.Brand>
-        <Nav variant={'underline'} className={'ms-auto'}>
-          {navLinks.map((link) => {
-            const isActive: boolean = isLinkActive(link.href);
-            const Icon: IconType = link.icon;
+        <Navbar.Toggle aria-controls='main-navbar-nav' />
+        <Navbar.Collapse id='main-navbar-nav'>
+          <Nav
+            variant={'underline'}
+            className={'ms-auto align-items-lg-center'}
+          >
+            {navLinks.map((link) => {
+              const isActive: boolean = isLinkActive(link.href);
+              const Icon: IconType = link.icon;
 
-            return (
-              <Nav.Item key={link.href}>
-                <Nav.Link
-                  as={Link}
-                  href={link.href}
-                  active={isActive}
-                  aria-current={isActive ? 'page' : undefined}
-                >
-                  {isActive && <Icon aria-hidden={true} className={'me-2'} />}
-
-                  {link.label}
-                </Nav.Link>
-              </Nav.Item>
-            );
-          })}
-        </Nav>
-        {authButtons}
+              return (
+                <Nav.Item key={link.href}>
+                  <Nav.Link
+                    as={Link}
+                    href={link.href}
+                    active={isActive}
+                    aria-current={isActive ? 'page' : undefined}
+                    className='d-inline-flex align-items-center'
+                  >
+                    <Icon aria-hidden={true} className={'me-2'} />
+                    {link.label}
+                  </Nav.Link>
+                </Nav.Item>
+              );
+            })}
+          </Nav>
+          <div className='ms-lg-3 mt-3 mt-lg-0'>{authButtons}</div>
+        </Navbar.Collapse>
       </Container>
     </Navbar>
   );

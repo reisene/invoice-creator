@@ -225,7 +225,7 @@ export default function GeneratorClient({
 
         <Col lg={6}>
           {invoiceData && selectedTaxParams ? (
-            <>
+            <div className='preview-sticky-wrapper'>
               <InvoicePreview
                 data={invoiceData}
                 taxParams={selectedTaxParams}
@@ -279,7 +279,7 @@ export default function GeneratorClient({
                   Nie udało się wygenerować PDF: {pdfError}
                 </Alert>
               ) : null}
-            </>
+            </div>
           ) : (
             <Alert variant='danger'>
               Brak parametrów podatkowych dla roku {taxYear}. Nie można obliczyć

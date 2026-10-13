@@ -13,7 +13,10 @@ export default function ForgotPasswordForm() {
 
   return (
     <Container className='py-5 page-narrow'>
-      <Card body className='shadow-sm'>
+      <Card
+        body
+        className='border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 p-3 p-sm-4'
+      >
         <h1 className='h4 text-center mb-4'>Resetowanie hasła</h1>
 
         {state?.success ? (

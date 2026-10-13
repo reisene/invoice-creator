@@ -29,13 +29,17 @@ export default function InvoicePreview({
   const { client, contractor, contract, remuneration, calculations } = data;
 
   return (
-    <div className='border p-4 shadow-sm invoice-preview d-flex flex-column justify-content-between'>
+    <div className='border border-secondary-subtle bg-body-tertiary p-4 p-md-5 shadow-sm rounded-4 invoice-preview d-flex flex-column justify-content-between'>
       <div>
         {/* Nagłówek */}
-        <h2 className='text-center fw-bold mb-4'>RACHUNEK do umowy zlecenia</h2>
-        <p className='text-center mb-4'>
+        <h2 className='text-center fw-bold mb-2 text-body-emphasis'>
+          RACHUNEK do umowy zlecenia
+        </h2>
+        <p className='text-center text-muted mb-4'>
           Numer rachunku:{' '}
-          {invoiceNumber ?? 'zostanie nadany przy pobieraniu PDF'}
+          <span className='fw-semibold text-body'>
+            {invoiceNumber ?? 'zostanie nadany przy pobieraniu PDF'}
+          </span>
         </p>
 
         {/* Dane stron */}

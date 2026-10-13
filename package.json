@@ -4,7 +4,7 @@
   "type": "module",
   "author": {
     "name": "DraugSköll",
-    "email": "kprinny@gmail.com"
+    "email": "contact@draugskoll.dev"
   },
   "funding": [
     {
@@ -20,7 +20,7 @@
     "type": "git",
     "url": "git+https://github.com/reisene/invoice-creator.git"
   },
-  "homepage": "https://github.com/reisene/invoice-creator#readme",
+  "homepage": "https://invoice-creator.draugskoll.dev",
   "bugs": {
     "url": "https://github.com/reisene/invoice-creator/issues",
     "email": "reisene@youtrack.cloud"

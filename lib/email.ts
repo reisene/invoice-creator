@@ -1,3 +1,4 @@
+import pkg from '@/package.json';
 import { Resend } from 'resend';
 import { siteUrl } from './siteUrl';
 
@@ -5,7 +6,7 @@ const resendApiKey = process.env.RESEND_API_KEY;
 export const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 const DEFAULT_FROM = 'Invoice Creator <kontakt@mail.draugskoll.dev>';
-const DEFAULT_NOTIFY = 'kprinny@gmail.com';
+const DEFAULT_NOTIFY = pkg.author.email;
 const DEFAULT_REPLY_TO = 'kontakt@mail.draugskoll.dev';
 
 function getFromEmail(): string {

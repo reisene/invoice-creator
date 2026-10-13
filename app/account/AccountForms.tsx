@@ -164,12 +164,13 @@ export function BankAccountForm({
           />
         </Form.Group>
         <Form.Group className='mb-3' controlId='bankName'>
-          <Form.Label>Nazwa banku</Form.Label>
+          <Form.Label>Nazwa banku / instytucji</Form.Label>
           <Form.Control
             name='bankName'
             defaultValue={bankAccount?.bankName ?? ''}
             required
             maxLength={100}
+            placeholder='np. mBank, PKO BP, ZEN, Revolut'
           />
         </Form.Group>
         <Form.Group className='mb-3' controlId='bankAccountNumber'>

@@ -1,3 +1,4 @@
+import { formatPolishBankAccount } from '@/lib/bankUtils';
 import { getSiteDisplayUrl } from '@/lib/siteUrl';
 import { numberToWords } from '@/lib/toWords';
 import type { InvoiceData } from '@/types/invoice';
@@ -253,6 +254,44 @@ export default function InvoicePreview({
               </tr>
             </tbody>
           </Table>
+        </div>
+
+        <div className='mb-4'>
+          <h4 className='fw-bold mb-2'>Forma wypłaty</h4>
+          {data.payment.method === 'CASH' ? (
+            <p className='mb-0'>Gotówka</p>
+          ) : data.payment.method === 'TRANSFER' &&
+            data.payment.transferTarget === 'DECLARATION' ? (
+            <p className='mb-0'>
+              Przelew na rachunek bankowy zgodnie ze złożonym oświadczeniem.
+            </p>
+          ) : data.payment.method === 'TRANSFER' ? (
+            <div>
+              <p className='mb-1'>Przelew na rachunek bankowy</p>
+              {data.payment.accountNumber ? (
+                <p className='mb-1'>
+                  <span className='text-body-secondary'>Numer rachunku: </span>
+                  <span className='font-monospace fw-semibold'>
+                    {formatPolishBankAccount(data.payment.accountNumber)}
+                  </span>
+                </p>
+              ) : null}
+              {data.payment.bankName ? (
+                <p className='mb-1'>
+                  <span className='text-body-secondary'>Bank: </span>
+                  <span>{data.payment.bankName}</span>
+                </p>
+              ) : null}
+              {data.payment.accountHolder ? (
+                <p className='mb-0'>
+                  <span className='text-body-secondary'>Właściciel: </span>
+                  <span>{data.payment.accountHolder}</span>
+                </p>
+              ) : null}
+            </div>
+          ) : (
+            <p className='mb-0 text-muted'>Nie wybrano formy wypłaty.</p>
+          )}
         </div>
 
         <div className='mb-4'>

@@ -55,8 +55,8 @@ function buildPresetFormData(
     yearToDateYoungReliefIncome: 0,
     taxReduction: status !== 'student_under_26',
     taxReductionAmount: 300,
-    paymentMethod: '',
-    transferTarget: '',
+    paymentMethod: 'TRANSFER',
+    transferTarget: 'SAVED_ACCOUNT',
   };
 }
 

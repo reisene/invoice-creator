@@ -38,8 +38,10 @@ export function isValidPolishBankAccount(value: string): boolean {
     .replace(/^PL/, '');
   if (!/^\d{26}$/.test(accountNumber)) return false;
 
+  const rearranged =
+    accountNumber.slice(2) + '2521' + accountNumber.slice(0, 2);
   let remainder = 0;
-  for (const digit of accountNumber) {
+  for (const digit of rearranged) {
     remainder = (remainder * 10 + Number(digit)) % 97;
   }
   return remainder === 1;

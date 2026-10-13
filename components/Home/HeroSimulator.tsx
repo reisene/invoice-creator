@@ -1,7 +1,7 @@
 'use client';
 
 import { calculateInvoice } from '@/lib/calculateInvoice';
-import { DEFAULT_TAX_PARAMS } from '@/lib/taxParams';
+import { DEFAULT_TAX_PARAMS } from '@/lib/taxConstants';
 import type { InvoiceFormData } from '@/types/invoiceForm';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';

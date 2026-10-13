@@ -193,4 +193,20 @@ describe('calculateInvoice - Weryfikacja reguł podatkowych i ZUS', () => {
     assert.equal(calculations.taxBeforeReduction, 2160);
     assert.equal(calculations.tax, 2160);
   });
+
+  it('stawka godzinowa i ułamkowa liczba godzin (np. 32.73 zł/h i 185.5 h)', () => {
+    const form = createBaseForm({
+      contractType: 'hourly',
+      hourlyRate: 32.73,
+      hoursWorked: 185.5,
+      contractorStatus: 'student_under_26',
+      youngRelief: true,
+    });
+    const result = calculateInvoice(form, testTaxParams);
+    // 32.73 * 185.5 = 6071.415 -> zaokrąglenie do 6071.42 zł
+    assert.equal(result.remuneration.gross, 6071.42);
+    assert.equal(result.calculations.gross, 6071.42);
+    // Student pod 26 lat: brutto = netto
+    assert.equal(result.calculations.net, 6071.42);
+  });
 });

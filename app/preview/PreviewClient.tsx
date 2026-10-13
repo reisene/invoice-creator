@@ -198,7 +198,7 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                   </Form.Label>
                   <Form.Control
                     type='number'
-                    step='100'
+                    step='0.01'
                     min={0}
                     value={formData.grossAmount ?? ''}
                     onChange={(e) =>
@@ -220,7 +220,7 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                       </Form.Label>
                       <Form.Control
                         type='number'
-                        step='1'
+                        step='0.01'
                         min={0}
                         value={formData.hourlyRate ?? ''}
                         onChange={(e) =>
@@ -241,7 +241,7 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                       </Form.Label>
                       <Form.Control
                         type='number'
-                        step='1'
+                        step='any'
                         min={0}
                         value={formData.hoursWorked ?? ''}
                         onChange={(e) =>

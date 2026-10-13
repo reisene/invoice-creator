@@ -333,7 +333,7 @@ export default function InvoiceForm({
               <Form.Label>Liczba godzin</Form.Label>
               <Form.Control
                 type='number'
-                step='0.5'
+                step='any'
                 min={0}
                 value={data.hoursWorked ?? ''}
                 onChange={(e) =>

@@ -106,7 +106,7 @@ export default function HeroSimulator() {
           <Form.Control
             id='hero-gross-input'
             type='number'
-            step={100}
+            step='0.01'
             min={0}
             value={gross}
             onChange={(e) => {

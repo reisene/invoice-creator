@@ -135,7 +135,7 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                     handleSelectPreset(preset);
                   }
                 }}
-                className={`h-100 text-decoration-none transition border ${
+                className={`h-100 text-decoration-none rounded-3 hover-elevate border ${
                   isSelected
                     ? 'border-primary shadow-sm bg-primary-subtle'
                     : 'border-secondary-subtle bg-body'
@@ -146,7 +146,9 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                     <Badge bg={preset.badgeVariant} className='mb-2'>
                       {preset.badge}
                     </Badge>
-                    <h2 className='h6 fw-bold mb-1'>{preset.name}</h2>
+                    <h2 className='h6 fw-bold mb-1 text-body-emphasis'>
+                      {preset.name}
+                    </h2>
                     <p className='small text-muted mb-0'>
                       {preset.shortDescription}
                     </p>
@@ -162,7 +164,7 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
         {/* Lewa kolumna: Szybka konfiguracja stawek + informacje prawne + akcje */}
         <Col lg={5}>
           {/* Informacja prawna o danym typie zlecenia */}
-          <Card className='mb-3 border-info-subtle bg-info-subtle'>
+          <Card className='mb-3 border-info-subtle bg-info-subtle rounded-4 shadow-sm'>
             <Card.Body className='p-3'>
               <div className='d-flex align-items-center gap-2 mb-2'>
                 <BsInfoCircleFill className='text-info' size={18} />
@@ -175,7 +177,7 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
           </Card>
 
           {/* Szybka edycja kwot i parametrów */}
-          <Card className='mb-3 border-secondary-subtle'>
+          <Card className='mb-3 border-secondary-subtle rounded-4 shadow-sm overflow-hidden'>
             <Card.Header className='bg-body-tertiary d-flex justify-content-between align-items-center'>
               <span className='fw-bold small'>Własne stawki i parametry</span>
               <Button
@@ -196,7 +198,7 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                   </Form.Label>
                   <Form.Control
                     type='number'
-                    step='100'
+                    step='0.01'
                     min={0}
                     value={formData.grossAmount ?? ''}
                     onChange={(e) =>
@@ -218,7 +220,7 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                       </Form.Label>
                       <Form.Control
                         type='number'
-                        step='1'
+                        step='0.01'
                         min={0}
                         value={formData.hourlyRate ?? ''}
                         onChange={(e) =>
@@ -239,7 +241,7 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                       </Form.Label>
                       <Form.Control
                         type='number'
-                        step='1'
+                        step='any'
                         min={0}
                         value={formData.hoursWorked ?? ''}
                         onChange={(e) =>
@@ -375,11 +377,13 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
 
         {/* Prawa kolumna: Podgląd rachunku na żywo */}
         <Col lg={7}>
-          <InvoicePreview
-            data={invoiceData}
-            taxParams={activeTaxParams}
-            invoiceNumber={`WZORZEC/${selectedPreset.id.toUpperCase()}/2026`}
-          />
+          <div className='preview-sticky-wrapper'>
+            <InvoicePreview
+              data={invoiceData}
+              taxParams={activeTaxParams}
+              invoiceNumber={`WZORZEC/${selectedPreset.id.toUpperCase()}/2026`}
+            />
+          </div>
         </Col>
       </Row>
     </Container>

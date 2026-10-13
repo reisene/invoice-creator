@@ -14,14 +14,14 @@ export default async function AuthButtons() {
 
   if (session?.user) {
     return (
-      <ButtonToolbar className='gap-2 ms-auto'>
+      <ButtonToolbar className='gap-2'>
         <Button
           href={'/account'}
           variant={'primary'}
           className='d-inline-flex align-items-center gap-2'
         >
           <BsPersonCircle aria-hidden />
-          Account
+          Konto
         </Button>
         <SignOutButton />
       </ButtonToolbar>
@@ -29,22 +29,22 @@ export default async function AuthButtons() {
   }
 
   return (
-    <ButtonToolbar className='gap-2 ms-auto'>
+    <ButtonToolbar className='gap-2'>
       <Button
         href={'/auth/sign-up'}
-        variant={'secondary'}
+        variant={'outline-primary'}
         className='d-inline-flex align-items-center gap-2'
       >
         <BsPersonPlus aria-hidden />
-        Sign Up
+        Rejestracja
       </Button>
       <Button
         href={'/auth/sign-in'}
-        variant={'success'}
+        variant={'primary'}
         className='d-inline-flex align-items-center gap-2'
       >
         <BsBoxArrowInRight aria-hidden />
-        Sign In
+        Logowanie
       </Button>
     </ButtonToolbar>
   );

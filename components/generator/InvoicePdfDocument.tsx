@@ -1,3 +1,4 @@
+import { formatPolishBankAccount } from '@/lib/bankUtils';
 import { getSiteDisplayUrl } from '@/lib/siteUrl';
 import { numberToWords } from '@/lib/toWords';
 import type { InvoiceData } from '@/types/invoice';
@@ -374,7 +375,8 @@ export default function createInvoicePdfDocument(
               ) : null}
               {data.payment.accountNumber ? (
                 <Text style={styles.line}>
-                  Numer rachunku: {data.payment.accountNumber}
+                  Numer rachunku:{' '}
+                  {formatPolishBankAccount(data.payment.accountNumber)}
                 </Text>
               ) : null}
             </>

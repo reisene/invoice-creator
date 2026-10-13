@@ -13,6 +13,7 @@ function getYear(): number | string {
 }
 
 const internalLinks: { href: Route; label: string }[] = [
+  { href: '/help', label: 'Pomoc' },
   { href: '/terms', label: 'Regulamin' },
   { href: '/privacy', label: 'Polityka prywatności' },
 ];

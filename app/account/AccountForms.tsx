@@ -26,7 +26,10 @@ export function ProfileForm({
   const [state, formAction, isPending] = useActionState(updateProfile, null);
 
   return (
-    <Card body className='shadow-sm mb-4'>
+    <Card
+      body
+      className='border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 mb-4'
+    >
       <h2 className='h5 mb-3'>Dane konta</h2>
       <Form action={formAction}>
         <Form.Group className='mb-3' controlId='name'>
@@ -75,7 +78,10 @@ export function PasswordForm() {
   const [state, formAction, isPending] = useActionState(changePassword, null);
 
   return (
-    <Card body className='shadow-sm mb-4'>
+    <Card
+      body
+      className='border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 mb-4'
+    >
       <h2 className='h5 mb-3'>Zmiana hasła</h2>
       <Form action={formAction} key={state?.ok ? 'done' : 'form'}>
         <Form.Group className='mb-3' controlId='currentPassword'>
@@ -138,7 +144,10 @@ export function BankAccountForm({
   const router = useRouter();
 
   return (
-    <Card body className='shadow-sm mb-4'>
+    <Card
+      body
+      className='border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 mb-4'
+    >
       <h2 className='h5 mb-2'>Rachunek bankowy</h2>
       <p className='text-body-secondary small'>
         Zapisany rachunek możesz wybrać jako formę wypłaty w generatorze.
@@ -155,12 +164,13 @@ export function BankAccountForm({
           />
         </Form.Group>
         <Form.Group className='mb-3' controlId='bankName'>
-          <Form.Label>Nazwa banku</Form.Label>
+          <Form.Label>Nazwa banku / instytucji</Form.Label>
           <Form.Control
             name='bankName'
             defaultValue={bankAccount?.bankName ?? ''}
             required
             maxLength={100}
+            placeholder='np. mBank, PKO BP, ZEN, Revolut'
           />
         </Form.Group>
         <Form.Group className='mb-3' controlId='bankAccountNumber'>
@@ -218,7 +228,10 @@ export function DeleteAccountForm() {
   const [state, formAction, isPending] = useActionState(deleteAccount, null);
 
   return (
-    <Card body className='shadow-sm border-danger mb-4'>
+    <Card
+      body
+      className='border border-danger-subtle bg-danger-subtle bg-opacity-10 shadow-sm rounded-4 mb-4'
+    >
       <h2 className='h5 text-danger mb-3'>Usuń konto</h2>
       <p className='small text-muted'>
         Usunięcie konta jest nieodwracalne. Razem z nim zostaną trwale skasowane

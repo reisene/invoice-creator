@@ -3,8 +3,10 @@
 import { saveParty } from '@/app/actions/savedData';
 import type { InvoiceFormData } from '@/types/invoiceForm';
 import type { SavedPartyDto } from '@/types/savedData';
+import Link from 'next/link';
 import { useState } from 'react';
 import { Alert, Button, Col, Form, Row } from 'react-bootstrap';
+import { BsQuestionCircle } from 'react-icons/bs';
 
 interface SavedPartiesPanelProps {
   parties: SavedPartyDto[];
@@ -121,6 +123,23 @@ export default function SavedPartiesPanel({
 
   return (
     <div className='mb-4'>
+      <div className='d-flex align-items-center justify-content-between mb-2'>
+        <span className='fw-bold small text-body-secondary text-uppercase letter-spacing-1'>
+          Zapisane strony umowy
+        </span>
+        <Link
+          href='/help/aplikacja/zapisywanie-danych-i-historia-rachunkow'
+          target='_blank'
+          rel='noopener noreferrer'
+          className='text-primary text-decoration-none small d-inline-flex align-items-center gap-1'
+          title='Pomoc: Zarządzanie stronami i kontem'
+        >
+          <BsQuestionCircle className='small' />
+          <span style={{ fontSize: '0.8rem' }}>
+            Jak działa baza kontrahentów?
+          </span>
+        </Link>
+      </div>
       <Row className='mb-2'>
         {renderColumn('CLIENT', 'Zapisani zleceniodawcy', clients)}
         {renderColumn('CONTRACTOR', 'Zapisani zleceniobiorcy', contractors)}

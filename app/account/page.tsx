@@ -36,7 +36,10 @@ export default async function AccountPage() {
       <PasswordForm />
       <BankAccountForm bankAccount={bankAccount} />
 
-      <Card body className='shadow-sm mb-4'>
+      <Card
+        body
+        className='border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 mb-4'
+      >
         <h2 className='h5 mb-2'>Eksport danych</h2>
         <p className='text-body-secondary small'>
           Pobierz zapisane rachunki, dane stron i dane rachunku bankowego w

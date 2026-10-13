@@ -17,11 +17,11 @@ export default function SignOutButton() {
   return (
     <Button
       onClick={handleSignOut}
-      variant={'danger'}
+      variant={'outline-danger'}
       className='d-inline-flex align-items-center gap-2'
     >
       <BsBoxArrowRight aria-hidden />
-      Sign Out
+      Wyloguj
     </Button>
   );
 }

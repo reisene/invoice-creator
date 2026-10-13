@@ -13,8 +13,15 @@ import { checkRateLimit } from '@/lib/rateLimit';
 import { sanitizeInvoiceForm } from '@/lib/sanitizeInvoiceForm';
 import { encryptJson, encryptText } from '@/lib/savedDataCrypto';
 import { getAllTaxParams } from '@/lib/taxParams';
-import { validateInvoiceForm } from '@/lib/validateInvoiceForm';
-import type { ActionResult, InvoiceNumberReservation } from '@/types/savedData';
+import {
+  isValidPolishBankAccount,
+  validateInvoiceForm,
+} from '@/lib/validateInvoiceForm';
+import type {
+  ActionResult,
+  InvoiceNumberReservation,
+  UserBankAccountDto,
+} from '@/types/savedData';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'node:crypto';
 
@@ -41,6 +48,7 @@ export async function saveInvoice(
   input: unknown,
   invoiceId?: string,
   reservation?: InvoiceNumberReservation,
+  saveAccountToProfile?: boolean,
 ): Promise<ActionResult<{ id: string; invoiceNumber: string }>> {
   const userId = await getCurrentUserId();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
@@ -63,6 +71,36 @@ export async function saveInvoice(
 
   const errors = validateInvoiceForm(form, params);
   if (errors.length > 0) return { ok: false, error: errors[0] };
+
+  if (
+    saveAccountToProfile &&
+    form.paymentMethod === 'TRANSFER' &&
+    form.transferTarget === 'SAVED_ACCOUNT' &&
+    form.bankAccountNumber &&
+    form.bankName &&
+    form.bankAccountHolder &&
+    isValidPolishBankAccount(form.bankAccountNumber)
+  ) {
+    const accNum = form.bankAccountNumber
+      .replace(/[\s-]/g, '')
+      .toUpperCase()
+      .replace(/^PL/, '');
+    await prisma.userBankAccount.upsert({
+      where: { userId },
+      create: {
+        userId,
+        accountHolder: encryptText(form.bankAccountHolder.trim()),
+        bankName: encryptText(form.bankName.trim()),
+        accountNumber: encryptText(accNum),
+      },
+      update: {
+        accountHolder: encryptText(form.bankAccountHolder.trim()),
+        bankName: encryptText(form.bankName.trim()),
+        accountNumber: encryptText(accNum),
+      },
+    });
+    revalidatePath('/account');
+  }
 
   const { calculations } = calculateInvoice(form, params);
   const scope = getInvoiceNumberScope(userId);
@@ -259,4 +297,63 @@ export async function deleteAllParties(): Promise<ActionResult<number>> {
   const { count } = await prisma.savedParty.deleteMany({ where: { userId } });
   revalidatePath('/account/invoices');
   return { ok: true, data: count };
+}
+
+export async function saveUserBankAccountAction(data: {
+  accountHolder: string;
+  bankName: string;
+  accountNumber: string;
+}): Promise<ActionResult<UserBankAccountDto>> {
+  const userId = await getCurrentUserId();
+  if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+
+  const limit = await checkRateLimit('saveBankAccount', userId);
+  if (!limit.ok) return { ok: false, error: limit.message };
+
+  const accountHolder = data.accountHolder.trim();
+  const bankName = data.bankName.trim();
+  const accountNumber = data.accountNumber
+    .replace(/[\s-]/g, '')
+    .toUpperCase()
+    .replace(/^PL/, '');
+
+  if (!accountHolder || accountHolder.length > 200) {
+    return { ok: false, error: 'Podaj nazwę właściciela rachunku.' };
+  }
+  if (!bankName || bankName.length > 100) {
+    return { ok: false, error: 'Podaj nazwę banku.' };
+  }
+  if (!isValidPolishBankAccount(accountNumber)) {
+    return {
+      ok: false,
+      error: 'Podaj prawidłowy polski numer rachunku bankowego (26 cyfr).',
+    };
+  }
+
+  await prisma.userBankAccount.upsert({
+    where: { userId },
+    create: {
+      userId,
+      accountHolder: encryptText(accountHolder),
+      bankName: encryptText(bankName),
+      accountNumber: encryptText(accountNumber),
+    },
+    update: {
+      accountHolder: encryptText(accountHolder),
+      bankName: encryptText(bankName),
+      accountNumber: encryptText(accountNumber),
+    },
+  });
+
+  revalidatePath('/account');
+  revalidatePath('/generator');
+
+  return {
+    ok: true,
+    data: {
+      accountHolder,
+      bankName,
+      accountNumber,
+    },
+  };
 }

@@ -3,7 +3,7 @@ import type { InvoiceFormData } from '@/types/invoiceForm';
 import type { TaxParams } from '@/types/taxParams';
 
 const round2 = (value: number): number =>
-  Math.round((value + Number.EPSILON) * 100) / 100;
+  Math.round((value + 1e-9) * 100) / 100;
 
 export function calculateInvoice(
   data: InvoiceFormData,

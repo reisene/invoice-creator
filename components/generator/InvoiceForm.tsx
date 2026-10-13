@@ -1,3 +1,10 @@
+import { saveUserBankAccountAction } from '@/app/actions/savedData';
+import {
+  cleanPolishBankAccount,
+  formatPolishBankAccount,
+  getPolishBankName,
+} from '@/lib/bankUtils';
+import { isValidPolishBankAccount } from '@/lib/validateInvoiceForm';
 import type {
   ClientType,
   ContractorStatus,
@@ -8,13 +15,24 @@ import type {
 } from '@/types/invoiceForm';
 import type { UserBankAccountDto } from '@/types/savedData';
 import type { TaxParams } from '@/types/taxParams';
-import { Col, Form, Row } from 'react-bootstrap';
+import Link from 'next/link';
+import { useState } from 'react';
+import { Alert, Button, Col, Form, Row, Spinner } from 'react-bootstrap';
+import {
+  BsBoxArrowInDown,
+  BsCheckCircleFill,
+  BsExclamationCircleFill,
+  BsInfoCircleFill,
+  BsQuestionCircle,
+} from 'react-icons/bs';
 
 interface InvoiceFormProps {
   data: InvoiceFormData;
   onChange: (data: InvoiceFormData) => void;
   taxParams?: TaxParams;
   bankAccount: UserBankAccountDto | null;
+  signedIn?: boolean;
+  onBankAccountSaved?: (account: UserBankAccountDto) => void;
 }
 
 const percent = (rate: number) => `${Math.round(rate * 10000) / 100}%`;
@@ -24,14 +42,119 @@ export default function InvoiceForm({
   onChange,
   taxParams,
   bankAccount,
+  signedIn = false,
+  onBankAccountSaved,
 }: InvoiceFormProps) {
   const fullReduction = taxParams?.monthlyTaxReduction ?? 300;
+  const [currentAccount, setCurrentAccount] =
+    useState<UserBankAccountDto | null>(bankAccount);
+  const [isSavingAccount, setIsSavingAccount] = useState(false);
+  const [saveAccountFeedback, setSaveAccountFeedback] = useState<{
+    ok: boolean;
+    text: string;
+  } | null>(null);
+
   const updateField = <K extends keyof InvoiceFormData>(
     field: K,
     value: InvoiceFormData[K],
   ) => {
     onChange({ ...data, [field]: value });
   };
+
+  const handleAccountNumberChange = (raw: string) => {
+    const cleaned = cleanPolishBankAccount(raw);
+    const formatted = formatPolishBankAccount(cleaned);
+    const detectedBank = getPolishBankName(cleaned);
+
+    const updates: Partial<InvoiceFormData> = {
+      bankAccountNumber: formatted,
+    };
+
+    if (detectedBank && (!data.bankName || data.bankName.trim() === '')) {
+      updates.bankName = detectedBank;
+    }
+
+    if (!data.bankAccountHolder && data.contractorName) {
+      updates.bankAccountHolder = data.contractorName;
+    }
+
+    onChange({ ...data, ...updates });
+  };
+
+  const handleApplySavedAccount = () => {
+    if (!currentAccount) return;
+    onChange({
+      ...data,
+      paymentMethod: 'TRANSFER',
+      transferTarget: 'SAVED_ACCOUNT',
+      bankAccountNumber: formatPolishBankAccount(currentAccount.accountNumber),
+      bankName: currentAccount.bankName,
+      bankAccountHolder: currentAccount.accountHolder,
+    });
+  };
+
+  const handleSaveAccountToProfile = async () => {
+    const rawAccount = cleanPolishBankAccount(data.bankAccountNumber ?? '');
+    const holder =
+      data.bankAccountHolder?.trim() || data.contractorName?.trim() || '';
+    const bank = data.bankName?.trim() || getPolishBankName(rawAccount) || '';
+
+    if (!isValidPolishBankAccount(rawAccount)) {
+      setSaveAccountFeedback({
+        ok: false,
+        text: 'Podaj prawidłowy 26-cyfrowy polski numer rachunku bankowego.',
+      });
+      return;
+    }
+    if (!bank) {
+      setSaveAccountFeedback({
+        ok: false,
+        text: 'Wpisz nazwę banku przed zapisaniem.',
+      });
+      return;
+    }
+    if (!holder) {
+      setSaveAccountFeedback({
+        ok: false,
+        text: 'Wpisz nazwę właściciela rachunku przed zapisaniem.',
+      });
+      return;
+    }
+
+    setIsSavingAccount(true);
+    setSaveAccountFeedback(null);
+    try {
+      const res = await saveUserBankAccountAction({
+        accountHolder: holder,
+        bankName: bank,
+        accountNumber: rawAccount,
+      });
+      if (res.ok) {
+        setCurrentAccount(res.data);
+        onBankAccountSaved?.(res.data);
+        setSaveAccountFeedback({
+          ok: true,
+          text: 'Rachunek bankowy został zapisany w Twoim profilu!',
+        });
+      } else {
+        setSaveAccountFeedback({
+          ok: false,
+          text: res.error,
+        });
+      }
+    } catch {
+      setSaveAccountFeedback({
+        ok: false,
+        text: 'Wystąpił błąd podczas zapisywania rachunku. Spróbuj ponownie.',
+      });
+    } finally {
+      setIsSavingAccount(false);
+    }
+  };
+
+  const cleanedAccount = cleanPolishBankAccount(data.bankAccountNumber ?? '');
+  const isAccountValid =
+    cleanedAccount.length === 26 && isValidPolishBankAccount(cleanedAccount);
 
   return (
     <Form>
@@ -298,7 +421,19 @@ export default function InvoiceForm({
         <Row className='mb-3'>
           <Col md={6}>
             <Form.Group>
-              <Form.Label>Stawka za godzinę (brutto)</Form.Label>
+              <Form.Label className='d-flex align-items-center justify-content-between'>
+                <span>Stawka za godzinę (brutto)</span>
+                <Link
+                  href='/help/podstawy/minimalna-stawka-godzinowa'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='text-primary text-decoration-none small d-inline-flex align-items-center gap-1'
+                  title='Pomoc: Minimalna stawka godzinowa'
+                >
+                  <BsQuestionCircle className='small' />
+                  <span style={{ fontSize: '0.8rem' }}>Pomoc</span>
+                </Link>
+              </Form.Label>
               <Form.Control
                 type='number'
                 step='0.01'
@@ -319,7 +454,7 @@ export default function InvoiceForm({
               <Form.Label>Liczba godzin</Form.Label>
               <Form.Control
                 type='number'
-                step='0.5'
+                step='any'
                 min={0}
                 value={data.hoursWorked ?? ''}
                 onChange={(e) =>
@@ -454,7 +589,25 @@ export default function InvoiceForm({
       <Row className='mb-3'>
         <Col md={6}>
           <Form.Group>
-            <Form.Label>Status zleceniobiorcy</Form.Label>
+            <Form.Label className='d-flex align-items-center justify-content-between'>
+              <span>Status zleceniobiorcy</span>
+              <Link
+                href={
+                  data.contractorStatus === 'student_under_26'
+                    ? '/help/zus/status-ucznia-i-studenta-do-26-lat'
+                    : data.contractorStatus === 'with_employment'
+                      ? '/help/zus/zbieg-tytulow-etat-i-zlecenie'
+                      : '/help/podstawy/czym-jest-rachunek-do-umowy-zlecenia'
+                }
+                target='_blank'
+                rel='noopener noreferrer'
+                className='text-primary text-decoration-none small d-inline-flex align-items-center gap-1'
+                title='Pomoc: Status zleceniobiorcy i składki ZUS'
+              >
+                <BsQuestionCircle className='small' />
+                <span style={{ fontSize: '0.8rem' }}>Pomoc</span>
+              </Link>
+            </Form.Label>
             <Form.Select
               value={data.contractorStatus}
               onChange={(e) => {
@@ -486,7 +639,19 @@ export default function InvoiceForm({
         </Col>
         <Col md={6}>
           <Form.Group>
-            <Form.Label>Koszty uzyskania przychodu</Form.Label>
+            <Form.Label className='d-flex align-items-center justify-content-between'>
+              <span>Koszty uzyskania przychodu</span>
+              <Link
+                href='/help/podatki/koszty-uzyskania-przychodu-20-vs-50'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='text-primary text-decoration-none small d-inline-flex align-items-center gap-1'
+                title='Pomoc: Koszty autorskie 50% vs standardowe 20%'
+              >
+                <BsQuestionCircle className='small' />
+                <span style={{ fontSize: '0.8rem' }}>Pomoc</span>
+              </Link>
+            </Form.Label>
             <Form.Select
               value={data.costType}
               onChange={(e) =>
@@ -535,17 +700,30 @@ export default function InvoiceForm({
       <Row className='mb-3'>
         <Col md={6}>
           <Form.Group>
-            <Form.Check
-              type='checkbox'
-              label='Dobrowolna składka chorobowa'
-              checked={
-                data.voluntarySickness && data.contractorStatus === 'standard'
-              }
-              disabled={data.contractorStatus !== 'standard'}
-              onChange={(e) =>
-                updateField('voluntarySickness', e.target.checked)
-              }
-            />
+            <div className='d-flex align-items-center justify-content-between'>
+              <Form.Check
+                type='checkbox'
+                id='voluntarySickness'
+                label='Dobrowolna składka chorobowa'
+                checked={
+                  data.voluntarySickness && data.contractorStatus === 'standard'
+                }
+                disabled={data.contractorStatus !== 'standard'}
+                onChange={(e) =>
+                  updateField('voluntarySickness', e.target.checked)
+                }
+              />
+              <Link
+                href='/help/zus/dobrowolne-ubezpieczenie-chorobowe'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='text-primary text-decoration-none small d-inline-flex align-items-center gap-1 ms-2 flex-shrink-0'
+                title='Pomoc: Dobrowolne ubezpieczenie chorobowe'
+              >
+                <BsQuestionCircle className='small' />
+                <span style={{ fontSize: '0.8rem' }}>Pomoc</span>
+              </Link>
+            </div>
             {data.contractorStatus !== 'standard' && (
               <Form.Text muted>
                 {data.contractorStatus === 'student_under_26'
@@ -557,12 +735,25 @@ export default function InvoiceForm({
         </Col>
         <Col md={6}>
           <Form.Group>
-            <Form.Check
-              type='checkbox'
-              label='Ulga dla młodych (0% PIT do limitu)'
-              checked={data.youngRelief}
-              onChange={(e) => updateField('youngRelief', e.target.checked)}
-            />
+            <div className='d-flex align-items-center justify-content-between'>
+              <Form.Check
+                type='checkbox'
+                id='youngRelief'
+                label='Ulga dla młodych (0% PIT do limitu)'
+                checked={data.youngRelief}
+                onChange={(e) => updateField('youngRelief', e.target.checked)}
+              />
+              <Link
+                href='/help/podatki/ulga-dla-mlodych-zerowy-pit'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='text-primary text-decoration-none small d-inline-flex align-items-center gap-1 ms-2 flex-shrink-0'
+                title='Pomoc: Ulga dla młodych (zerowy PIT)'
+              >
+                <BsQuestionCircle className='small' />
+                <span style={{ fontSize: '0.8rem' }}>Pomoc</span>
+              </Link>
+            </div>
             <Form.Text muted>
               Dla osób poniżej 26 lat. Wymaga złożenia zleceniodawcy
               oświadczenia o zastosowaniu ulgi.
@@ -574,12 +765,25 @@ export default function InvoiceForm({
       <Row className='mb-3'>
         <Col md={6}>
           <Form.Group>
-            <Form.Check
-              type='checkbox'
-              label='Kwota zmniejszająca podatek (oświadczenie PIT-2)'
-              checked={data.taxReduction}
-              onChange={(e) => updateField('taxReduction', e.target.checked)}
-            />
+            <div className='d-flex align-items-center justify-content-between'>
+              <Form.Check
+                type='checkbox'
+                id='taxReduction'
+                label='Kwota zmniejszająca podatek (oświadczenie PIT-2)'
+                checked={data.taxReduction}
+                onChange={(e) => updateField('taxReduction', e.target.checked)}
+              />
+              <Link
+                href='/help/podatki/kwota-zmniejszajaca-podatek-pit-2'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='text-primary text-decoration-none small d-inline-flex align-items-center gap-1 ms-2 flex-shrink-0'
+                title='Pomoc: Oświadczenie PIT-2'
+              >
+                <BsQuestionCircle className='small' />
+                <span style={{ fontSize: '0.8rem' }}>Pomoc</span>
+              </Link>
+            </div>
             <Form.Text muted>
               Możesz złożyć PIT-2 maksymalnie 3 płatnikom w danym miesiącu.
             </Form.Text>
@@ -616,6 +820,290 @@ export default function InvoiceForm({
             </Form.Group>
           </Col>
         </Row>
+      )}
+
+      {/* Forma wypłaty wynagrodzenia */}
+      <h3 className='mb-3 mt-4'>Wypłata wynagrodzenia</h3>
+
+      <Row className='mb-3'>
+        <Col md={6}>
+          <Form.Group>
+            <Form.Label>Sposób wypłaty</Form.Label>
+            <Form.Select
+              value={
+                data.paymentMethod === 'CASH'
+                  ? 'CASH'
+                  : data.paymentMethod === 'TRANSFER' &&
+                      data.transferTarget === 'DECLARATION'
+                    ? 'TRANSFER_DECLARATION'
+                    : 'TRANSFER_ACCOUNT'
+              }
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === 'CASH') {
+                  onChange({
+                    ...data,
+                    paymentMethod: 'CASH',
+                    transferTarget: '',
+                  });
+                } else if (val === 'TRANSFER_DECLARATION') {
+                  onChange({
+                    ...data,
+                    paymentMethod: 'TRANSFER',
+                    transferTarget: 'DECLARATION',
+                  });
+                } else {
+                  onChange({
+                    ...data,
+                    paymentMethod: 'TRANSFER',
+                    transferTarget: 'SAVED_ACCOUNT',
+                    bankAccountNumber:
+                      data.bankAccountNumber ||
+                      (currentAccount
+                        ? formatPolishBankAccount(currentAccount.accountNumber)
+                        : ''),
+                    bankName: data.bankName || currentAccount?.bankName || '',
+                    bankAccountHolder:
+                      data.bankAccountHolder ||
+                      currentAccount?.accountHolder ||
+                      data.contractorName ||
+                      '',
+                  });
+                }
+              }}
+              required
+            >
+              <option value='TRANSFER_ACCOUNT'>Przelew na konto bankowe</option>
+              <option value='TRANSFER_DECLARATION'>
+                Przelew na konto zgodnie ze złożonym oświadczeniem
+              </option>
+              <option value='CASH'>Gotówka do rąk zleceniobiorcy</option>
+            </Form.Select>
+          </Form.Group>
+        </Col>
+      </Row>
+
+      {/* Szczegóły dla przelewu na konto */}
+      {data.paymentMethod === 'TRANSFER' &&
+        (data.transferTarget === 'SAVED_ACCOUNT' || !data.transferTarget) && (
+          <div className='p-3 rounded-4 bg-body-tertiary border border-secondary-subtle mb-3'>
+            {signedIn && currentAccount && (
+              <div className='mb-3 p-2 px-3 rounded-3 bg-body border border-secondary-subtle d-flex align-items-center justify-content-between flex-wrap gap-2 small'>
+                <div>
+                  <span className='text-body-secondary me-1'>
+                    Zapisany rachunek:
+                  </span>
+                  <strong>{currentAccount.bankName}</strong> (
+                  <span className='font-monospace'>
+                    {formatPolishBankAccount(currentAccount.accountNumber)}
+                  </span>
+                  )
+                </div>
+                <Button
+                  type='button'
+                  variant='outline-primary'
+                  size='sm'
+                  onClick={handleApplySavedAccount}
+                >
+                  Użyj tego konta
+                </Button>
+              </div>
+            )}
+
+            <Row className='mb-3'>
+              <Col md={12}>
+                <Form.Group>
+                  <Form.Label className='d-flex align-items-center justify-content-between'>
+                    <span>Numer rachunku bankowego (NRB / IBAN)</span>
+                    {cleanedAccount.length === 26 && (
+                      <span
+                        className={`small d-inline-flex align-items-center gap-1 ${
+                          isAccountValid ? 'text-success' : 'text-danger'
+                        }`}
+                      >
+                        {isAccountValid ? (
+                          <>
+                            <BsCheckCircleFill /> Prawidłowy numer konta
+                          </>
+                        ) : (
+                          <>
+                            <BsExclamationCircleFill /> Nieprawidłowa suma
+                            kontrolna
+                          </>
+                        )}
+                      </span>
+                    )}
+                  </Form.Label>
+                  <Form.Control
+                    type='text'
+                    inputMode='numeric'
+                    value={data.bankAccountNumber ?? ''}
+                    placeholder='np. 12 3456 7890 1234 5678 9012 3456'
+                    onChange={(e) => handleAccountNumberChange(e.target.value)}
+                    maxLength={32}
+                    className='font-monospace'
+                    required
+                  />
+                  <Form.Text className='text-body-secondary'>
+                    {cleanedAccount.length > 0 && cleanedAccount.length < 26
+                      ? `Wpisano ${cleanedAccount.length} z 26 cyfr.`
+                      : 'Standardowy 26-cyfrowy polski numer konta. Odstępy formatowane są automatycznie.'}
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row className='mb-3'>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Nazwa banku / instytucji</Form.Label>
+                  <Form.Control
+                    type='text'
+                    value={data.bankName ?? ''}
+                    placeholder='np. mBank, PKO BP, ZEN, Revolut'
+                    onChange={(e) => updateField('bankName', e.target.value)}
+                    maxLength={100}
+                    required
+                  />
+                  <Form.Text className='text-body-secondary'>
+                    Rozpoznawana automatycznie z numeru konta lub do wpisania
+                    własnego (np. ZEN, Revolut).
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <div className='d-flex align-items-center justify-content-between'>
+                    <Form.Label className='mb-0'>
+                      Właściciel rachunku
+                    </Form.Label>
+                    {data.contractorName &&
+                      data.bankAccountHolder !== data.contractorName && (
+                        <button
+                          type='button'
+                          className='btn btn-link p-0 text-decoration-none small'
+                          style={{ fontSize: '0.8rem' }}
+                          onClick={() =>
+                            updateField(
+                              'bankAccountHolder',
+                              data.contractorName,
+                            )
+                          }
+                        >
+                          Użyj zleceniobiorcy
+                        </button>
+                      )}
+                  </div>
+                  <Form.Control
+                    type='text'
+                    className='mt-1'
+                    value={data.bankAccountHolder ?? ''}
+                    placeholder='Imię i nazwisko posiadacza rachunku'
+                    onChange={(e) =>
+                      updateField('bankAccountHolder', e.target.value)
+                    }
+                    maxLength={200}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            {signedIn ? (
+              <div className='pt-2 border-top border-secondary-subtle'>
+                <div className='d-flex flex-wrap align-items-center justify-content-between gap-2'>
+                  <div>
+                    <span className='fw-semibold small d-block'>
+                      Zapis w profilu
+                    </span>
+                    <span className='text-body-secondary small'>
+                      Zapisz ten numer rachunku w swoim profilu, aby był
+                      automatycznie dostępny przy kolejnych rachunkach.
+                    </span>
+                  </div>
+                  <Button
+                    type='button'
+                    variant='outline-primary'
+                    size='sm'
+                    disabled={
+                      isSavingAccount ||
+                      cleanedAccount.length !== 26 ||
+                      !isAccountValid
+                    }
+                    onClick={handleSaveAccountToProfile}
+                    className='d-inline-flex align-items-center gap-1'
+                  >
+                    {isSavingAccount ? (
+                      <>
+                        <Spinner animation='border' size='sm' />
+                        <span>Zapisywanie…</span>
+                      </>
+                    ) : (
+                      <>
+                        <BsBoxArrowInDown />
+                        <span>Zapisz ten rachunek w profilu</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+                {saveAccountFeedback && (
+                  <Alert
+                    variant={saveAccountFeedback.ok ? 'success' : 'danger'}
+                    className='mt-2 mb-0 py-2 px-3 small'
+                    dismissible
+                    onClose={() => setSaveAccountFeedback(null)}
+                  >
+                    {saveAccountFeedback.text}
+                  </Alert>
+                )}
+              </div>
+            ) : (
+              <div className='pt-2 border-top border-secondary-subtle'>
+                <div className='d-flex align-items-start gap-2 small text-body-secondary'>
+                  <BsInfoCircleFill className='text-primary mt-1 flex-shrink-0' />
+                  <div>
+                    Wskazówka: Wpisany numer rachunku znajdzie się na Twoim
+                    rachunku PDF.{' '}
+                    <Link href='/auth/sign-in' className='fw-semibold'>
+                      Zaloguj się
+                    </Link>{' '}
+                    lub{' '}
+                    <Link href='/auth/sign-up' className='fw-semibold'>
+                      załóż bezpłatne konto
+                    </Link>
+                    , aby trwale zapisać rachunek bankowy i nie musieć wpisywać
+                    go ponownie.
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+      {/* Informacja dla przelewu oświadczeniem */}
+      {data.paymentMethod === 'TRANSFER' &&
+        data.transferTarget === 'DECLARATION' && (
+          <div className='p-3 rounded-4 bg-body-tertiary border border-secondary-subtle mb-3 small text-body-secondary d-flex align-items-center gap-2'>
+            <BsInfoCircleFill className='text-primary flex-shrink-0' />
+            <span>
+              Na rachunku i w pliku PDF zostanie umieszczona klauzula:{' '}
+              <em>
+                „Przelew na rachunek bankowy zgodnie ze złożonym oświadczeniem”
+              </em>
+              .
+            </span>
+          </div>
+        )}
+
+      {/* Informacja dla gotówki */}
+      {data.paymentMethod === 'CASH' && (
+        <div className='p-3 rounded-4 bg-body-tertiary border border-secondary-subtle mb-3 small text-body-secondary d-flex align-items-center gap-2'>
+          <BsInfoCircleFill className='text-primary flex-shrink-0' />
+          <span>
+            Na rachunku i w pliku PDF zostanie wskazana forma wypłaty:{' '}
+            <em>„Gotówka”</em>.
+          </span>
+        </div>
       )}
 
       {/* Uwagi */}

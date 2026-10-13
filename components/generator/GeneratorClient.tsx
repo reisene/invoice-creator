@@ -4,6 +4,10 @@ import { reserveInvoiceNumber, saveInvoice } from '@/app/actions/savedData';
 import InvoiceForm from '@/components/generator/InvoiceForm';
 import InvoicePreview from '@/components/generator/InvoicePreview';
 import SavedPartiesPanel from '@/components/generator/SavedPartiesPanel';
+import {
+  cleanPolishBankAccount,
+  formatPolishBankAccount,
+} from '@/lib/bankUtils';
 import { calculateInvoice } from '@/lib/calculateInvoice';
 import { validateInvoiceForm } from '@/lib/validateInvoiceForm';
 import type { InvoiceData } from '@/types/invoice';
@@ -17,7 +21,9 @@ import type { TaxParams } from '@/types/taxParams';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, Button, Col, Container, Row } from 'react-bootstrap';
 
-function getInitialData(): InvoiceFormData {
+function getInitialData(
+  savedBankAccount?: UserBankAccountDto | null,
+): InvoiceFormData {
   const today = new Date().toISOString().slice(0, 10);
   const monthStart = new Date();
   monthStart.setDate(1);
@@ -55,8 +61,13 @@ function getInitialData(): InvoiceFormData {
 
     taxReduction: true,
     taxReductionAmount: 300,
-    paymentMethod: '',
-    transferTarget: '',
+    paymentMethod: 'TRANSFER',
+    transferTarget: 'SAVED_ACCOUNT',
+    bankAccountHolder: savedBankAccount?.accountHolder,
+    bankName: savedBankAccount?.bankName,
+    bankAccountNumber: savedBankAccount?.accountNumber
+      ? formatPolishBankAccount(savedBankAccount.accountNumber)
+      : undefined,
   };
 }
 
@@ -81,8 +92,10 @@ export default function GeneratorClient({
   initialInvoice,
   duplicateData,
 }: GeneratorClientProps) {
+  const [userBankAccount, setUserBankAccount] =
+    useState<UserBankAccountDto | null>(bankAccount);
   const [formData, setFormData] = useState<InvoiceFormData>(
-    initialInvoice?.data ?? duplicateData ?? getInitialData(),
+    initialInvoice?.data ?? duplicateData ?? getInitialData(bankAccount),
   );
   const [parties, setParties] = useState(initialParties);
   const [invoiceId, setInvoiceId] = useState(initialInvoice?.id);
@@ -137,11 +150,29 @@ export default function GeneratorClient({
     setIsSaving(true);
     setSaveMessage(null);
     try {
-      const result = await saveInvoice(formData, invoiceId, numberReservation);
+      const result = await saveInvoice(
+        formData,
+        invoiceId,
+        numberReservation,
+        true,
+      );
       if (result.ok) {
         setInvoiceId(result.data.id);
         setInvoiceNumber(result.data.invoiceNumber);
         setNumberReservation(undefined);
+        if (
+          formData.paymentMethod === 'TRANSFER' &&
+          formData.transferTarget === 'SAVED_ACCOUNT' &&
+          formData.bankAccountNumber &&
+          formData.bankName &&
+          formData.bankAccountHolder
+        ) {
+          setUserBankAccount({
+            accountHolder: formData.bankAccountHolder.trim(),
+            bankName: formData.bankName.trim(),
+            accountNumber: cleanPolishBankAccount(formData.bankAccountNumber),
+          });
+        }
         setSaveMessage({ variant: 'success', text: 'Rachunek zapisany.' });
       } else {
         setSaveMessage({ variant: 'danger', text: result.error });
@@ -219,13 +250,15 @@ export default function GeneratorClient({
             data={formData}
             onChange={setFormData}
             taxParams={selectedTaxParams}
-            bankAccount={bankAccount}
+            bankAccount={userBankAccount}
+            signedIn={signedIn}
+            onBankAccountSaved={setUserBankAccount}
           />
         </Col>
 
         <Col lg={6}>
           {invoiceData && selectedTaxParams ? (
-            <>
+            <div className='preview-sticky-wrapper'>
               <InvoicePreview
                 data={invoiceData}
                 taxParams={selectedTaxParams}
@@ -279,7 +312,7 @@ export default function GeneratorClient({
                   Nie udało się wygenerować PDF: {pdfError}
                 </Alert>
               ) : null}
-            </>
+            </div>
           ) : (
             <Alert variant='danger'>
               Brak parametrów podatkowych dla roku {taxYear}. Nie można obliczyć

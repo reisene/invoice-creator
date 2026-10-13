@@ -33,10 +33,15 @@ export async function GET() {
   const limit = await checkRateLimit('exportData', user.id);
   if (!limit.ok) return new Response(limit.message, { status: 429 });
 
-  const [rawInvoices, parties, bankAccount] = await Promise.all([
+  const [rawInvoices, parties, bankAccount, cookieConsent] = await Promise.all([
     getSavedInvoicesForUser(user.id),
     getSavedPartiesForUser(user.id),
     getUserBankAccount(user.id),
+    prisma.cookieConsent.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'asc' },
+      select: { choice: true, consentVersion: true, createdAt: true },
+    }),
   ]);
 
   // Older invoices have no uid yet; assign one so re-importing detects them.
@@ -62,6 +67,7 @@ export async function GET() {
     exportedAt: new Date().toISOString(),
     account: { name: user.name, email: user.email },
     bankAccount,
+    cookieConsent,
     invoices: invoices.map((invoice) => ({
       uid: invoice.uid,
       invoiceNumber: invoice.invoiceNumber,

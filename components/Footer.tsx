@@ -1,3 +1,4 @@
+import CookieSettingsButton from '@/components/CookieSettingsButton';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { Container } from 'react-bootstrap';
@@ -90,6 +91,7 @@ export default function Footer({
                 {link.label}
               </a>
             ))}
+            <CookieSettingsButton />
           </div>
         </div>
       </Container>

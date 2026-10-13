@@ -71,6 +71,11 @@ export default async function PrivacyPage() {
               oczekiwać na powiązanie z Kontem.
             </li>
             <li>
+              <strong>Wybór cookies:</strong> wybrana opcja, wersja komunikatu,
+              data zapisu oraz — w przypadku zalogowanego Użytkownika —
+              identyfikator Konta.
+            </li>
+            <li>
               <strong>Dane techniczne i bezpieczeństwa:</strong> informacje
               dotyczące obsługi żądań i bezpieczeństwa. Upstash wykorzystuje
               identyfikator Konta albo adres IP do limitowania żądań. Vercel
@@ -93,7 +98,8 @@ export default async function PrivacyPage() {
             Dane są używane w celu utworzenia i obsługi Konta, świadczenia
             funkcji generatora i zapisu danych na żądanie Użytkownika, kontaktu
             w sprawie zgłoszeń, zapewnienia bezpieczeństwa, zapobiegania
-            nadużyciom oraz wykazania faktu i treści akceptacji Regulaminu.
+            nadużyciom, wykazania faktu i treści akceptacji Regulaminu oraz
+            zapisania i odtworzenia wyboru dotyczącego cookies.
           </p>
           <p>
             Podstawy prawne właściwe dla poszczególnych celów, w tym wykonanie
@@ -175,6 +181,9 @@ export default async function PrivacyPage() {
               przechowywania.
             </li>
             <li>
+              Wpisy decyzji dotyczących cookies są przechowywane przez 30 dni.
+            </li>
+            <li>
               Logi wykonania aplikacji w Vercel są dostępne przez godzinę.
               Wiadomości i powiązane z nimi logi w Resend są przechowywane przez
               30 dni. Logi Neon nie są obecnie włączone; w Upstash nie są
@@ -192,6 +201,7 @@ export default async function PrivacyPage() {
             powiązane sekwencje numeracji. Dowody akceptacji Regulaminu oraz
             wiadomości kontaktowe nie są usuwane w ramach tej operacji, jeśli
             ich dalsze przechowywanie jest uzasadnione wskazanymi wyżej celami.
+            Wpisy decyzji dotyczących cookies powiązane z Kontem są usuwane.
             Dane w kopiach zapasowych są usuwane zgodnie z cyklem ich
             przechowywania przez dostawców.
           </p>
@@ -218,13 +228,23 @@ export default async function PrivacyPage() {
           </p>
         </section>
 
-        <section className='mt-4'>
+        <section className='mt-4' id='cookies'>
           <h2 className='h5'>8. Pliki cookies i pamięć przeglądarki</h2>
           <p>
             Serwis korzysta z technicznych mechanizmów niezbędnych do
             uwierzytelniania i utrzymania sesji. Funkcja podglądu może zapisać
             dane robocze w pamięci sesyjnej przeglądarki. Serwis nie korzysta z
-            narzędzi analitycznych ani reklamowych.
+            narzędzi analitycznych ani reklamowych ani obecnie nie zapisuje
+            cookies opcjonalnych. Baner umożliwia zaakceptowanie albo odrzucenie
+            cookies opcjonalnych. Wybór jest zapisywany w niezbędnym cookie na
+            cookie <code>cookie-consent</code> przez 12 miesięcy. Neon Auth
+            ustawia niezbędne cookies{' '}
+            <code>__Secure-neon-auth.session_token</code> i{' '}
+            <code>__Secure-neon-auth.local.session_data</code> do logowania i
+            obsługi sesji; ich czas życia wynika z konfiguracji sesji Neon Auth.
+            Wpis w rejestrze decyzji jest przechowywany przez 30 dni; wpisy
+            powiązane z Kontem są usuwane wraz z Kontem. Ustawienie można
+            zmienić przyciskiem „Ustawienia cookies” w stopce Serwisu.
           </p>
         </section>
 

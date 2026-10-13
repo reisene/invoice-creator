@@ -306,6 +306,7 @@ export async function deleteAccount(
       prisma.invoice.deleteMany({ where: { userId } }),
       prisma.savedParty.deleteMany({ where: { userId } }),
       prisma.userBankAccount.deleteMany({ where: { userId } }),
+      prisma.cookieConsent.deleteMany({ where: { userId } }),
       prisma.invoiceSequence.deleteMany({
         where: { scope: getInvoiceNumberScope(userId) },
       }),

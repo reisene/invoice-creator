@@ -41,6 +41,11 @@ enum TermsAcceptanceMethod {
   ACCOUNT_RECONSENT
 }
 
+enum CookieConsentChoice {
+  ACCEPT_OPTIONAL
+  REJECT_OPTIONAL
+}
+
 model Invoice {
   id             String   @id @default(cuid())
   userId         String
@@ -105,15 +110,25 @@ model ContactMessage {
 }
 
 model TermsAcceptance {
-  id                           String    @id @default(cuid())
+  id                           String                @id @default(cuid())
   userId                       String?
   email                        String
   termsVersion                 String
   registrationMethod           TermsAcceptanceMethod
-  acceptedAt                   DateTime  @default(now()) @db.Timestamptz(3)
-  earlyServiceStartRequested   Boolean   @default(false)
-  earlyServiceStartRequestedAt DateTime? @db.Timestamptz(3)
+  acceptedAt                   DateTime              @default(now()) @db.Timestamptz(3)
+  earlyServiceStartRequested   Boolean               @default(false)
+  earlyServiceStartRequestedAt DateTime?             @db.Timestamptz(3)
 
   @@unique([userId, termsVersion])
   @@index([email, termsVersion, registrationMethod, userId, acceptedAt])
+}
+
+model CookieConsent {
+  id             String              @id @default(cuid())
+  userId         String?
+  consentVersion String
+  choice         CookieConsentChoice
+  createdAt      DateTime            @default(now()) @db.Timestamptz(3)
+
+  @@index([createdAt])
 }

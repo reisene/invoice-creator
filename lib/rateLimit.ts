@@ -13,6 +13,7 @@ const POLICIES = {
   saveParty: { requests: 60, window: '1 m' },
   saveBankAccount: { requests: 30, window: '1 m' },
   contactForm: { requests: 5, window: '10 m' },
+  cookieConsent: { requests: 20, window: '10 m' },
   accountSensitive: { requests: 10, window: '10 m' },
 } satisfies Record<string, { requests: number; window: Window }>;
 

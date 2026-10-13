@@ -1,5 +1,6 @@
 import AppNavbar from '@/components/AppNavbar';
 import AuthButtons from '@/components/AuthButtons';
+import CookieConsent from '@/components/CookieConsent';
 import Footer from '@/components/Footer';
 import { siteUrl } from '@/lib/siteUrl';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -72,6 +73,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       <body className='min-vh-100 d-flex flex-column'>
         <AppNavbar authButtons={<AuthButtons />} />
         <main className='py-5 flex-grow-1'>{children}</main>
+        <CookieConsent />
         <Footer author={author} />
       </body>
     </html>

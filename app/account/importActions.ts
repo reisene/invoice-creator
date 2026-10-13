@@ -2,7 +2,7 @@
 
 import type { Prisma } from '@/generated/prisma';
 import { calculateInvoice } from '@/lib/calculateInvoice';
-import { getCurrentUserId } from '@/lib/currentUser';
+import { getCurrentUserIdWithTerms } from '@/lib/currentUser';
 import { prisma } from '@/lib/db';
 import { getInvoiceNumberScope } from '@/lib/invoiceNumbering';
 import { parseParty } from '@/lib/parseParty';
@@ -42,7 +42,7 @@ export async function importUserData(
   raw: string,
   commit: boolean,
 ): Promise<ActionResult<ImportSummary>> {
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, error: 'Zaloguj się, aby importować dane.' };
   const limit = await checkRateLimit('importData', userId);
   if (!limit.ok) return { ok: false, error: limit.message };

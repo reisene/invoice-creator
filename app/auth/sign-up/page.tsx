@@ -1,5 +1,6 @@
 'use client';
 
+import { TERMS_VERSION } from '@/lib/termsAcceptance';
 import Link from 'next/link';
 import { useActionState } from 'react';
 import { Alert, Button, Card, Container, Form } from 'react-bootstrap';
@@ -48,6 +49,33 @@ export default function SignUpForm() {
               autoComplete='new-password'
             />
           </Form.Group>
+
+          <Form.Check
+            className='mb-3'
+            id='accept-terms'
+            name='acceptTerms'
+            type='checkbox'
+            value='accepted'
+            required
+            label={
+              <>
+                Akceptuję{' '}
+                <Link href='/terms' target='_blank' rel='noreferrer'>
+                  Regulamin (wersja {TERMS_VERSION})
+                </Link>
+                .
+              </>
+            }
+          />
+
+          <Form.Check
+            className='mb-3'
+            id='request-immediate-start'
+            name='requestImmediateStart'
+            type='checkbox'
+            value='requested'
+            label='Wnoszę o rozpoczęcie świadczenia Usług przed upływem terminu na odstąpienie od Umowy (oświadczenie dobrowolne; jego brak nie blokuje Konta ani dostępu do Usług).'
+          />
 
           {state?.error && <Alert variant='danger'>{state.error}</Alert>}
 

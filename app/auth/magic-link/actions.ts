@@ -2,29 +2,65 @@
 
 import { auth } from '@/lib/auth/server';
 import { authErrorMessage } from '@/lib/authErrors';
+import { recordTermsAcceptance } from '@/lib/recordTermsAcceptance';
+import { parseRegistrationConsent } from '@/lib/termsAcceptance';
 import { headers } from 'next/headers';
 
-export async function requestMagicLink(
-  _prevState: { error?: string; success?: boolean } | null,
-  formData: FormData,
-) {
-  const email = (formData.get('email') as string)?.trim();
+type MagicLinkActionState =
+  { error: string; success?: never } | { success: true; error?: never } | null;
 
+export async function requestMagicLink(
+  _prevState: MagicLinkActionState,
+  formData: FormData,
+): Promise<MagicLinkActionState> {
+  const mode = formData.get('mode');
+  if (mode !== 'signup' && mode !== 'signin') {
+    return { error: 'Nieprawidłowy tryb logowania.' };
+  }
+
+  const registrationConsent =
+    mode === 'signup' ? parseRegistrationConsent(formData, 'MAGIC_LINK') : null;
+  if (registrationConsent && 'error' in registrationConsent) {
+    return registrationConsent;
+  }
+
+  const emailField = formData.get('email');
+  const email = registrationConsent
+    ? registrationConsent.consent.email
+    : typeof emailField === 'string'
+      ? emailField.trim()
+      : '';
   if (!email) {
     return { error: 'Podaj adres e-mail.' };
   }
 
-  const name = (formData.get('name') as string | null)?.trim();
+  const nameField = formData.get('name');
+  const name = typeof nameField === 'string' ? nameField.trim() : '';
   const origin = (await headers()).get('origin');
 
   const { error } = await auth.signIn.magicLink({
     email,
     ...(name ? { name } : {}),
-    callbackURL: `${origin ?? ''}/`,
+    callbackURL: `${origin ?? ''}/auth/terms-check`,
   });
 
   if (error) {
     return { error: authErrorMessage(error, 'Nie udało się wysłać linku.') };
+  }
+
+  if (registrationConsent && 'consent' in registrationConsent) {
+    try {
+      await recordTermsAcceptance(registrationConsent.consent);
+    } catch (error) {
+      console.error(
+        'Link logowania wysłano, ale nie udało się zapisać akceptacji Regulaminu.',
+        error,
+      );
+      return {
+        error:
+          'Link został wysłany, ale nie udało się zapisać akceptacji Regulaminu. Po zalogowaniu poprosimy o jej ponowne potwierdzenie.',
+      };
+    }
   }
 
   return { success: true };

@@ -35,6 +35,12 @@ enum PartyKind {
   CONTRACTOR
 }
 
+enum TermsAcceptanceMethod {
+  EMAIL_PASSWORD
+  MAGIC_LINK
+  ACCOUNT_RECONSENT
+}
+
 model Invoice {
   id             String   @id @default(cuid())
   userId         String
@@ -98,3 +104,16 @@ model ContactMessage {
   @@index([userId])
 }
 
+model TermsAcceptance {
+  id                           String    @id @default(cuid())
+  userId                       String?
+  email                        String
+  termsVersion                 String
+  registrationMethod           TermsAcceptanceMethod
+  acceptedAt                   DateTime  @default(now()) @db.Timestamptz(3)
+  earlyServiceStartRequested   Boolean   @default(false)
+  earlyServiceStartRequestedAt DateTime? @db.Timestamptz(3)
+
+  @@unique([userId, termsVersion])
+  @@index([email, termsVersion, registrationMethod, userId, acceptedAt])
+}

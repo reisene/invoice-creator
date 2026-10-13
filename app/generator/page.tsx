@@ -1,5 +1,5 @@
 import GeneratorClient from '@/components/generator/GeneratorClient';
-import { getCurrentUserId } from '@/lib/currentUser';
+import { getCurrentUserIdWithTerms } from '@/lib/currentUser';
 import {
   getSavedInvoiceForUser,
   getSavedPartiesForUser,
@@ -26,7 +26,11 @@ export default async function GeneratorPage({
   searchParams,
 }: GeneratorPageProps) {
   const [taxParams, userId, { invoice: invoiceId, duplicate: duplicateId }] =
-    await Promise.all([getAllTaxParams(), getCurrentUserId(), searchParams]);
+    await Promise.all([
+      getAllTaxParams(),
+      getCurrentUserIdWithTerms(),
+      searchParams,
+    ]);
 
   let parties: SavedPartyDto[] = [];
   let bankAccount = null;

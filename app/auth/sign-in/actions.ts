@@ -2,6 +2,7 @@
 
 import { auth } from '@/lib/auth/server';
 import { authErrorMessage } from '@/lib/authErrors';
+import type { Route } from 'next';
 import { redirect } from 'next/navigation';
 
 export async function signInWithEmail(
@@ -29,5 +30,5 @@ export async function signInWithEmail(
     };
   }
 
-  redirect('/');
+  redirect('/auth/terms-check' as Route);
 }

@@ -1,4 +1,4 @@
-import { getCurrentUserId } from '@/lib/currentUser';
+import { getCurrentUserIdWithTerms } from '@/lib/currentUser';
 import {
   getSavedInvoicesForUser,
   getSavedPartiesForUser,
@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export default async function AccountPage() {
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) redirect('/auth/sign-in');
 
   const [invoices, parties] = await Promise.all([

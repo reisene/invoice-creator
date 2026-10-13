@@ -2,7 +2,7 @@
 
 import { auth } from '@/lib/auth/server';
 import { authErrorMessage } from '@/lib/authErrors';
-import { getCurrentUserId } from '@/lib/currentUser';
+import { getCurrentUserIdWithTerms } from '@/lib/currentUser';
 import { prisma } from '@/lib/db';
 import { getInvoiceNumberScope } from '@/lib/invoiceNumbering';
 import { checkRateLimit } from '@/lib/rateLimit';
@@ -19,7 +19,7 @@ export async function saveBankAccount(
   _prev: AccountFormState,
   formData: FormData,
 ): Promise<AccountFormState> {
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, message: NOT_SIGNED_IN };
 
   const accountHolder = String(formData.get('accountHolder') ?? '').trim();
@@ -64,7 +64,7 @@ export async function deleteBankAccount(): Promise<{
   ok: boolean;
   message: string;
 }> {
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, message: NOT_SIGNED_IN };
   await prisma.userBankAccount.deleteMany({ where: { userId } });
   revalidatePath('/account');
@@ -76,7 +76,9 @@ export async function updateProfile(
   _prev: AccountFormState,
   formData: FormData,
 ): Promise<AccountFormState> {
-  if (!(await getCurrentUserId())) return { ok: false, message: NOT_SIGNED_IN };
+  if (!(await getCurrentUserIdWithTerms())) {
+    return { ok: false, message: NOT_SIGNED_IN };
+  }
 
   const name = String(formData.get('name') ?? '').trim();
   if (name.length < 1 || name.length > 100) {
@@ -99,7 +101,7 @@ export async function changePassword(
   _prev: AccountFormState,
   formData: FormData,
 ): Promise<AccountFormState> {
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, message: NOT_SIGNED_IN };
   const limit = await checkRateLimit('accountSensitive', userId);
   if (!limit.ok) return { ok: false, message: limit.message };
@@ -140,7 +142,7 @@ export async function requestEmailChange(
   _prev: AccountFormState,
   formData: FormData,
 ): Promise<AccountFormState> {
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, message: NOT_SIGNED_IN };
   const limit = await checkRateLimit('accountSensitive', userId);
   if (!limit.ok) return { ok: false, message: limit.message };
@@ -172,7 +174,7 @@ export async function confirmEmailChange(
   _prev: AccountFormState,
   formData: FormData,
 ): Promise<AccountFormState> {
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, message: NOT_SIGNED_IN };
   const limit = await checkRateLimit('accountSensitive', userId);
   if (!limit.ok) return { ok: false, message: limit.message };
@@ -203,7 +205,9 @@ export async function confirmEmailChange(
 export async function revokeSessionById(
   id: string,
 ): Promise<{ ok: boolean; message: string }> {
-  if (!(await getCurrentUserId())) return { ok: false, message: NOT_SIGNED_IN };
+  if (!(await getCurrentUserIdWithTerms())) {
+    return { ok: false, message: NOT_SIGNED_IN };
+  }
   if (typeof id !== 'string' || id.length === 0 || id.length > 200) {
     return { ok: false, message: 'Nieprawidłowy identyfikator sesji.' };
   }
@@ -229,7 +233,9 @@ export async function revokeOtherSessions(): Promise<{
   ok: boolean;
   message: string;
 }> {
-  if (!(await getCurrentUserId())) return { ok: false, message: NOT_SIGNED_IN };
+  if (!(await getCurrentUserIdWithTerms())) {
+    return { ok: false, message: NOT_SIGNED_IN };
+  }
 
   const { error } = await auth.revokeOtherSessions();
   if (error) {
@@ -249,7 +255,9 @@ export async function revokeAllSessions(): Promise<{
   ok: boolean;
   message: string;
 }> {
-  if (!(await getCurrentUserId())) return { ok: false, message: NOT_SIGNED_IN };
+  if (!(await getCurrentUserIdWithTerms())) {
+    return { ok: false, message: NOT_SIGNED_IN };
+  }
 
   const { error } = await auth.revokeSessions();
   if (error) {
@@ -268,7 +276,7 @@ export async function deleteAccount(
   _prev: AccountFormState,
   formData: FormData,
 ): Promise<AccountFormState> {
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, message: NOT_SIGNED_IN };
   const limit = await checkRateLimit('accountSensitive', userId);
   if (!limit.ok) return { ok: false, message: limit.message };

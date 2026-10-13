@@ -1,5 +1,6 @@
 'use client';
 
+import { TERMS_VERSION } from '@/lib/termsAcceptance';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useActionState } from 'react';
@@ -28,6 +29,12 @@ function MagicLinkFormInner() {
           </Alert>
         ) : (
           <Form action={formAction}>
+            <Form.Control
+              type='hidden'
+              name='mode'
+              value={isSignUp ? 'signup' : 'signin'}
+            />
+
             {isSignUp && (
               <Form.Group className='mb-3' controlId='name'>
                 <Form.Label>Imię i nazwisko</Form.Label>
@@ -44,6 +51,37 @@ function MagicLinkFormInner() {
                 autoComplete='email'
               />
             </Form.Group>
+
+            {isSignUp && (
+              <>
+                <Form.Check
+                  className='mb-3'
+                  id='accept-terms'
+                  name='acceptTerms'
+                  type='checkbox'
+                  value='accepted'
+                  required
+                  label={
+                    <>
+                      Akceptuję{' '}
+                      <Link href='/terms' target='_blank' rel='noreferrer'>
+                        Regulamin (wersja {TERMS_VERSION})
+                      </Link>
+                      .
+                    </>
+                  }
+                />
+
+                <Form.Check
+                  className='mb-3'
+                  id='request-immediate-start'
+                  name='requestImmediateStart'
+                  type='checkbox'
+                  value='requested'
+                  label='Wnoszę o rozpoczęcie świadczenia Usług przed upływem terminu na odstąpienie od Umowy (oświadczenie dobrowolne; jego brak nie blokuje Konta ani dostępu do Usług).'
+                />
+              </>
+            )}
 
             {state?.error && <Alert variant='danger'>{state.error}</Alert>}
 

@@ -2,6 +2,10 @@ import { auth } from '@/lib/auth/server';
 import { prisma } from '@/lib/db';
 import { checkRateLimit } from '@/lib/rateLimit';
 import {
+  claimPendingMagicLinkAcceptance,
+  hasCurrentTermsAcceptance,
+} from '@/lib/recordTermsAcceptance';
+import {
   getSavedInvoicesForUser,
   getSavedPartiesForUser,
   getUserBankAccount,
@@ -17,6 +21,14 @@ export async function GET() {
   const user = session?.user;
   if (!user) {
     return new Response('Zaloguj się, aby pobrać dane.', { status: 401 });
+  }
+  if (user.email) {
+    await claimPendingMagicLinkAcceptance(user.id, user.email);
+  }
+  if (!(await hasCurrentTermsAcceptance(user.id))) {
+    return new Response('Zaakceptuj aktualny Regulamin, aby pobrać dane.', {
+      status: 403,
+    });
   }
   const limit = await checkRateLimit('exportData', user.id);
   if (!limit.ok) return new Response(limit.message, { status: 429 });

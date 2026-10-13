@@ -1,7 +1,7 @@
 'use server';
 
 import { calculateInvoice } from '@/lib/calculateInvoice';
-import { getCurrentUserId } from '@/lib/currentUser';
+import { getCurrentUserIdWithTerms } from '@/lib/currentUser';
 import { prisma } from '@/lib/db';
 import {
   getInvoiceNumberScope,
@@ -34,7 +34,7 @@ export async function reserveInvoiceNumber(
     return { ok: false, error: 'Nieprawidłowy rok numeracji.' };
   }
 
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
   const limit = await checkRateLimit('reserveNumber', userId);
   if (!limit.ok) return { ok: false, error: limit.message };
   const reservation = await reserveInvoiceNumberForScope(
@@ -50,7 +50,7 @@ export async function saveInvoice(
   reservation?: InvoiceNumberReservation,
   saveAccountToProfile?: boolean,
 ): Promise<ActionResult<{ id: string; invoiceNumber: string }>> {
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
   const limit = await checkRateLimit('saveInvoice', userId);
   if (!limit.ok) return { ok: false, error: limit.message };
@@ -176,7 +176,7 @@ export async function saveInvoice(
 export async function deleteInvoice(
   invoiceId: string,
 ): Promise<ActionResult<number>> {
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
   if (
     typeof invoiceId !== 'string' ||
@@ -197,7 +197,7 @@ export async function deleteInvoice(
 export async function saveParty(
   input: unknown,
 ): Promise<ActionResult<{ id: string }>> {
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
   const limit = await checkRateLimit('saveParty', userId);
   if (!limit.ok) return { ok: false, error: limit.message };
@@ -230,7 +230,7 @@ export async function updateParty(
   partyId: string,
   input: unknown,
 ): Promise<ActionResult> {
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
   if (
     typeof partyId !== 'string' ||
@@ -263,7 +263,7 @@ export async function updateParty(
 export async function deleteParty(
   partyId: string,
 ): Promise<ActionResult<number>> {
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
   if (
     typeof partyId !== 'string' ||
@@ -282,7 +282,7 @@ export async function deleteParty(
 }
 
 export async function deleteAllInvoices(): Promise<ActionResult<number>> {
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
 
   const { count } = await prisma.invoice.deleteMany({ where: { userId } });
@@ -291,7 +291,7 @@ export async function deleteAllInvoices(): Promise<ActionResult<number>> {
 }
 
 export async function deleteAllParties(): Promise<ActionResult<number>> {
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
 
   const { count } = await prisma.savedParty.deleteMany({ where: { userId } });
@@ -304,7 +304,7 @@ export async function saveUserBankAccountAction(data: {
   bankName: string;
   accountNumber: string;
 }): Promise<ActionResult<UserBankAccountDto>> {
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
 
   const limit = await checkRateLimit('saveBankAccount', userId);

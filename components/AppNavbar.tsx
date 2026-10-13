@@ -26,7 +26,7 @@ const navLinks: {
 }[] = [
   {
     href: '/',
-    label: 'Home',
+    label: 'Start',
     icon: BsFillHousesFill,
   },
   {
@@ -36,17 +36,17 @@ const navLinks: {
   },
   {
     href: '/preview',
-    label: 'Preview',
+    label: 'Wzory',
     icon: BsFillFileEarmarkTextFill,
   },
   {
     href: '/help',
-    label: 'Help',
+    label: 'Pomoc',
     icon: BsQuestionCircleFill,
   },
   {
     href: '/contact',
-    label: 'Contact',
+    label: 'Kontakt',
     icon: BsEnvelopeFill,
   },
 ];

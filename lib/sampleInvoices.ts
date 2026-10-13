@@ -1,0 +1,193 @@
+import type { InvoiceFormData } from '@/types/invoiceForm';
+
+export interface SampleInvoicePreset {
+  id: string;
+  name: string;
+  badge: string;
+  badgeVariant: 'primary' | 'success' | 'info' | 'warning' | 'secondary';
+  shortDescription: string;
+  legalNote: string;
+  formData: InvoiceFormData;
+}
+
+export const SAMPLE_INVOICE_PRESETS: SampleInvoicePreset[] = [
+  {
+    id: 'standard',
+    name: 'Standardowe zlecenie',
+    badge: 'Standard',
+    badgeVariant: 'primary',
+    shortDescription:
+      'Podstawowa umowa zlecenia z pełnymi składkami ZUS i zaliczką na podatek PIT.',
+    legalNote:
+      'Zleceniobiorca nie ma innego tytułu do ubezpieczeń. Obowiązkowe są składki emerytalna (9,76%) i rentowa (1,5%). Dobrowolne ubezpieczenie chorobowe (2,45%). Standardowe koszty uzyskania przychodów (20%) oraz kwota zmniejszająca podatek z oświadczenia PIT-2.',
+    formData: {
+      clientType: 'company',
+      clientName: 'Przykładowa Firma Sp. z o.o.',
+      clientAddress: 'ul. Marszałkowska 10/12, 00-001 Warszawa',
+      clientNip: '5250001010',
+      contractorName: 'Jan Kowalski',
+      contractorAddress: 'ul. Słoneczna 15/4, 02-001 Warszawa',
+      contractorPesel: '90010112345',
+      contractDate: '2026-03-01',
+      periodStart: '2026-03-01',
+      periodEnd: '2026-03-31',
+      contractType: 'monthly',
+      grossAmount: 5000,
+      contractorStatus: 'standard',
+      voluntarySickness: true,
+      costType: '20',
+      youngRelief: false,
+      yearToDateTaxableIncome: 0,
+      yearToDateYoungReliefIncome: 0,
+      taxReduction: true,
+      taxReductionAmount: 300,
+      paymentMethod: 'TRANSFER',
+      transferTarget: 'DECLARATION',
+      notes: 'Realizacja zlecenia zgodnie z umową z dnia 01.03.2026 r.',
+    },
+  },
+  {
+    id: 'student',
+    name: 'Student do 26 lat',
+    badge: '0% ZUS i 0% PIT',
+    badgeVariant: 'success',
+    shortDescription:
+      'Zlecenie dla ucznia lub studenta do ukończenia 26 roku życia. Kwota brutto = kwota netto.',
+    legalNote:
+      'Zgodnie z art. 6 ust. 4 ustawy o SUS uczeń i student do 26 lat nie podlega ubezpieczeniom społecznym ani zdrowotnemu. Z kolei na mocy art. 21 ust. 1 pkt 148 ustawy o PIT przychody do rocznego limitu 85 528 zł są całkowicie zwolnione z podatku dochodowego (ulga dla młodych).',
+    formData: {
+      clientType: 'company',
+      clientName: 'Agencja Reklamowa Nova Sp. z o.o.',
+      clientAddress: 'ul. Piotrkowska 80, 90-001 Łódź',
+      clientNip: '7250012345',
+      contractorName: 'Anna Nowak',
+      contractorAddress: 'al. Politechniki 5, 90-924 Łódź',
+      contractorPesel: '02231509876',
+      contractDate: '2026-03-01',
+      periodStart: '2026-03-01',
+      periodEnd: '2026-03-31',
+      contractType: 'monthly',
+      grossAmount: 4500,
+      contractorStatus: 'student_under_26',
+      voluntarySickness: false,
+      costType: '20',
+      youngRelief: true,
+      yearToDateTaxableIncome: 0,
+      yearToDateYoungReliefIncome: 0,
+      taxReduction: false,
+      taxReductionAmount: 0,
+      paymentMethod: 'TRANSFER',
+      transferTarget: 'DECLARATION',
+      notes:
+        'Oświadczenie zleceniobiorcy: posiadam ważną legitymację studencką do 31.10.2026 r.',
+    },
+  },
+  {
+    id: 'with_employment',
+    name: 'Zbieg z umową o pracę (etat)',
+    badge: 'Tylko zdrowotna 9%',
+    badgeVariant: 'info',
+    shortDescription:
+      'Zleceniobiorca zatrudniony na etacie w innej firmie z pensją co najmniej minimalną.',
+    legalNote:
+      'Na podstawie art. 9 ust. 1 i 1a ustawy o systemie ubezpieczeń społecznych zleceniobiorca mający inny tytuł do ubezpieczeń gwarantujący co najmniej płacę minimalną jest zwolniony ze składek ZUS (emerytalnej, rentowej, chorobowej). Od zlecenia odprowadzana jest tylko składka zdrowotna 9% oraz zaliczka PIT.',
+    formData: {
+      clientType: 'company',
+      clientName: 'Software Solutions SA',
+      clientAddress: 'ul. Domaniewska 34, 02-672 Warszawa',
+      clientNip: '5219988776',
+      contractorName: 'Marek Wiśniewski',
+      contractorAddress: 'ul. Kwiatowa 3, 05-500 Piaseczno',
+      contractorPesel: '88052054321',
+      contractDate: '2026-03-01',
+      periodStart: '2026-03-01',
+      periodEnd: '2026-03-31',
+      contractType: 'monthly',
+      grossAmount: 3800,
+      contractorStatus: 'with_employment',
+      voluntarySickness: false,
+      costType: '20',
+      youngRelief: false,
+      yearToDateTaxableIncome: 0,
+      yearToDateYoungReliefIncome: 0,
+      taxReduction: true,
+      taxReductionAmount: 300,
+      paymentMethod: 'TRANSFER',
+      transferTarget: 'DECLARATION',
+      notes:
+        'Zleceniobiorca oświadcza, że w innym zakładzie pracy osiąga przychód wyższy niż wynagrodzenie minimalne.',
+    },
+  },
+  {
+    id: 'copyright',
+    name: 'Prawa autorskie (50% KUP)',
+    badge: '50% koszty',
+    badgeVariant: 'warning',
+    shortDescription:
+      'Zlecenie z przeniesieniem praw autorskich (dzieła twórcze, programowanie, grafika, teksty).',
+    legalNote:
+      'Art. 22 ust. 9 pkt 3 ustawy o PIT przewiduje 50% koszty uzyskania przychodów z tytułu korzystania przez twórców z praw autorskich. Przekłada się to na znacznie niższy podatek PIT oraz – w określonych przypadkach – obniżenie składki zdrowotnej do kwoty hipotetycznej zaliczki.',
+    formData: {
+      clientType: 'company',
+      clientName: 'Studio Kreatywne Pixel Sp. z o.o.',
+      clientAddress: 'ul. Floriańska 12, 31-021 Kraków',
+      clientNip: '6761234567',
+      contractorName: 'Ewa Dąbrowska',
+      contractorAddress: 'ul. Karmelicka 28/6, 31-131 Kraków',
+      contractorPesel: '92111001234',
+      contractDate: '2026-03-01',
+      periodStart: '2026-03-01',
+      periodEnd: '2026-03-31',
+      contractType: 'monthly',
+      grossAmount: 6000,
+      contractorStatus: 'with_employment',
+      voluntarySickness: false,
+      costType: '50',
+      youngRelief: false,
+      yearToDateTaxableIncome: 0,
+      yearToDateYoungReliefIncome: 0,
+      taxReduction: false,
+      taxReductionAmount: 0,
+      paymentMethod: 'TRANSFER',
+      transferTarget: 'DECLARATION',
+      notes:
+        'Rachunek obejmuje honorarium za przeniesienie autorskich praw majątkowych do utworu graficznego.',
+    },
+  },
+  {
+    id: 'hourly',
+    name: 'Rozliczenie godzinowe',
+    badge: 'Stawka za godzinę',
+    badgeVariant: 'secondary',
+    shortDescription:
+      'Rachunek z ewidencją przepracowanych godzin i stawką godzinową brutto.',
+    legalNote:
+      'Zgodnie z ustawą o minimalnym wynagrodzeniu za pracę zleceniodawca i zleceniobiorca ustalają sposób potwierdzania liczby godzin wykonania zlecenia. Stawka godzinowa nie może być niższa od obowiązującej minimalnej stawki godzinowej.',
+    formData: {
+      clientType: 'company',
+      clientName: 'Logistyka Express Sp. z o.o.',
+      clientAddress: 'ul. Magazynowa 4, 60-001 Poznań',
+      clientNip: '7778899001',
+      contractorName: 'Piotr Kamiński',
+      contractorAddress: 'os. Rzeczypospolitej 10/15, 61-397 Poznań',
+      contractorPesel: '95081203456',
+      contractDate: '2026-03-01',
+      periodStart: '2026-03-01',
+      periodEnd: '2026-03-31',
+      contractType: 'hourly',
+      hourlyRate: 45,
+      hoursWorked: 80,
+      contractorStatus: 'standard',
+      voluntarySickness: false,
+      costType: '20',
+      youngRelief: false,
+      yearToDateTaxableIncome: 0,
+      yearToDateYoungReliefIncome: 0,
+      taxReduction: true,
+      taxReductionAmount: 300,
+      paymentMethod: 'TRANSFER',
+      transferTarget: 'DECLARATION',
+      notes: 'Zgodnie z załączoną ewidencją godzin za marzec 2026 r.',
+    },
+  },
+];

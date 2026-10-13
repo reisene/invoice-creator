@@ -14,7 +14,7 @@ import type {
   UserBankAccountDto,
 } from '@/types/savedData';
 import type { TaxParams } from '@/types/taxParams';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, Button, Col, Container, Row } from 'react-bootstrap';
 
 function getInitialData(): InvoiceFormData {
@@ -98,6 +98,24 @@ export default function GeneratorClient({
   } | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!initialInvoice && !duplicateData) {
+      try {
+        const stored = sessionStorage.getItem('generator_preset_data');
+        if (stored) {
+          const parsed = JSON.parse(stored) as InvoiceFormData;
+          if (parsed && typeof parsed === 'object') {
+            setFormData(parsed);
+            sessionStorage.removeItem('generator_preset_data');
+          }
+        }
+      } catch {
+        // Ignoruj błąd odczytu z pamięci podręcznej
+      }
+    }
+  }, [initialInvoice, duplicateData]);
+
   const taxYear = Number(formData.periodStart.slice(0, 4));
   const selectedTaxParams = [...taxParams]
     .reverse()

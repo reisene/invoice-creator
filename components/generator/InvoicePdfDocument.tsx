@@ -1,3 +1,4 @@
+import { getSiteDisplayUrl } from '@/lib/siteUrl';
 import { numberToWords } from '@/lib/toWords';
 import type { InvoiceData } from '@/types/invoice';
 import notoSansLatin from '@fontsource/noto-sans/files/noto-sans-latin-400-normal.woff';
@@ -58,10 +59,23 @@ const latinExtRanges = [
 function Text({
   children: textChildren,
   style,
+  render,
+  fixed,
 }: {
   children?: ReactNode;
   style?: ComponentProps<typeof Page>['style'];
+  render?: (props: {
+    pageNumber: number;
+    totalPages: number;
+    subPageNumber: number;
+    subPageTotalPages: number;
+  }) => ReactNode;
+  fixed?: boolean;
 }) {
+  if (render) {
+    return <ReactPdfText style={style} render={render} fixed={fixed} />;
+  }
+
   const children = Children.map(textChildren, (child) => {
     if (typeof child !== 'string') return child;
 
@@ -101,7 +115,9 @@ function Text({
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    paddingTop: 36,
+    paddingHorizontal: 40,
+    paddingBottom: 50,
     fontFamily: 'Noto Sans Latin',
     fontSize: 10,
     color: '#212529',
@@ -164,6 +180,22 @@ const styles = StyleSheet.create({
     borderTopWidth: 0.75,
     borderTopColor: '#212529',
     paddingTop: 6,
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 40,
+    right: 40,
+    paddingTop: 6,
+    borderTopWidth: 0.5,
+    borderTopColor: '#dee2e6',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 7.5,
+    color: '#6c757d',
   },
 });
 
@@ -363,6 +395,19 @@ export default function createInvoicePdfDocument(
           <View style={styles.signature}>
             <Text>Podpis zleceniobiorcy</Text>
           </View>
+        </View>
+
+        <View style={styles.footer} fixed>
+          <Text style={styles.footerText}>
+            Dokument wygenerowany za pomocą Invoice Creator –{' '}
+            {getSiteDisplayUrl()}
+          </Text>
+          <Text
+            style={styles.footerText}
+            render={({ pageNumber, totalPages }) =>
+              `Strona ${pageNumber} z ${totalPages}`
+            }
+          />
         </View>
       </Page>
     </Document>

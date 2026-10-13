@@ -36,7 +36,7 @@ export default async function SessionsCard() {
   ]);
   const currentId = current?.session?.id;
   const list = [...(sessions ?? [])].sort(
-    (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 
   return (
@@ -62,7 +62,7 @@ export default async function SessionsCard() {
                 {item.id === currentId && <Badge bg='success'>Ta sesja</Badge>}
               </td>
               <td>{item.ipAddress ?? '—'}</td>
-              <td>{item.createdAt.toLocaleString('pl-PL')}</td>
+              <td>{new Date(item.createdAt).toLocaleString('pl-PL')}</td>
               <td className='text-end'>
                 {item.id !== currentId && (
                   <SessionActionButton

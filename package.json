@@ -4,8 +4,19 @@
   "type": "module",
   "author": {
     "name": "DraugSköll",
-    "email": "kprinny@gmail.com"
+    "email": "contact@draugskoll.dev"
   },
+  "description": "A simple invoice generator for contracts of mandate.",
+  "license": "GPL-3.0-or-later",
+  "keywords": [
+    "invoice",
+    "generator",
+    "contracts",
+    "mandate",
+    "pdf",
+    "nextjs",
+    "react"
+  ],
   "funding": [
     {
       "type": "patreon",
@@ -20,7 +31,7 @@
     "type": "git",
     "url": "git+https://github.com/reisene/invoice-creator.git"
   },
-  "homepage": "https://github.com/reisene/invoice-creator#readme",
+  "homepage": "https://invoice-creator.draugskoll.dev",
   "bugs": {
     "url": "https://github.com/reisene/invoice-creator/issues",
     "email": "reisene@youtrack.cloud"
@@ -74,6 +85,7 @@
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
     "remark-mdx-frontmatter": "^6.0.0",
+    "resend": "^6.32.1",
     "to-words": "^7.1.0"
   },
   "devDependencies": {

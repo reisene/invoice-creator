@@ -8,7 +8,9 @@ import type {
 } from '@/types/invoiceForm';
 import type { UserBankAccountDto } from '@/types/savedData';
 import type { TaxParams } from '@/types/taxParams';
+import Link from 'next/link';
 import { Col, Form, Row } from 'react-bootstrap';
+import { BsQuestionCircle } from 'react-icons/bs';
 
 interface InvoiceFormProps {
   data: InvoiceFormData;
@@ -298,7 +300,19 @@ export default function InvoiceForm({
         <Row className='mb-3'>
           <Col md={6}>
             <Form.Group>
-              <Form.Label>Stawka za godzinę (brutto)</Form.Label>
+              <Form.Label className='d-flex align-items-center justify-content-between'>
+                <span>Stawka za godzinę (brutto)</span>
+                <Link
+                  href='/help/podstawy/minimalna-stawka-godzinowa'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='text-primary text-decoration-none small d-inline-flex align-items-center gap-1'
+                  title='Pomoc: Minimalna stawka godzinowa'
+                >
+                  <BsQuestionCircle className='small' />
+                  <span style={{ fontSize: '0.8rem' }}>Pomoc</span>
+                </Link>
+              </Form.Label>
               <Form.Control
                 type='number'
                 step='0.01'
@@ -454,7 +468,25 @@ export default function InvoiceForm({
       <Row className='mb-3'>
         <Col md={6}>
           <Form.Group>
-            <Form.Label>Status zleceniobiorcy</Form.Label>
+            <Form.Label className='d-flex align-items-center justify-content-between'>
+              <span>Status zleceniobiorcy</span>
+              <Link
+                href={
+                  data.contractorStatus === 'student_under_26'
+                    ? '/help/zus/status-ucznia-i-studenta-do-26-lat'
+                    : data.contractorStatus === 'with_employment'
+                      ? '/help/zus/zbieg-tytulow-etat-i-zlecenie'
+                      : '/help/podstawy/czym-jest-rachunek-do-umowy-zlecenia'
+                }
+                target='_blank'
+                rel='noopener noreferrer'
+                className='text-primary text-decoration-none small d-inline-flex align-items-center gap-1'
+                title='Pomoc: Status zleceniobiorcy i składki ZUS'
+              >
+                <BsQuestionCircle className='small' />
+                <span style={{ fontSize: '0.8rem' }}>Pomoc</span>
+              </Link>
+            </Form.Label>
             <Form.Select
               value={data.contractorStatus}
               onChange={(e) => {
@@ -486,7 +518,19 @@ export default function InvoiceForm({
         </Col>
         <Col md={6}>
           <Form.Group>
-            <Form.Label>Koszty uzyskania przychodu</Form.Label>
+            <Form.Label className='d-flex align-items-center justify-content-between'>
+              <span>Koszty uzyskania przychodu</span>
+              <Link
+                href='/help/podatki/koszty-uzyskania-przychodu-20-vs-50'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='text-primary text-decoration-none small d-inline-flex align-items-center gap-1'
+                title='Pomoc: Koszty autorskie 50% vs standardowe 20%'
+              >
+                <BsQuestionCircle className='small' />
+                <span style={{ fontSize: '0.8rem' }}>Pomoc</span>
+              </Link>
+            </Form.Label>
             <Form.Select
               value={data.costType}
               onChange={(e) =>
@@ -535,17 +579,30 @@ export default function InvoiceForm({
       <Row className='mb-3'>
         <Col md={6}>
           <Form.Group>
-            <Form.Check
-              type='checkbox'
-              label='Dobrowolna składka chorobowa'
-              checked={
-                data.voluntarySickness && data.contractorStatus === 'standard'
-              }
-              disabled={data.contractorStatus !== 'standard'}
-              onChange={(e) =>
-                updateField('voluntarySickness', e.target.checked)
-              }
-            />
+            <div className='d-flex align-items-center justify-content-between'>
+              <Form.Check
+                type='checkbox'
+                id='voluntarySickness'
+                label='Dobrowolna składka chorobowa'
+                checked={
+                  data.voluntarySickness && data.contractorStatus === 'standard'
+                }
+                disabled={data.contractorStatus !== 'standard'}
+                onChange={(e) =>
+                  updateField('voluntarySickness', e.target.checked)
+                }
+              />
+              <Link
+                href='/help/zus/dobrowolne-ubezpieczenie-chorobowe'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='text-primary text-decoration-none small d-inline-flex align-items-center gap-1 ms-2 flex-shrink-0'
+                title='Pomoc: Dobrowolne ubezpieczenie chorobowe'
+              >
+                <BsQuestionCircle className='small' />
+                <span style={{ fontSize: '0.8rem' }}>Pomoc</span>
+              </Link>
+            </div>
             {data.contractorStatus !== 'standard' && (
               <Form.Text muted>
                 {data.contractorStatus === 'student_under_26'
@@ -557,12 +614,25 @@ export default function InvoiceForm({
         </Col>
         <Col md={6}>
           <Form.Group>
-            <Form.Check
-              type='checkbox'
-              label='Ulga dla młodych (0% PIT do limitu)'
-              checked={data.youngRelief}
-              onChange={(e) => updateField('youngRelief', e.target.checked)}
-            />
+            <div className='d-flex align-items-center justify-content-between'>
+              <Form.Check
+                type='checkbox'
+                id='youngRelief'
+                label='Ulga dla młodych (0% PIT do limitu)'
+                checked={data.youngRelief}
+                onChange={(e) => updateField('youngRelief', e.target.checked)}
+              />
+              <Link
+                href='/help/podatki/ulga-dla-mlodych-zerowy-pit'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='text-primary text-decoration-none small d-inline-flex align-items-center gap-1 ms-2 flex-shrink-0'
+                title='Pomoc: Ulga dla młodych (zerowy PIT)'
+              >
+                <BsQuestionCircle className='small' />
+                <span style={{ fontSize: '0.8rem' }}>Pomoc</span>
+              </Link>
+            </div>
             <Form.Text muted>
               Dla osób poniżej 26 lat. Wymaga złożenia zleceniodawcy
               oświadczenia o zastosowaniu ulgi.
@@ -574,12 +644,25 @@ export default function InvoiceForm({
       <Row className='mb-3'>
         <Col md={6}>
           <Form.Group>
-            <Form.Check
-              type='checkbox'
-              label='Kwota zmniejszająca podatek (oświadczenie PIT-2)'
-              checked={data.taxReduction}
-              onChange={(e) => updateField('taxReduction', e.target.checked)}
-            />
+            <div className='d-flex align-items-center justify-content-between'>
+              <Form.Check
+                type='checkbox'
+                id='taxReduction'
+                label='Kwota zmniejszająca podatek (oświadczenie PIT-2)'
+                checked={data.taxReduction}
+                onChange={(e) => updateField('taxReduction', e.target.checked)}
+              />
+              <Link
+                href='/help/podatki/kwota-zmniejszajaca-podatek-pit-2'
+                target='_blank'
+                rel='noopener noreferrer'
+                className='text-primary text-decoration-none small d-inline-flex align-items-center gap-1 ms-2 flex-shrink-0'
+                title='Pomoc: Oświadczenie PIT-2'
+              >
+                <BsQuestionCircle className='small' />
+                <span style={{ fontSize: '0.8rem' }}>Pomoc</span>
+              </Link>
+            </div>
             <Form.Text muted>
               Możesz złożyć PIT-2 maksymalnie 3 płatnikom w danym miesiącu.
             </Form.Text>

@@ -292,7 +292,7 @@ export async function deleteAccount(
     };
   }
 
-  // Data goes first: if this fails the account still exists and the user can retry.
+  // Data goes first: if this fails, the account still exists and the user can retry.
   try {
     await prisma.$transaction([
       prisma.invoice.deleteMany({ where: { userId } }),

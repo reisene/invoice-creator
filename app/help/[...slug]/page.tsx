@@ -43,9 +43,21 @@ export async function generateMetadata({
     };
   }
 
+  const canonicalUrl = `/help/${article.slugPath}`;
+
   return {
     title: `${article.title} – Pomoc i Baza Wiedzy`,
     description: article.description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      type: 'article',
+      locale: 'pl_PL',
+      title: `${article.title} – Pomoc i Baza Wiedzy`,
+      description: article.description,
+      url: canonicalUrl,
+    },
   };
 }
 
@@ -90,8 +102,11 @@ export default async function HelpSlugPage({ params }: HelpSlugPageProps) {
                   Pomoc
                 </Link>
               </li>
-              <li className='breadcrumb-item active' aria-current='page'>
+              <li className='breadcrumb-item text-body-secondary'>
                 {article.categoryLabel}
+              </li>
+              <li className='breadcrumb-item active' aria-current='page'>
+                {article.title}
               </li>
             </ol>
           </nav>

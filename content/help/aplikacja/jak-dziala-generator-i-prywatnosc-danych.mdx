@@ -1,0 +1,42 @@
+---
+title: 'Jak działa generator i jak dbamy o prywatność Twoich danych?'
+description: 'Generowanie PDF bezpośrednio w przeglądarce, bezpieczeństwo danych osobowych i brak profilowania.'
+category: 'aplikacja'
+order: 9
+tags: ['prywatność', 'bezpieczeństwo', 'dane osobowe', 'rodo', 'generator']
+---
+
+# Jak działa generator i jak dbamy o prywatność Twoich danych?
+
+Aplikacja **Invoice Creator** została zaprojektowana z myślą o maksymalnej prostocie, poprawności prawnej oraz bezkompromisowym poszanowaniu prywatności użytkowników.
+
+---
+
+## Architektura Client-First (prywatność z natury)
+
+Tradycyjne generatory dokumentów przesyłają wpisywane dane (takie jak numery PESEL, adresy zamieszkania, kwoty czy numery rachunków bankowych) na serwer, gdzie dokument jest przetwarzany.
+
+W **Invoice Creator** przyjęliśmy inną, bezpieczniejszą filozofię:
+
+1. **Generowanie PDF w przeglądarce:** Cały proces kalkulacji podatków, składek ZUS oraz generowania pliku PDF odbywa się bezpośrednio na Twoim urządzeniu (przy użyciu technologii Web Workers i biblioteki `@react-pdf/renderer`).
+2. **Brak przesyłania danych:** Żadne wrażliwe dane wpisane w generatorze nie opuszczają Twojej przeglądarki, chyba że jesteś zalogowany i świadomie klikniesz opcję zapisu rachunku w chmurze na swoim profilu.
+3. **Brak trackerów i profilowania:** Nie śledzimy Twojej aktywności, nie sprzedajemy danych ani nie integrujemy zewnętrznych skryptów śledzących reklamodawców.
+
+---
+
+## Przechowywanie danych w przeglądarce
+
+Podczas pracy z formularzem, generator korzysta z lokalnej pamięci Twojej przeglądarki (`sessionStorage` oraz `localStorage`):
+
+- Pozwala to zapobiec utracie wprowadzonych danych w razie przypadkowego odświeżenia strony.
+- Umożliwia wygodne przenoszenie gotowych wzorców ze strony `/preview` wprost do edytora `/generator`.
+- Możesz w każdej chwili wyczyścić te dane w ustawieniach przeglądarki lub klikając przycisk resetowania formularza.
+
+---
+
+## Otwarty kod źródłowy (Open Source)
+
+Projekt jest w pełni otwarty i dostępny na platformie GitHub:
+
+- Każdy programista, audytor bezpieczeństwa oraz księgowy może zweryfikować kod źródłowy, algorytmy kalkulacji podatkowych oraz sposób obsługi danych.
+- Społeczność na bieżąco zgłasza uwagi oraz aktualizacje stawek podatkowych.

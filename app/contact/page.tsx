@@ -6,7 +6,6 @@ import { Badge, Card, Col, Container, Row } from 'react-bootstrap';
 import {
   BsBoxArrowUpRight,
   BsBugFill,
-  BsChevronRight,
   BsEnvelopeAtFill,
   BsGithub,
   BsHeartFill,
@@ -43,20 +42,14 @@ export default async function ContactPage() {
           <li className='breadcrumb-item'>
             <Link
               href='/'
-              className='text-decoration-none text-body-secondary d-inline-flex align-items-center gap-1'
+              className='text-decoration-none d-inline-flex align-items-center gap-1'
             >
               <BsHousesFill className='small' />
               <span>Start</span>
             </Link>
           </li>
-          <li
-            className='breadcrumb-item active text-body fw-medium'
-            aria-current='page'
-          >
-            <span className='d-inline-flex align-items-center gap-1'>
-              <BsChevronRight className='small text-muted me-1' />
-              Kontakt
-            </span>
+          <li className='breadcrumb-item active' aria-current='page'>
+            Kontakt
           </li>
         </ol>
       </nav>
@@ -258,7 +251,7 @@ export default async function ContactPage() {
                 <BsBoxArrowUpRight className='small' />
               </a>
               <a
-                href={pkg.homepage}
+                href={`${repoUrl}#readme`}
                 target='_blank'
                 rel='noopener noreferrer'
                 className='btn btn-sm btn-outline-secondary rounded-pill d-inline-flex align-items-center gap-1'

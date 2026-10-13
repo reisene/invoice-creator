@@ -21,7 +21,21 @@
   border: 1px solid var(--bs-border-color);
 }
 
-/* Interactive card hover */
+/* Breadcrumbs styling for high contrast and active item differentiation */
+.breadcrumb-item a {
+  color: var(--bs-primary);
+  text-underline-offset: 3px;
+}
+
+.breadcrumb-item a:hover {
+  color: var(--bs-primary-text-emphasis, var(--bs-primary));
+  text-decoration: underline;
+}
+
+.breadcrumb-item.active {
+  color: var(--bs-emphasis-color) !important;
+  font-weight: 600;
+}
 .hover-elevate {
   transition:
     transform 0.2s ease,

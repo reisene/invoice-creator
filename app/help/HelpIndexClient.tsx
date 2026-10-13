@@ -2,7 +2,8 @@
 
 import { HELP_CATEGORIES, type HelpArticleMeta } from '@/types/help';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useMemo, useState } from 'react';
 import {
   Badge,
   Button,
@@ -35,8 +36,11 @@ interface HelpIndexClientProps {
   articles: HelpArticleMeta[];
 }
 
-export default function HelpIndexClient({ articles }: HelpIndexClientProps) {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+function HelpIndexInner({ articles }: HelpIndexClientProps) {
+  const searchParams = useSearchParams();
+  const initialCategory = searchParams.get('category') ?? 'all';
+  const [selectedCategory, setSelectedCategory] =
+    useState<string>(initialCategory);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const filteredArticles = useMemo(() => {
@@ -230,5 +234,13 @@ export default function HelpIndexClient({ articles }: HelpIndexClientProps) {
         </Card.Body>
       </Card>
     </Container>
+  );
+}
+
+export default function HelpIndexClient({ articles }: HelpIndexClientProps) {
+  return (
+    <Suspense>
+      <HelpIndexInner articles={articles} />
+    </Suspense>
   );
 }

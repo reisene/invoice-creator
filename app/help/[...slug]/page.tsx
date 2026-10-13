@@ -102,10 +102,18 @@ export default async function HelpSlugPage({ params }: HelpSlugPageProps) {
                   Pomoc
                 </Link>
               </li>
-              <li className='breadcrumb-item text-body-secondary'>
-                {article.categoryLabel}
+              <li className='breadcrumb-item'>
+                <Link
+                  href={`/help?category=${article.category}` as never}
+                  className='text-decoration-none'
+                >
+                  {article.categoryLabel}
+                </Link>
               </li>
-              <li className='breadcrumb-item active' aria-current='page'>
+              <li
+                className='breadcrumb-item active fw-semibold text-emphasis'
+                aria-current='page'
+              >
                 {article.title}
               </li>
             </ol>

@@ -6,6 +6,17 @@
     "name": "DraugSköll",
     "email": "contact@draugskoll.dev"
   },
+  "description": "A simple invoice generator for contracts of mandate.",
+  "license": "GPL-3.0-or-later",
+  "keywords": [
+    "invoice",
+    "generator",
+    "contracts",
+    "mandate",
+    "pdf",
+    "nextjs",
+    "react"
+  ],
   "funding": [
     {
       "type": "patreon",

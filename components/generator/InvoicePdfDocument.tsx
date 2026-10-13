@@ -204,6 +204,11 @@ function formatCurrency(value: number): string {
   return `${value.toFixed(2).replace('.', ',')} zł`;
 }
 
+function formatIssueDate(value: string): string {
+  const [year, month, day] = value.split('-');
+  return year && month && day ? `${day}.${month}.${year}` : value;
+}
+
 function PdfRow({
   label,
   value,
@@ -238,6 +243,13 @@ export default function createInvoicePdfDocument(
         <Text style={[styles.line, { textAlign: 'center', marginBottom: 16 }]}>
           Numer rachunku: {invoiceNumber}
         </Text>
+        {data.issuePlace && data.issueDate ? (
+          <Text
+            style={[styles.line, { textAlign: 'center', marginBottom: 16 }]}
+          >
+            {data.issuePlace}, {formatIssueDate(data.issueDate)}
+          </Text>
+        ) : null}
 
         <View style={styles.columns}>
           <View style={styles.column}>

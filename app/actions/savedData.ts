@@ -111,6 +111,8 @@ export async function saveInvoice(
     contractNumber: form.contractNumber
       ? encryptText(form.contractNumber)
       : null,
+    issuePlace: form.issuePlace?.trim() || null,
+    issueDate: form.issueDate || null,
     periodStart: form.periodStart,
     net: calculations.net,
     data: encryptJson(form),

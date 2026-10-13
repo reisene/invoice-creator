@@ -24,7 +24,12 @@ import { Alert, Button, Col, Container, Row } from 'react-bootstrap';
 function getInitialData(
   savedBankAccount?: UserBankAccountDto | null,
 ): InvoiceFormData {
-  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const today = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+  ].join('-');
   const monthStart = new Date();
   monthStart.setDate(1);
   const monthEnd = new Date();
@@ -44,6 +49,8 @@ function getInitialData(
 
     contractNumber: undefined,
     contractDate: today,
+    issuePlace: '',
+    issueDate: today,
     periodStart: monthStart.toISOString().slice(0, 10),
     periodEnd: monthEnd.toISOString().slice(0, 10),
     contractType: 'monthly',
@@ -94,9 +101,16 @@ export default function GeneratorClient({
 }: GeneratorClientProps) {
   const [userBankAccount, setUserBankAccount] =
     useState<UserBankAccountDto | null>(bankAccount);
-  const [formData, setFormData] = useState<InvoiceFormData>(
-    initialInvoice?.data ?? duplicateData ?? getInitialData(bankAccount),
-  );
+  const [formData, setFormData] = useState<InvoiceFormData>(() => {
+    if (initialInvoice) return initialInvoice.data;
+    if (duplicateData) {
+      return {
+        ...duplicateData,
+        issueDate: getInitialData(bankAccount).issueDate,
+      };
+    }
+    return getInitialData(bankAccount);
+  });
   const [parties, setParties] = useState(initialParties);
   const [invoiceId, setInvoiceId] = useState(initialInvoice?.id);
   const [invoiceNumber, setInvoiceNumber] = useState(
@@ -119,7 +133,12 @@ export default function GeneratorClient({
         if (stored) {
           const parsed = JSON.parse(stored) as InvoiceFormData;
           if (parsed && typeof parsed === 'object') {
-            setFormData(parsed);
+            setFormData({
+              ...getInitialData(bankAccount),
+              ...parsed,
+              issueDate:
+                parsed.issueDate ?? getInitialData(bankAccount).issueDate,
+            });
             sessionStorage.removeItem('generator_preset_data');
           }
         }

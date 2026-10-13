@@ -29,6 +29,8 @@ export interface InvoiceFormData {
   // Umowa
   contractNumber?: string;
   contractDate: string; // ISO Date
+  issuePlace?: string;
+  issueDate?: string; // ISO Date
   periodStart: string;
   periodEnd: string;
   contractType: ContractType;

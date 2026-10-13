@@ -79,14 +79,31 @@ export function birthDateFromPesel(value: string): string | null {
 }
 
 function isValidDate(value: string): boolean {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value));
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return (
+    !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
+  );
 }
 
 export function validateInvoiceForm(
   data: InvoiceFormData,
   params?: TaxParams,
+  options: { allowMissingIssueDetails?: boolean } = {},
 ): string[] {
   const errors: string[] = [];
+
+  if (!options.allowMissingIssueDetails) {
+    if (!data.issuePlace?.trim()) {
+      errors.push('Podaj miejscowość wystawienia rachunku.');
+    } else if (data.issuePlace.length > 100) {
+      errors.push('Miejscowość wystawienia może mieć maksymalnie 100 znaków.');
+    }
+
+    if (!data.issueDate || !isValidDate(data.issueDate)) {
+      errors.push('Podaj prawidłową datę wystawienia rachunku.');
+    }
+  }
 
   if (!data.clientName.trim()) errors.push('Podaj nazwę zleceniodawcy.');
   if (!data.clientAddress.trim()) errors.push('Podaj adres zleceniodawcy.');

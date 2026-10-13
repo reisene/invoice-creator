@@ -158,6 +158,34 @@ export default function InvoiceForm({
 
   return (
     <Form>
+      <h3 className='mb-3'>Miejsce i data wystawienia</h3>
+
+      <Row className='mb-3'>
+        <Col md={6}>
+          <Form.Group>
+            <Form.Label>Miejscowość wystawienia</Form.Label>
+            <Form.Control
+              type='text'
+              maxLength={100}
+              value={data.issuePlace ?? ''}
+              onChange={(e) => updateField('issuePlace', e.target.value)}
+              required
+            />
+          </Form.Group>
+        </Col>
+        <Col md={6}>
+          <Form.Group>
+            <Form.Label>Data wystawienia</Form.Label>
+            <Form.Control
+              type='date'
+              value={data.issueDate ?? ''}
+              onChange={(e) => updateField('issueDate', e.target.value)}
+              required
+            />
+          </Form.Group>
+        </Col>
+      </Row>
+
       {/* Zleceniodawca */}
       <h3 className='mb-3'>Dane zleceniodawcy</h3>
 

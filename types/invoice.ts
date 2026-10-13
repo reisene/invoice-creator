@@ -1,4 +1,7 @@
 export interface InvoiceData {
+  issuePlace?: string;
+  issueDate?: string;
+
   // Dane stron i umowy
   client: {
     type: 'company' | 'private';

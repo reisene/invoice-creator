@@ -142,6 +142,8 @@ export function calculateInvoice(
       periodEnd: data.periodEnd,
       type: data.contractType,
     },
+    issuePlace: data.issuePlace,
+    issueDate: data.issueDate,
     payment: {
       method: data.paymentMethod,
       transferTarget: data.transferTarget,

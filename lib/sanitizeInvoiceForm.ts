@@ -59,6 +59,8 @@ export function sanitizeInvoiceForm(input: unknown): InvoiceFormData | null {
   const contractorNip = optionalText(v.contractorNip, 20);
   const contractNumber = optionalText(v.contractNumber, 100);
   const contractDate = text(v.contractDate, 10);
+  const issuePlace = optionalText(v.issuePlace, 100);
+  const issueDate = optionalText(v.issueDate, 10);
   const periodStart = text(v.periodStart, 10);
   const periodEnd = text(v.periodEnd, 10);
   const grossAmount = optionalNum(v.grossAmount);
@@ -89,6 +91,8 @@ export function sanitizeInvoiceForm(input: unknown): InvoiceFormData | null {
     contractorNip === null ||
     contractNumber === null ||
     contractDate === null ||
+    issuePlace === null ||
+    issueDate === null ||
     periodStart === null ||
     periodEnd === null ||
     grossAmount === null ||
@@ -119,6 +123,8 @@ export function sanitizeInvoiceForm(input: unknown): InvoiceFormData | null {
     contractorNip,
     contractNumber,
     contractDate,
+    issuePlace,
+    issueDate,
     periodStart,
     periodEnd,
     contractType,

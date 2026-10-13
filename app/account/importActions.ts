@@ -111,7 +111,14 @@ export async function importUserData(
       problems.push(`${label}: nieprawidłowe dane.`);
       return;
     }
-    const errors = validateInvoiceForm(form, params);
+    const isLegacyInvoice =
+      isRecord(item) &&
+      isRecord(item.data) &&
+      item.data.issuePlace === undefined &&
+      item.data.issueDate === undefined;
+    const errors = validateInvoiceForm(form, params, {
+      allowMissingIssueDetails: isLegacyInvoice,
+    });
     if (errors.length > 0) {
       summary.invoices.invalid++;
       problems.push(`${label}: ${errors[0]}`);
@@ -160,6 +167,8 @@ export async function importUserData(
       contractNumber: form.contractNumber
         ? encryptText(form.contractNumber)
         : null,
+      issuePlace: form.issuePlace?.trim() || null,
+      issueDate: form.issueDate || null,
       periodStart: form.periodStart,
       net: calculations.net,
       data: encryptJson(form),

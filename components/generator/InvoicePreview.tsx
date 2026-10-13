@@ -22,6 +22,11 @@ function formatRate(rate: number): string {
     .replace('.', ',')}%`;
 }
 
+function formatIssueDate(value: string): string {
+  const [year, month, day] = value.split('-');
+  return year && month && day ? `${day}.${month}.${year}` : value;
+}
+
 export default function InvoicePreview({
   data,
   taxParams,
@@ -42,6 +47,11 @@ export default function InvoicePreview({
             {invoiceNumber ?? 'zostanie nadany przy pobieraniu PDF'}
           </span>
         </p>
+        {data.issuePlace && data.issueDate ? (
+          <p className='text-center mb-4'>
+            {data.issuePlace}, {formatIssueDate(data.issueDate)}
+          </p>
+        ) : null}
 
         {/* Dane stron */}
         <div className='row mb-4'>

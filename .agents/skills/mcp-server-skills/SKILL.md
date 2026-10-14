@@ -97,12 +97,9 @@ import { rollDice, rollDiceTool } from '@/lib/dice';
 
 const handler = createMcpHandler(
   (server) => {
-    server.tool(
-      rollDiceTool.name,
-      rollDiceTool.description,
-      rollDiceTool.schema,
-      async ({ sides }) => ({ content: [rollDice(sides)] }),
-    );
+    server.tool(rollDiceTool.name, rollDiceTool.description, rollDiceTool.schema, async ({ sides }) => ({
+      content: [rollDice(sides)],
+    }));
   },
   {}, // server options
   {

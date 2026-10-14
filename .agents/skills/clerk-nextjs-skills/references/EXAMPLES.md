@@ -111,18 +111,9 @@ export const config = {
 // proxy.ts
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-const publicRoutes = createRouteMatcher([
-  '/',
-  '/sign-in(.*)',
-  '/sign-up(.*)',
-  '/public(.*)',
-]);
+const publicRoutes = createRouteMatcher(['/', '/sign-in(.*)', '/sign-up(.*)', '/public(.*)']);
 
-const protectedRoutes = createRouteMatcher([
-  '/dashboard(.*)',
-  '/profile(.*)',
-  '/api/user(.*)',
-]);
+const protectedRoutes = createRouteMatcher(['/dashboard(.*)', '/profile(.*)', '/api/user(.*)']);
 
 export default clerkMiddleware(async (auth, req) => {
   if (publicRoutes(req)) {
@@ -307,10 +298,7 @@ export async function GET() {
       name: user.fullName,
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch user' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Failed to fetch user' }, { status: 500 });
   }
 }
 ```
@@ -342,10 +330,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to update metadata' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Failed to update metadata' }, { status: 500 });
   }
 }
 ```
@@ -467,29 +452,24 @@ import { auth, clerkClient } from '@clerk/nextjs/server';
 const clerk = await clerkClient();
 
 const handler = createMcpHandler((server) => {
-  server.tool(
-    'get-user-profile',
-    'Get the authenticated user profile',
-    {},
-    async (_, { authInfo }) => {
-      const userId = authInfo!.extra!.userId! as string;
-      const user = await clerk.users.getUser(userId);
+  server.tool('get-user-profile', 'Get the authenticated user profile', {}, async (_, { authInfo }) => {
+    const userId = authInfo!.extra!.userId! as string;
+    const user = await clerk.users.getUser(userId);
 
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify({
-              id: user.id,
-              email: user.primaryEmailAddress?.emailAddress,
-              name: user.fullName,
-              role: user.publicMetadata?.role,
-            }),
-          },
-        ],
-      };
-    },
-  );
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            id: user.id,
+            email: user.primaryEmailAddress?.emailAddress,
+            name: user.fullName,
+            role: user.publicMetadata?.role,
+          }),
+        },
+      ],
+    };
+  });
 });
 
 const authHandler = withMcpAuth(
@@ -631,8 +611,7 @@ export function ProtectedSection({ children, fallback }: Props) {
 // lib/validate-clerk-env.ts
 export function validateClerkEnvironment() {
   const required = {
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
-      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
   };
 

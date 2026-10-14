@@ -1,7 +1,8 @@
 import 'server-only';
 
 import { prisma } from '@/lib/db';
-import { type RegistrationConsent, TERMS_VERSION } from '@/lib/termsAcceptance';
+import type { RegistrationConsent } from '@/lib/termsAcceptance';
+import { TERMS_VERSION } from '@/lib/termsMetadata';
 
 const PENDING_MAGIC_LINK_RETENTION_DAYS = 30;
 

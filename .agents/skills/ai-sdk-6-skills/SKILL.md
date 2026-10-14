@@ -144,11 +144,7 @@ import { cohere } from '@ai-sdk/cohere';
 
 const { ranking } = await rerank({
   model: cohere.reranking('rerank-v3.5'),
-  documents: [
-    'sunny day at the beach',
-    'rainy afternoon in the city',
-    'snowy night in the mountains',
-  ],
+  documents: ['sunny day at the beach', 'rainy afternoon in the city', 'snowy night in the mountains'],
   query: 'talk about rain',
   topN: 2,
 });
@@ -596,9 +592,7 @@ const supportAgent = new ToolLoopAgent({
   instructions: 'You are a support agent.',
   prepareCall: ({ options, ...settings }) => ({
     ...settings,
-    instructions:
-      settings.instructions +
-      `\nUser: ${options.userId}, Account: ${options.accountType}`,
+    instructions: settings.instructions + `\nUser: ${options.userId}, Account: ${options.accountType}`,
   }),
 });
 

@@ -164,10 +164,7 @@ export default clerkMiddleware(async (auth, req) => {
 // Works in both middleware.ts and proxy.ts
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-const isProtectedRoute = createRouteMatcher([
-  '/dashboard(.*)',
-  '/api/user(.*)',
-]);
+const isProtectedRoute = createRouteMatcher(['/dashboard(.*)', '/api/user(.*)']);
 
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {

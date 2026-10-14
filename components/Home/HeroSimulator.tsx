@@ -123,9 +123,7 @@ export default function HeroSimulator() {
               key={amt}
               type='button'
               onClick={() => setGross(amt)}
-              className={`btn btn-sm rounded-pill px-2 py-0 ${
-                gross === amt ? 'btn-primary' : 'btn-outline-secondary'
-              }`}
+              className={`btn btn-sm rounded-pill px-2 py-0 ${gross === amt ? 'btn-primary' : 'btn-outline-secondary'}`}
             >
               {amt.toLocaleString('pl-PL')} zł
             </button>

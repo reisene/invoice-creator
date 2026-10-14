@@ -1,9 +1,16 @@
+import {
+  ContactEmail,
+  ServiceAddress,
+  ServiceProviderIdentity,
+} from '@/components/legal/TermsVariables';
 import type { MDXComponents } from 'mdx/types';
 import Link from 'next/link';
 import type { ComponentProps } from 'react';
 import { BsInfoCircleFill } from 'react-icons/bs';
 
-export function useMDXComponents(components: MDXComponents): MDXComponents {
+export function useMDXComponents(
+  components: MDXComponents = {},
+): MDXComponents {
   return {
     h1: ({ children, ...props }) => (
       <h1 className='h2 fw-bold mb-4' {...props}>
@@ -63,6 +70,9 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         </a>
       );
     },
+    ContactEmail,
+    ServiceAddress,
+    ServiceProviderIdentity,
     ...components,
   };
 }

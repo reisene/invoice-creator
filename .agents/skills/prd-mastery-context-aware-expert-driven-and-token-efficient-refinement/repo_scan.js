@@ -76,12 +76,10 @@ function detectLanguage() {
 
   if (fileExists('tsconfig.json')) languages.push('TypeScript');
   if (fileExists('package.json')) languages.push('JavaScript');
-  if (fileExists('requirements.txt') || fileExists('pyproject.toml'))
-    languages.push('Python');
+  if (fileExists('requirements.txt') || fileExists('pyproject.toml')) languages.push('Python');
   if (fileExists('go.mod')) languages.push('Go');
   if (fileExists('Cargo.toml')) languages.push('Rust');
-  if (fileExists('pom.xml') || fileExists('build.gradle'))
-    languages.push('Java');
+  if (fileExists('pom.xml') || fileExists('build.gradle')) languages.push('Java');
 
   return languages.length > 0 ? languages : ['None detected'];
 }
@@ -105,8 +103,7 @@ function detectDatabase() {
     if (deps['redis']) databases.push('Redis');
   }
 
-  if (fileExists('prisma/schema.prisma'))
-    databases.push('Prisma (schema detected)');
+  if (fileExists('prisma/schema.prisma')) databases.push('Prisma (schema detected)');
 
   return databases.length > 0 ? databases : ['None detected'];
 }
@@ -126,8 +123,7 @@ function detectArchitecture() {
   if (fileExists('nx.json')) patterns.push('Nx Monorepo');
 
   // Check for microservices indicators
-  if (fileExists('docker-compose.yml'))
-    patterns.push('Docker Compose (multiple services)');
+  if (fileExists('docker-compose.yml')) patterns.push('Docker Compose (multiple services)');
   if (fileExists('kubernetes')) patterns.push('Kubernetes');
 
   return patterns.length > 0 ? patterns : ['Standard structure'];
@@ -143,8 +139,7 @@ function detectAuthentication() {
       ...packageJson.devDependencies,
     };
 
-    if (deps['next-auth'] || deps['@auth/core'])
-      auth.push('Auth.js / NextAuth');
+    if (deps['next-auth'] || deps['@auth/core']) auth.push('Auth.js / NextAuth');
     if (deps['@clerk/nextjs']) auth.push('Clerk');
     if (deps['@supabase/auth-helpers-nextjs']) auth.push('Supabase Auth');
     if (deps['passport']) auth.push('Passport.js');
@@ -177,8 +172,7 @@ function detectAIIntegrations() {
 function detectDeployment() {
   const deployment = [];
 
-  if (fileExists('vercel.json') || fileExists('.vercel'))
-    deployment.push('Vercel');
+  if (fileExists('vercel.json') || fileExists('.vercel')) deployment.push('Vercel');
   if (fileExists('netlify.toml')) deployment.push('Netlify');
   if (fileExists('Dockerfile')) deployment.push('Docker');
   if (fileExists('.github/workflows')) deployment.push('GitHub Actions');
@@ -200,13 +194,9 @@ function analyzeDocumentation() {
 
 function getProjectStats() {
   const stats = {
-    hasTests:
-      fileExists('__tests__') || fileExists('tests') || fileExists('test'),
+    hasTests: fileExists('__tests__') || fileExists('tests') || fileExists('test'),
     hasCI: fileExists('.github/workflows') || fileExists('.gitlab-ci.yml'),
-    hasLinting:
-      fileExists('.eslintrc.json') ||
-      fileExists('.eslintrc.js') ||
-      fileExists('eslint.config.js'),
+    hasLinting: fileExists('.eslintrc.json') || fileExists('.eslintrc.js') || fileExists('eslint.config.js'),
     hasPrettier: fileExists('.prettierrc') || fileExists('prettier.config.js'),
     hasTypeScript: fileExists('tsconfig.json'),
   };
@@ -218,17 +208,11 @@ function generateRecommendations(findings) {
   const recommendations = [];
 
   if (findings.projectType.includes('New')) {
-    recommendations.push(
-      'Start with architecture decisions and tech stack selection',
-    );
-    recommendations.push(
-      'Consider creating an Architecture Decision Record (ADR)',
-    );
+    recommendations.push('Start with architecture decisions and tech stack selection');
+    recommendations.push('Consider creating an Architecture Decision Record (ADR)');
     recommendations.push('Define core requirements before implementation');
   } else {
-    recommendations.push(
-      'Review existing architecture before proposing changes',
-    );
+    recommendations.push('Review existing architecture before proposing changes');
     recommendations.push('Consider backward compatibility and migration paths');
     recommendations.push('Validate changes align with current patterns');
   }
@@ -242,9 +226,7 @@ function generateRecommendations(findings) {
   }
 
   if (findings.ai.length > 1 && !findings.ai.includes('None detected')) {
-    recommendations.push(
-      'Multiple AI integrations detected - consider standardization',
-    );
+    recommendations.push('Multiple AI integrations detected - consider standardization');
   }
 
   return recommendations;
@@ -342,49 +324,32 @@ For new PRDs, reference this document to ensure alignment with existing architec
 function generateObservations(findings) {
   const observations = [];
 
-  if (
-    findings.frameworks.length > 2 &&
-    !findings.frameworks.includes('None detected')
-  ) {
-    observations.push(
-      '- **Multiple Frameworks**: Consider consolidating to reduce complexity',
-    );
+  if (findings.frameworks.length > 2 && !findings.frameworks.includes('None detected')) {
+    observations.push('- **Multiple Frameworks**: Consider consolidating to reduce complexity');
   }
 
   if (findings.ai.some((a) => a.includes('AI SDK'))) {
-    observations.push(
-      '- **AI Integration**: Project has AI capabilities - consider AI-driven features',
-    );
+    observations.push('- **AI Integration**: Project has AI capabilities - consider AI-driven features');
   }
 
   if (findings.authentication.includes('None detected')) {
-    observations.push(
-      '- **No Authentication**: Consider adding auth if user features are planned',
-    );
+    observations.push('- **No Authentication**: Consider adding auth if user features are planned');
   }
 
   if (findings.architecture.some((a) => a.includes('App Router'))) {
-    observations.push(
-      '- **Modern Next.js**: Using App Router - leverage server components and actions',
-    );
+    observations.push('- **Modern Next.js**: Using App Router - leverage server components and actions');
   }
 
   if (findings.databases.some((d) => d.includes('Prisma'))) {
-    observations.push(
-      '- **Prisma ORM**: Type-safe database access - ensure schema migrations are planned',
-    );
+    observations.push('- **Prisma ORM**: Type-safe database access - ensure schema migrations are planned');
   }
 
   if (findings.databases.some((d) => d.includes('Vector'))) {
-    observations.push(
-      '- **Vector Database**: Semantic search capability - consider AI-powered search features',
-    );
+    observations.push('- **Vector Database**: Semantic search capability - consider AI-powered search features');
   }
 
   if (observations.length === 0) {
-    observations.push(
-      '- No specific concerns detected - standard project structure',
-    );
+    observations.push('- No specific concerns detected - standard project structure');
   }
 
   return observations;

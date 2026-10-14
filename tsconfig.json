@@ -16,6 +16,9 @@
     "plugins": [
       {
         "name": "next"
+      },
+      {
+        "name": "@mdx-js/typescript-plugin"
       }
     ],
     "paths": {

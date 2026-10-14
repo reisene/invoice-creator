@@ -272,3 +272,7 @@
 .help-table-wrapper tbody tr:hover td {
   background-color: var(--bs-tertiary-bg);
 }
+
+.terms-metadata-badge {
+  font-size: 0.875rem;
+}

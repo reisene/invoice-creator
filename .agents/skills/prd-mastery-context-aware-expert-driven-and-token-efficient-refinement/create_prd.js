@@ -160,9 +160,7 @@ function printNextSteps(info) {
   console.log(`3. Add design mockups to:`);
   console.log(`   ${path.join(info.folderPath, 'mockups/')}`);
   console.log('');
-  console.log(
-    `4. Update ${path.join(PRDS_DIR, 'README.md')} to include PRD-${info.prdId}`,
-  );
+  console.log(`4. Update ${path.join(PRDS_DIR, 'README.md')} to include PRD-${info.prdId}`);
   console.log('');
   console.log(`5. Commit your changes:`);
   console.log(`   git add prds/${info.folderName}/`);

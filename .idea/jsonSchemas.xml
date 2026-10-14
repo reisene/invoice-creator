@@ -3,6 +3,22 @@
   <component name="JsonSchemaMappingsProjectConfiguration">
     <state>
       <map>
+        <entry key="GitHub Issue Forms [Auto]">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="GitHub Issue Forms [Auto]" />
+              <option name="relativePathToSchema" value="/github_workflow_plugin_github-issue-forms_schema.json" />
+              <option name="applicationDefined" value="true" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value=".github/ISSUE_TEMPLATE/config.yml" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
         <entry key="Pull Request Labeler">
           <value>
             <SchemaInfo>

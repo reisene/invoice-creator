@@ -160,9 +160,7 @@ export function validateClerkEnv() {
   const missing = required.filter((key) => !process.env[key]);
 
   if (missing.length > 0) {
-    throw new Error(
-      `Missing required Clerk environment variables: ${missing.join(', ')}`,
-    );
+    throw new Error(`Missing required Clerk environment variables: ${missing.join(', ')}`);
   }
 }
 ```
@@ -346,10 +344,7 @@ export default clerkMiddleware(async (auth, req) => {
 // Option B: Protect specific routes
 import { createRouteMatcher } from '@clerk/nextjs/server';
 
-const isProtectedRoute = createRouteMatcher([
-  '/dashboard(.*)',
-  '/api/user(.*)',
-]);
+const isProtectedRoute = createRouteMatcher(['/dashboard(.*)', '/api/user(.*)']);
 
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {

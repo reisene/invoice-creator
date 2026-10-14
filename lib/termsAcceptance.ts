@@ -1,30 +1,3 @@
-import pkg from '@/package.json' with { type: 'json' };
-import { statSync } from 'node:fs';
-import path from 'node:path';
-
-const termsFilePath = path.join(process.cwd(), 'lib', 'termsAcceptance.ts');
-
-export const TERMS_LAST_MODIFIED = statSync(termsFilePath).mtime;
-
-const termVer: () => string = (): string => {
-  const match = pkg.version.match(/^v?(\d+)\.(\d+)(?:\.(\d+))?/);
-
-  if (!match) {
-    return 'wersja robocza';
-  }
-
-  const major = Number(match[1]);
-  const minor = Number(match[2]);
-
-  if (major === 0 && minor === 1) {
-    return 'projekt 0.1';
-  }
-
-  return `${major}.${minor}`;
-};
-
-export const TERMS_VERSION: string = termVer();
-
 export type RegistrationMethod =
   'EMAIL_PASSWORD' | 'MAGIC_LINK' | 'ACCOUNT_RECONSENT';
 

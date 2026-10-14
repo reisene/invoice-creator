@@ -16,7 +16,8 @@ We will investigate and respond as quickly as possible.
 
 ## Supported versions
 
-This project is under active development. Security updates will be provided for the current version in active development and the latest released version when applicable.
+This project is under active development. Security updates will be provided for the current version in active
+development and the latest released version when applicable.
 
 ## Disclosure policy
 

@@ -2,7 +2,8 @@
 
 ## Our pledge
 
-We as members, contributors, and maintainers pledge to make participation in this project a harassment-free experience for everyone.
+We as members, contributors, and maintainers pledge to make participation in this project a harassment-free experience
+for everyone.
 
 ## Our standards
 

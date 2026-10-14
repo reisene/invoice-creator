@@ -106,10 +106,7 @@ export { handler as GET };
 Create `app/.well-known/oauth-authorization-server/route.ts`:
 
 ```typescript
-import {
-  authServerMetadataHandlerClerk,
-  metadataCorsOptionsRequestHandler,
-} from '@clerk/mcp-tools/next';
+import { authServerMetadataHandlerClerk, metadataCorsOptionsRequestHandler } from '@clerk/mcp-tools/next';
 
 const handler = authServerMetadataHandlerClerk();
 const corsHandler = metadataCorsOptionsRequestHandler();
@@ -330,9 +327,7 @@ server.tool(
 4. **Audit Logging**: Log all MCP tool invocations
 
    ```typescript
-   console.log(
-     `[MCP] ${userId} called ${toolName} at ${new Date().toISOString()}`,
-   );
+   console.log(`[MCP] ${userId} called ${toolName} at ${new Date().toISOString()}`);
    ```
 
 5. **Secrets Management**: Never expose secrets in tool responses

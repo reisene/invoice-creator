@@ -269,10 +269,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }
 
           // Verify password
-          const isValidPassword = await bcrypt.compare(
-            password,
-            user.hashedPassword,
-          );
+          const isValidPassword = await bcrypt.compare(password, user.hashedPassword);
 
           if (!isValidPassword) {
             throw new Error('Invalid password');
@@ -324,10 +321,7 @@ export async function POST(req: Request) {
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'User already exists' },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: 'User already exists' }, { status: 400 });
     }
 
     // Hash password
@@ -342,16 +336,10 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json(
-      { message: 'User created successfully', userId: user.id },
-      { status: 201 },
-    );
+    return NextResponse.json({ message: 'User created successfully', userId: user.id }, { status: 201 });
   } catch (error) {
     console.error('Registration error:', error);
-    return NextResponse.json(
-      { error: 'Failed to register user' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Failed to register user' }, { status: 500 });
   }
 }
 ```
@@ -762,9 +750,7 @@ import { auth } from '@/auth';
 import { NextResponse } from 'next/server';
 import type { Session } from 'next-auth';
 
-export async function withAuth(
-  handler: (session: Session) => Promise<NextResponse>,
-) {
+export async function withAuth(handler: (session: Session) => Promise<NextResponse>) {
   const session = await auth();
 
   if (!session?.user) {

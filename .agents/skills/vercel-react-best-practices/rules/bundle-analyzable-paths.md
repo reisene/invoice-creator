@@ -54,9 +54,7 @@ const baseDir = path.join(process.cwd(), 'content/' + contentKind);
 
 ```ts
 const baseDir =
-  kind === ContentKind.Blog
-    ? path.join(process.cwd(), 'content/blog')
-    : path.join(process.cwd(), 'content/docs');
+  kind === ContentKind.Blog ? path.join(process.cwd(), 'content/blog') : path.join(process.cwd(), 'content/docs');
 ```
 
 In Next.js server code, this matters for output file tracing too. `path.join(process.cwd(), someVar)` can widen the traced file set because Next.js statically analyze `import`, `require`, and `fs` usage.

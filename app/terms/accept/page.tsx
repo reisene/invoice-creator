@@ -3,7 +3,7 @@ import {
   claimPendingMagicLinkAcceptance,
   hasCurrentTermsAcceptance,
 } from '@/lib/recordTermsAcceptance';
-import { TERMS_VERSION } from '@/lib/termsAcceptance';
+import { TERMS_VERSION } from '@/lib/termsMetadata';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { Alert, Card, Container } from 'react-bootstrap';

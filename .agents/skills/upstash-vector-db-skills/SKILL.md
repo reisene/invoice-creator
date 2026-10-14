@@ -85,10 +85,7 @@ const results = await index.query({
 });
 
 results.forEach((result) => {
-  console.log(
-    `ID: ${result.id}, Score: ${result.score}, Metadata:`,
-    result.metadata,
-  );
+  console.log(`ID: ${result.id}, Score: ${result.score}, Metadata:`, result.metadata);
 });
 ```
 

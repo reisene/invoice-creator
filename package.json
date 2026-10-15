@@ -59,6 +59,7 @@
     "pretypecheck:ts6": "tsx scripts/generateLegalRegistry.ts",
     "typecheck:ts6": "tsc6 --noEmit",
     "test": "tsx --test tests/**/*.test.ts",
+    "db:push": "prisma db push",
     "db:seed": "prisma db seed",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

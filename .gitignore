@@ -41,8 +41,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# prisma generated files
+# generated files
 generated/prisma
+content/legal/registry.generated.ts
 
 # From EnvUi
 .env

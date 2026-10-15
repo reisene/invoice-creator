@@ -4,7 +4,7 @@ import { Fira_Mono } from 'next/font/google';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { Container, Nav, Navbar } from 'react-bootstrap';
+import { Container, Image, Nav, Navbar } from 'react-bootstrap';
 import { IconType } from 'react-icons';
 import {
   BsCalculatorFill,
@@ -59,6 +59,7 @@ export default function AppNavbar({ authButtons }: { authButtons: ReactNode }) {
     }
     return pathname === href || pathname.startsWith(`${href}/`);
   };
+  const logo = 'logo.svg';
 
   return (
     <Navbar
@@ -71,8 +72,15 @@ export default function AppNavbar({ authButtons }: { authButtons: ReactNode }) {
         <Navbar.Brand
           as={Link}
           href={'/'}
-          className={'d-flex align-items-center fw-bold'}
+          className={'d-flex align-items-center fw-bold g-1'}
         >
+          <Image
+            src={logo}
+            alt={'Invoice Creator Logo'}
+            aria-label={'Invoice Creator Logo'}
+            width={32}
+            height={32}
+          />
           Invoice Creator
         </Navbar.Brand>
         <Navbar.Toggle aria-controls='main-navbar-nav' />

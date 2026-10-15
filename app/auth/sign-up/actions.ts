@@ -2,6 +2,7 @@
 
 import { auth } from '@/lib/auth/server';
 import { authErrorMessage } from '@/lib/authErrors';
+import { getCurrentLegalDocument } from '@/lib/legalDocuments';
 import { recordTermsAcceptance } from '@/lib/recordTermsAcceptance';
 import { parseRegistrationConsent } from '@/lib/termsAcceptance';
 import { redirect } from 'next/navigation';
@@ -10,7 +11,11 @@ export async function signUpWithEmail(
   _prevState: { error?: string; success?: boolean } | null,
   formData: FormData,
 ) {
-  const parsedConsent = parseRegistrationConsent(formData, 'EMAIL_PASSWORD');
+  const parsedConsent = parseRegistrationConsent(
+    formData,
+    'EMAIL_PASSWORD',
+    getCurrentLegalDocument('terms').version,
+  );
   if ('error' in parsedConsent) {
     return parsedConsent;
   }

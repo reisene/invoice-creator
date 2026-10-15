@@ -17,6 +17,12 @@ export default function SignUpForm({ termsVersion }: { termsVersion: string }) {
         <h1 className='h4 text-center mb-4'>Utwórz konto</h1>
 
         <Form action={formAction}>
+          <Form.Control
+            type='hidden'
+            name='termsVersion'
+            value={termsVersion}
+          />
+
           <Form.Group className='mb-3' controlId='name'>
             <Form.Label>Imię i nazwisko</Form.Label>
             <Form.Control

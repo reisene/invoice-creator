@@ -28,6 +28,14 @@ function MagicLinkFormInner({ termsVersion }: { termsVersion: string }) {
           </Alert>
         ) : (
           <Form action={formAction}>
+            {isSignUp && (
+              <Form.Control
+                type='hidden'
+                name='termsVersion'
+                value={termsVersion}
+              />
+            )}
+
             <Form.Control
               type='hidden'
               name='mode'

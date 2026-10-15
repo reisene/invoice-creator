@@ -1,6 +1,7 @@
 'use server';
 
 import { auth } from '@/lib/auth/server';
+import { getCurrentLegalDocument } from '@/lib/legalDocuments';
 import {
   hasCurrentTermsAcceptance,
   recordTermsAcceptance,
@@ -13,8 +14,15 @@ export async function acceptCurrentTerms(
   _prevState: AcceptTermsState,
   formData: FormData,
 ): Promise<AcceptTermsState> {
+  const currentTermsVersion = getCurrentLegalDocument('terms').version;
   if (formData.get('acceptTerms') !== 'accepted') {
     return { error: 'Zaakceptuj Regulamin, aby kontynuować.' };
+  }
+  if (formData.get('termsVersion') !== currentTermsVersion) {
+    return {
+      error:
+        'Wersja Regulaminu uległa zmianie. Odśwież stronę i zapoznaj się z aktualnym dokumentem.',
+    };
   }
 
   const { data: session } = await auth.getSession();
@@ -32,6 +40,7 @@ export async function acceptCurrentTerms(
     await recordTermsAcceptance(
       {
         email: user.email,
+        termsVersion: currentTermsVersion,
         registrationMethod: 'ACCOUNT_RECONSENT',
         earlyServiceStartRequested: false,
       },

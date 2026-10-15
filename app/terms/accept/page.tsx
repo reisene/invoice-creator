@@ -1,9 +1,9 @@
 import { auth } from '@/lib/auth/server';
+import { getCurrentLegalDocument } from '@/lib/legalDocuments';
 import {
   claimPendingMagicLinkAcceptance,
   hasCurrentTermsAcceptance,
 } from '@/lib/recordTermsAcceptance';
-import { TERMS_VERSION } from '@/lib/termsMetadata';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { Alert, Card, Container } from 'react-bootstrap';
@@ -29,6 +29,7 @@ export default async function AcceptTermsPage() {
   if (await hasCurrentTermsAcceptance(userId)) {
     redirect('/');
   }
+  const { version } = getCurrentLegalDocument('terms');
 
   return (
     <Container className='py-5 page-narrow'>
@@ -39,10 +40,10 @@ export default async function AcceptTermsPage() {
         <h1 className='h4 mb-3'>Zaakceptuj aktualny Regulamin</h1>
         <Alert variant='info'>
           Aby kontynuować korzystanie z Konta, potwierdź akceptację Regulaminu w
-          wersji {TERMS_VERSION}. Zapiszemy informację o koncie, wersji
-          dokumentu i czasie akceptacji.
+          wersji {version}. Zapiszemy informację o koncie, wersji dokumentu i
+          czasie akceptacji.
         </Alert>
-        <AcceptanceForm />
+        <AcceptanceForm termsVersion={version} />
       </Card>
     </Container>
   );

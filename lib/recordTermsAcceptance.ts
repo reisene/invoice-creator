@@ -1,8 +1,8 @@
 import 'server-only';
 
 import { prisma } from '@/lib/db';
+import { getCurrentLegalDocument } from '@/lib/legalDocuments';
 import type { RegistrationConsent } from '@/lib/termsAcceptance';
-import { TERMS_VERSION } from '@/lib/termsMetadata';
 
 const PENDING_MAGIC_LINK_RETENTION_DAYS = 30;
 
@@ -25,13 +25,16 @@ export async function recordTermsAcceptance(
   if (userId) {
     await prisma.termsAcceptance.upsert({
       where: {
-        userId_termsVersion: { userId, termsVersion: TERMS_VERSION },
+        userId_termsVersion: {
+          userId,
+          termsVersion: consent.termsVersion,
+        },
       },
       create: {
         ...consent,
         email: consent.email.toLowerCase(),
         userId,
-        termsVersion: TERMS_VERSION,
+        termsVersion: consent.termsVersion,
         acceptedAt,
         earlyServiceStartRequestedAt: consent.earlyServiceStartRequested
           ? acceptedAt
@@ -46,7 +49,7 @@ export async function recordTermsAcceptance(
     data: {
       ...consent,
       email: consent.email.toLowerCase(),
-      termsVersion: TERMS_VERSION,
+      termsVersion: consent.termsVersion,
       acceptedAt,
       earlyServiceStartRequestedAt: consent.earlyServiceStartRequested
         ? acceptedAt
@@ -59,13 +62,14 @@ export async function claimPendingMagicLinkAcceptance(
   userId: string,
   email: string,
 ): Promise<void> {
+  const termsVersion = getCurrentLegalDocument('terms').version;
   if (await hasCurrentTermsAcceptance(userId)) return;
 
   const pending = await prisma.termsAcceptance.findFirst({
     where: {
       userId: null,
       email: email.trim().toLowerCase(),
-      termsVersion: TERMS_VERSION,
+      termsVersion,
       registrationMethod: 'MAGIC_LINK',
       acceptedAt: { gte: getPendingMagicLinkAcceptanceCutoff() },
     },
@@ -94,9 +98,10 @@ export async function claimPendingMagicLinkAcceptance(
 export async function hasCurrentTermsAcceptance(
   userId: string,
 ): Promise<boolean> {
+  const termsVersion = getCurrentLegalDocument('terms').version;
   const acceptance = await prisma.termsAcceptance.findUnique({
     where: {
-      userId_termsVersion: { userId, termsVersion: TERMS_VERSION },
+      userId_termsVersion: { userId, termsVersion },
     },
   });
 

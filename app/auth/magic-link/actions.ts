@@ -2,6 +2,7 @@
 
 import { auth } from '@/lib/auth/server';
 import { authErrorMessage } from '@/lib/authErrors';
+import { getCurrentLegalDocument } from '@/lib/legalDocuments';
 import { recordTermsAcceptance } from '@/lib/recordTermsAcceptance';
 import { parseRegistrationConsent } from '@/lib/termsAcceptance';
 import { headers } from 'next/headers';
@@ -19,7 +20,13 @@ export async function requestMagicLink(
   }
 
   const registrationConsent =
-    mode === 'signup' ? parseRegistrationConsent(formData, 'MAGIC_LINK') : null;
+    mode === 'signup'
+      ? parseRegistrationConsent(
+          formData,
+          'MAGIC_LINK',
+          getCurrentLegalDocument('terms').version,
+        )
+      : null;
   if (registrationConsent && 'error' in registrationConsent) {
     return registrationConsent;
   }

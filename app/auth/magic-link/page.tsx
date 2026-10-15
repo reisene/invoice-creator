@@ -1,6 +1,10 @@
-import { TERMS_VERSION } from '@/lib/termsMetadata';
+import { getCurrentLegalDocument } from '@/lib/legalDocuments';
+import { connection } from 'next/server';
 import MagicLinkForm from './MagicLinkForm';
 
-export default function MagicLinkPage() {
-  return <MagicLinkForm termsVersion={TERMS_VERSION} />;
+export default async function MagicLinkPage() {
+  await connection();
+  const { version } = getCurrentLegalDocument('terms');
+
+  return <MagicLinkForm termsVersion={version} />;
 }

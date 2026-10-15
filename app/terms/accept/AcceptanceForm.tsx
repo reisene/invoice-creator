@@ -5,7 +5,11 @@ import Link from 'next/link';
 import { useActionState } from 'react';
 import { Alert, Button, Form } from 'react-bootstrap';
 
-export default function AcceptanceForm() {
+export default function AcceptanceForm({
+  termsVersion,
+}: {
+  termsVersion: string;
+}) {
   const [state, formAction, isPending] = useActionState(
     acceptCurrentTerms,
     null,
@@ -13,6 +17,8 @@ export default function AcceptanceForm() {
 
   return (
     <Form action={formAction}>
+      <Form.Control type='hidden' name='termsVersion' value={termsVersion} />
+
       <Form.Check
         className='mb-3'
         id='accept-current-terms'

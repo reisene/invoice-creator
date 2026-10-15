@@ -47,12 +47,16 @@
     ]
   },
   "scripts": {
+    "predev": "tsx scripts/generateLegalRegistry.ts",
     "dev": "doppler run -- next dev",
+    "prebuild": "tsx scripts/generateLegalRegistry.ts",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "prepare": "husky",
+    "pretypecheck": "tsx scripts/generateLegalRegistry.ts",
     "typecheck": "tsc --noEmit",
+    "pretypecheck:ts6": "tsx scripts/generateLegalRegistry.ts",
     "typecheck:ts6": "tsc6 --noEmit",
     "test": "tsx --test tests/**/*.test.ts",
     "db:seed": "prisma db seed",

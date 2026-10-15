@@ -2,7 +2,7 @@ import {
   ContactEmail,
   ServiceAddress,
   ServiceProviderIdentity,
-} from '@/components/legal/TermsVariables';
+} from '@/components/legal/LegalDocumentComponents';
 import type { MDXComponents } from 'mdx/types';
 import Link from 'next/link';
 import type { ComponentProps } from 'react';

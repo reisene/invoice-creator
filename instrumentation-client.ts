@@ -10,7 +10,7 @@ initBotId({
 });
 
 Sentry.init({
-  dsn: 'https://0c07c0064949b0e2931a3180ef1d3da2@o4510119548223488.ingest.de.sentry.io/4512260662755408',
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
   // Add optional integrations for additional features
   integrations: [Sentry.replayIntegration()],

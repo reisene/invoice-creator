@@ -1,5 +1,5 @@
 export const COOKIE_CONSENT_COOKIE = 'cookie-consent';
-export const COOKIE_CONSENT_VERSION = '2';
+export const COOKIE_CONSENT_VERSION = '3';
 export const COOKIE_CONSENT_LOG_RETENTION_DAYS = 30;
 export const COOKIE_SETTINGS_EVENT = 'cookie-consent:open-settings';
 export const COOKIE_CONSENT_CHANGED_EVENT = 'cookie-consent:changed';

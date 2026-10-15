@@ -89,7 +89,9 @@ export default function CookieConsentBanner({
 
           <p className='text-body-secondary mb-3'>
             Używamy cookies niezbędnych do logowania i działania Serwisu. Za
-            Twoją zgodą uruchomimy także Vercel Web Analytics do statystyk
+            Raporty błędów Sentry pomagają nam wykrywać awarie. Za Twoją zgodą
+            uruchomimy dodatkowo Sentry Session Replay do odtwarzania
+            zanonimizowanego przebiegu sesji, Vercel Web Analytics do statystyk
             odwiedzin oraz Speed Insights do pomiaru wydajności. Możesz
             zaakceptować opcjonalne pomiary albo pozostać przy niezbędnych —
             wybór nie ogranicza dostępu do Serwisu.
@@ -117,11 +119,13 @@ export default function CookieConsentBanner({
                   <div>
                     <p className='fw-semibold mb-1'>Opcjonalne</p>
                     <p className='small text-body-secondary mb-0'>
-                      Vercel Web Analytics i Speed Insights uruchamiamy
-                      wyłącznie po akceptacji. Narzędzia nie korzystają z
-                      cookies do tych pomiarów, ale respektują Twój wybór
-                      dotyczący opcjonalnej analityki. Nie używamy narzędzi
-                      reklamowych. Zmiana wyboru przeładuje stronę.
+                      Sentry Session Replay, Vercel Web Analytics i Speed
+                      Insights uruchamiamy wyłącznie po akceptacji. Replay
+                      rejestruje zmiany interfejsu i interakcje z przeglądarką;
+                      domyślnie maskuje tekst i wartości pól formularzy oraz
+                      blokuje multimedia. Zmiana lub wycofanie zgody zatrzymuje
+                      dalsze nagrywanie. Nie używamy narzędzi reklamowych.
+                      Zmiana wyboru przeładuje stronę.
                     </p>
                   </div>
                 </div>

@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/nextjs';
 import { saveUserBankAccountAction } from '@/app/actions/savedData';
 import {
   cleanPolishBankAccount,
@@ -16,6 +15,7 @@ import type {
 } from '@/types/invoiceForm';
 import type { UserBankAccountDto } from '@/types/savedData';
 import type { TaxParams } from '@/types/taxParams';
+import * as Sentry from '@sentry/nextjs';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Alert, Button, Col, Form, Row, Spinner } from 'react-bootstrap';
@@ -173,7 +173,9 @@ export default function InvoiceForm({
               type='text'
               maxLength={100}
               value={data.issuePlace ?? ''}
-              onChange={(e) => updateField('issuePlace', e.target.value)}
+              onChange={(e) => {
+                updateField('issuePlace', e.target.value);
+              }}
               required
             />
           </Form.Group>
@@ -184,7 +186,9 @@ export default function InvoiceForm({
             <Form.Control
               type='date'
               value={data.issueDate ?? ''}
-              onChange={(e) => updateField('issueDate', e.target.value)}
+              onChange={(e) => {
+                updateField('issueDate', e.target.value);
+              }}
               required
             />
           </Form.Group>
@@ -200,9 +204,9 @@ export default function InvoiceForm({
             <Form.Label>Typ zleceniodawcy</Form.Label>
             <Form.Select
               value={data.clientType}
-              onChange={(e) =>
-                updateField('clientType', e.target.value as ClientType)
-              }
+              onChange={(e) => {
+                updateField('clientType', e.target.value as ClientType);
+              }}
             >
               <option value='company'>Firma</option>
               <option value='private'>Osoba prywatna</option>
@@ -224,12 +228,12 @@ export default function InvoiceForm({
                 min={0}
                 max={taxParams?.yearlyYoungReliefLimit}
                 value={data.yearToDateYoungReliefIncome}
-                onChange={(e) =>
+                onChange={(e) => {
                   updateField(
                     'yearToDateYoungReliefIncome',
                     e.target.value ? Number(e.target.value) : 0,
-                  )
-                }
+                  );
+                }}
                 required
               />
               <Form.Text>
@@ -248,7 +252,9 @@ export default function InvoiceForm({
             <Form.Control
               type='text'
               value={data.clientName}
-              onChange={(e) => updateField('clientName', e.target.value)}
+              onChange={(e) => {
+                updateField('clientName', e.target.value);
+              }}
               required
             />
           </Form.Group>
@@ -260,7 +266,9 @@ export default function InvoiceForm({
               as='textarea'
               rows={3}
               value={data.clientAddress}
-              onChange={(e) => updateField('clientAddress', e.target.value)}
+              onChange={(e) => {
+                updateField('clientAddress', e.target.value);
+              }}
               required
             />
           </Form.Group>
@@ -275,9 +283,9 @@ export default function InvoiceForm({
               <Form.Control
                 type='text'
                 value={data.clientNip ?? ''}
-                onChange={(e) =>
-                  updateField('clientNip', e.target.value || undefined)
-                }
+                onChange={(e) => {
+                  updateField('clientNip', e.target.value || undefined);
+                }}
                 required={data.clientType === 'company'}
               />
             </Form.Group>
@@ -289,9 +297,9 @@ export default function InvoiceForm({
               <Form.Control
                 type='text'
                 value={data.clientPesel ?? ''}
-                onChange={(e) =>
-                  updateField('clientPesel', e.target.value || undefined)
-                }
+                onChange={(e) => {
+                  updateField('clientPesel', e.target.value || undefined);
+                }}
                 required={data.clientType === 'private'}
               />
             </Form.Group>
@@ -309,7 +317,9 @@ export default function InvoiceForm({
             <Form.Control
               type='text'
               value={data.contractorName}
-              onChange={(e) => updateField('contractorName', e.target.value)}
+              onChange={(e) => {
+                updateField('contractorName', e.target.value);
+              }}
               required
             />
           </Form.Group>
@@ -321,7 +331,9 @@ export default function InvoiceForm({
               as='textarea'
               rows={3}
               value={data.contractorAddress}
-              onChange={(e) => updateField('contractorAddress', e.target.value)}
+              onChange={(e) => {
+                updateField('contractorAddress', e.target.value);
+              }}
               required
             />
           </Form.Group>
@@ -335,7 +347,9 @@ export default function InvoiceForm({
             <Form.Control
               type='text'
               value={data.contractorPesel}
-              onChange={(e) => updateField('contractorPesel', e.target.value)}
+              onChange={(e) => {
+                updateField('contractorPesel', e.target.value);
+              }}
               required
             />
           </Form.Group>
@@ -346,9 +360,9 @@ export default function InvoiceForm({
             <Form.Control
               type='text'
               value={data.contractorNip ?? ''}
-              onChange={(e) =>
-                updateField('contractorNip', e.target.value || undefined)
-              }
+              onChange={(e) => {
+                updateField('contractorNip', e.target.value || undefined);
+              }}
             />
           </Form.Group>
         </Col>
@@ -364,9 +378,9 @@ export default function InvoiceForm({
             <Form.Control
               type='text'
               value={data.contractNumber ?? ''}
-              onChange={(e) =>
-                updateField('contractNumber', e.target.value || undefined)
-              }
+              onChange={(e) => {
+                updateField('contractNumber', e.target.value || undefined);
+              }}
             />
           </Form.Group>
         </Col>
@@ -376,7 +390,9 @@ export default function InvoiceForm({
             <Form.Control
               type='date'
               value={data.contractDate}
-              onChange={(e) => updateField('contractDate', e.target.value)}
+              onChange={(e) => {
+                updateField('contractDate', e.target.value);
+              }}
               required
             />
           </Form.Group>
@@ -390,7 +406,9 @@ export default function InvoiceForm({
             <Form.Control
               type='date'
               value={data.periodStart}
-              onChange={(e) => updateField('periodStart', e.target.value)}
+              onChange={(e) => {
+                updateField('periodStart', e.target.value);
+              }}
               required
             />
           </Form.Group>
@@ -401,7 +419,9 @@ export default function InvoiceForm({
             <Form.Control
               type='date'
               value={data.periodEnd}
-              onChange={(e) => updateField('periodEnd', e.target.value)}
+              onChange={(e) => {
+                updateField('periodEnd', e.target.value);
+              }}
               required
             />
           </Form.Group>
@@ -414,9 +434,9 @@ export default function InvoiceForm({
             <Form.Label>Typ umowy</Form.Label>
             <Form.Select
               value={data.contractType}
-              onChange={(e) =>
-                updateField('contractType', e.target.value as ContractType)
-              }
+              onChange={(e) => {
+                updateField('contractType', e.target.value as ContractType);
+              }}
               required
             >
               <option value='monthly'>Miesięczna</option>
@@ -439,12 +459,12 @@ export default function InvoiceForm({
                 step='0.01'
                 min={0}
                 value={data.grossAmount ?? ''}
-                onChange={(e) =>
+                onChange={(e) => {
                   updateField(
                     'grossAmount',
                     e.target.value ? Number(e.target.value) : undefined,
-                  )
-                }
+                  );
+                }}
                 required={data.contractType === 'monthly'}
               />
             </Form.Group>
@@ -472,12 +492,12 @@ export default function InvoiceForm({
                 step='0.01'
                 min={0}
                 value={data.hourlyRate ?? ''}
-                onChange={(e) =>
+                onChange={(e) => {
                   updateField(
                     'hourlyRate',
                     e.target.value ? Number(e.target.value) : undefined,
-                  )
-                }
+                  );
+                }}
                 required={data.contractType === 'hourly'}
               />
             </Form.Group>
@@ -490,12 +510,12 @@ export default function InvoiceForm({
                 step='any'
                 min={0}
                 value={data.hoursWorked ?? ''}
-                onChange={(e) =>
+                onChange={(e) => {
                   updateField(
                     'hoursWorked',
                     e.target.value ? Number(e.target.value) : undefined,
-                  )
-                }
+                  );
+                }}
                 required={data.contractType === 'hourly'}
               />
             </Form.Group>
@@ -687,9 +707,9 @@ export default function InvoiceForm({
             </Form.Label>
             <Form.Select
               value={data.costType}
-              onChange={(e) =>
-                updateField('costType', e.target.value as CostType)
-              }
+              onChange={(e) => {
+                updateField('costType', e.target.value as CostType);
+              }}
               required
             >
               <option value='20'>
@@ -714,12 +734,12 @@ export default function InvoiceForm({
               step='1'
               min={0}
               value={data.yearToDateTaxableIncome}
-              onChange={(e) =>
+              onChange={(e) => {
                 updateField(
                   'yearToDateTaxableIncome',
                   e.target.value ? Number(e.target.value) : 0,
-                )
-              }
+                );
+              }}
               required
             />
             <Form.Text>
@@ -742,9 +762,9 @@ export default function InvoiceForm({
                   data.voluntarySickness && data.contractorStatus === 'standard'
                 }
                 disabled={data.contractorStatus !== 'standard'}
-                onChange={(e) =>
-                  updateField('voluntarySickness', e.target.checked)
-                }
+                onChange={(e) => {
+                  updateField('voluntarySickness', e.target.checked);
+                }}
               />
               <Link
                 href='/help/zus/dobrowolne-ubezpieczenie-chorobowe'
@@ -774,7 +794,9 @@ export default function InvoiceForm({
                 id='youngRelief'
                 label='Ulga dla młodych (0% PIT do limitu)'
                 checked={data.youngRelief}
-                onChange={(e) => updateField('youngRelief', e.target.checked)}
+                onChange={(e) => {
+                  updateField('youngRelief', e.target.checked);
+                }}
               />
               <Link
                 href='/help/podatki/ulga-dla-mlodych-zerowy-pit'
@@ -804,7 +826,9 @@ export default function InvoiceForm({
                 id='taxReduction'
                 label='Kwota zmniejszająca podatek (oświadczenie PIT-2)'
                 checked={data.taxReduction}
-                onChange={(e) => updateField('taxReduction', e.target.checked)}
+                onChange={(e) => {
+                  updateField('taxReduction', e.target.checked);
+                }}
               />
               <Link
                 href='/help/podatki/kwota-zmniejszajaca-podatek-pit-2'
@@ -831,12 +855,12 @@ export default function InvoiceForm({
               <Form.Label>Wysokość kwoty zmniejszającej</Form.Label>
               <Form.Select
                 value={data.taxReductionAmount}
-                onChange={(e) =>
+                onChange={(e) => {
                   updateField(
                     'taxReductionAmount',
                     Number(e.target.value) as TaxReductionAmount,
-                  )
-                }
+                  );
+                }}
                 required={data.taxReduction}
               >
                 <option value={300}>
@@ -972,7 +996,9 @@ export default function InvoiceForm({
                     inputMode='numeric'
                     value={data.bankAccountNumber ?? ''}
                     placeholder='np. 12 3456 7890 1234 5678 9012 3456'
-                    onChange={(e) => handleAccountNumberChange(e.target.value)}
+                    onChange={(e) => {
+                      handleAccountNumberChange(e.target.value);
+                    }}
                     maxLength={32}
                     className='font-monospace'
                     required
@@ -994,7 +1020,9 @@ export default function InvoiceForm({
                     type='text'
                     value={data.bankName ?? ''}
                     placeholder='np. mBank, PKO BP, ZEN, Revolut'
-                    onChange={(e) => updateField('bankName', e.target.value)}
+                    onChange={(e) => {
+                      updateField('bankName', e.target.value);
+                    }}
                     maxLength={100}
                     required
                   />
@@ -1032,9 +1060,9 @@ export default function InvoiceForm({
                     className='mt-1'
                     value={data.bankAccountHolder ?? ''}
                     placeholder='Imię i nazwisko posiadacza rachunku'
-                    onChange={(e) =>
-                      updateField('bankAccountHolder', e.target.value)
-                    }
+                    onChange={(e) => {
+                      updateField('bankAccountHolder', e.target.value);
+                    }}
                     maxLength={200}
                     required
                   />
@@ -1150,9 +1178,9 @@ export default function InvoiceForm({
               as='textarea'
               rows={3}
               value={data.notes ?? ''}
-              onChange={(e) =>
-                updateField('notes', e.target.value || undefined)
-              }
+              onChange={(e) => {
+                updateField('notes', e.target.value || undefined);
+              }}
               placeholder='Np. dodatkowe informacje dla zleceniodawcy'
             />
           </Form.Group>

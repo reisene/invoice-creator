@@ -1,5 +1,6 @@
 import AppNavbar from '@/components/AppNavbar';
 import AuthButtons from '@/components/AuthButtons';
+import ConsentedSentryReplay from '@/components/ConsentedSentryReplay';
 import ConsentedTelemetry from '@/components/ConsentedTelemetry';
 import CookieConsent from '@/components/CookieConsent';
 import Footer from '@/components/Footer';
@@ -92,6 +93,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         <main className='py-5 flex-grow-1'>{children}</main>
         <CookieConsent />
         <ConsentedTelemetry />
+        <ConsentedSentryReplay />
         <Footer author={author} />
       </body>
     </html>

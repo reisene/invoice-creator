@@ -48,3 +48,5 @@ content/legal/registry.generated.ts
 # From EnvUi
 .env
 workspace.xml
+
+.vercel

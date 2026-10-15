@@ -3,6 +3,7 @@ import AuthButtons from '@/components/AuthButtons';
 import CookieConsent from '@/components/CookieConsent';
 import Footer from '@/components/Footer';
 import { siteUrl } from '@/lib/siteUrl';
+import { socialImage } from '@/lib/socialImage';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
@@ -38,6 +39,15 @@ export const metadata: Metadata = {
   },
   description,
   applicationName: siteName,
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
   keywords: [
     'rachunek do umowy zlecenia',
     'generator rachunków',
@@ -54,8 +64,14 @@ export const metadata: Metadata = {
     title: siteName,
     description,
     url: '/',
+    images: [socialImage],
   },
-  twitter: { card: 'summary', title: siteName, description },
+  twitter: {
+    card: 'summary_large_image',
+    title: siteName,
+    description,
+    images: [socialImage],
+  },
   alternates: { canonical: '/' },
 };
 export const viewport: Viewport = {

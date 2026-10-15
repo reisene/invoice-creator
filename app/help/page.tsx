@@ -1,5 +1,6 @@
 import HelpIndexClient from '@/app/help/HelpIndexClient';
 import { getAllHelpArticles } from '@/lib/helpArticles';
+import { socialImage } from '@/lib/socialImage';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
     description:
       'Kompendium wiedzy o umowach zlecenia w 2026 roku: zasady wystawiania rachunku, składki ZUS, ulga dla studentów, koszty 20% i 50% oraz oświadczenie PIT-2.',
     url: '/help',
+    images: [socialImage],
   },
 };
 

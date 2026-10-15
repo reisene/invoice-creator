@@ -4,6 +4,7 @@ import {
   getArticleBySlug,
   getCategoryArticles,
 } from '@/lib/helpArticles';
+import { socialImage } from '@/lib/socialImage';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -57,6 +58,7 @@ export async function generateMetadata({
       title: `${article.title} – Pomoc i Baza Wiedzy`,
       description: article.description,
       url: canonicalUrl,
+      images: [socialImage],
     },
   };
 }

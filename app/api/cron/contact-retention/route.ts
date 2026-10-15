@@ -2,6 +2,7 @@ import { getContactMessageRetentionCutoff } from '@/lib/contactMessageRetention'
 import { getCookieConsentLogCutoff } from '@/lib/cookieConsent';
 import { prisma } from '@/lib/db';
 import { getPendingMagicLinkAcceptanceCutoff } from '@/lib/recordTermsAcceptance';
+import { sendRetentionHeartbeat } from '@/lib/retentionHeartbeat';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -52,10 +53,13 @@ export async function GET(request: Request) {
     }),
   ]);
 
+  const heartbeat = await sendRetentionHeartbeat();
+
   return Response.json({
     deletedCount: contactMessages.count,
     deletedPendingTermsAcceptances: pendingTermsAcceptances.count,
     deletedCookieConsentLogs: cookieConsentLogs.count,
     deletedReleasedTermsAcceptances: releasedTermsAcceptances.count,
+    heartbeat,
   });
 }

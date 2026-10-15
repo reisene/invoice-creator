@@ -9,6 +9,7 @@ import {
   confirmEmailChange,
   deleteAccount,
   deleteBankAccount,
+  requestAccountDeletionCode,
   requestEmailChange,
   saveBankAccount,
   updateProfile,
@@ -226,6 +227,11 @@ export function BankAccountForm({
 
 export function DeleteAccountForm() {
   const [state, formAction, isPending] = useActionState(deleteAccount, null);
+  const [method, setMethod] = useState('password');
+  const [codeState, codeAction, sendingCode] = useActionState(
+    requestAccountDeletionCode,
+    null,
+  );
 
   return (
     <Card
@@ -237,24 +243,76 @@ export function DeleteAccountForm() {
         Usunięcie konta jest nieodwracalne. Razem z nim zostaną trwale skasowane
         wszystkie zapisane rachunki, dane stron i dane konta bankowego. Jeśli
         usunięcie konta się nie powiedzie, dane mogą już zostać skasowane; wtedy
-        ponów operację. Przed usunięciem możesz pobrać eksport danych.
+        ponów operację. Przed usunięciem możesz pobrać eksport danych. Dowody
+        akceptacji Regulaminu zostaną usunięte, chyba że są niezbędne w
+        konkretnym sporze. Wiadomości kontaktowe podlegają odrębnej retencji
+        opisanej w Polityce prywatności.
       </p>
+      <Form.Group className='mb-3' controlId='deleteMethod'>
+        <Form.Label>Potwierdzenie tożsamości</Form.Label>
+        <Form.Select
+          value={method}
+          disabled={isPending || sendingCode}
+          onChange={(event) => setMethod(event.target.value)}
+        >
+          <option value='password'>Hasło</option>
+          <option value='email-code'>
+            Kod e-mail (także dla kont bez hasła)
+          </option>
+        </Form.Select>
+      </Form.Group>
+      {method === 'email-code' && (
+        <Form action={codeAction} className='mb-3'>
+          <Button
+            type='submit'
+            variant='outline-secondary'
+            disabled={sendingCode || isPending}
+          >
+            {sendingCode ? 'Wysyłanie…' : 'Wyślij kod e-mail'}
+          </Button>
+          {codeState && (
+            <Alert
+              className='mt-3'
+              variant={codeState.ok ? 'success' : 'danger'}
+            >
+              {codeState.message}
+            </Alert>
+          )}
+        </Form>
+      )}
       <Form action={formAction}>
-        <Form.Group className='mb-3' controlId='deletePassword'>
-          <Form.Label>Hasło</Form.Label>
-          <Form.Control
-            name='password'
-            type='password'
-            required
-            autoComplete='current-password'
-          />
-        </Form.Group>
+        <input type='hidden' name='method' value={method} />
+        {method === 'password' ? (
+          <Form.Group className='mb-3' controlId='deletePassword'>
+            <Form.Label>Hasło</Form.Label>
+            <Form.Control
+              name='password'
+              type='password'
+              required
+              autoComplete='current-password'
+            />
+          </Form.Group>
+        ) : (
+          <Form.Group className='mb-3' controlId='deleteOtp'>
+            <Form.Label>Kod z wiadomości e-mail</Form.Label>
+            <Form.Control
+              name='otp'
+              type='text'
+              inputMode='numeric'
+              autoComplete='one-time-code'
+              pattern='[0-9]{6}'
+              maxLength={6}
+              required
+            />
+          </Form.Group>
+        )}
 
         <Form.Check
           className='mb-3'
           type='checkbox'
           id='deleteConfirm'
           name='confirm'
+          required
           label='Rozumiem, że konta i danych nie da się odzyskać.'
         />
 

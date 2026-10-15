@@ -1,5 +1,6 @@
 import type { TaxParams } from '@/types/taxParams';
 import { prisma } from './db';
+import { logServerError } from './serverLogger';
 import { DEFAULT_TAX_PARAMS } from './taxConstants';
 
 export type { TaxParams } from '@/types/taxParams';
@@ -35,7 +36,7 @@ export async function getAllTaxParams(): Promise<TaxParams[]> {
       return params.map(toTaxParams);
     }
   } catch (error) {
-    console.error('Failed to load tax params from database:', error);
+    logServerError('Failed to load tax params from database:', error);
   }
   return [DEFAULT_TAX_PARAMS];
 }

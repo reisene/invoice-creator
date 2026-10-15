@@ -1,5 +1,6 @@
 import pkg from '@/package.json';
 import { Resend } from 'resend';
+import { logServerError } from './serverLogger';
 import { siteUrl } from './siteUrl';
 
 const resendApiKey = process.env.RESEND_API_KEY;
@@ -108,13 +109,17 @@ export async function sendAdminContactNotification(
       `,
     });
 
+    if (result.error) {
+      logServerError('[email] Admin notification rejected.', result.error);
+      return { ok: false };
+    }
     return { ok: true, id: result.data?.id };
   } catch (error) {
-    console.error(
+    logServerError(
       '[email] Błąd wysyłania powiadomienia admina przez Resend:',
       error,
     );
-    return { ok: false, error };
+    return { ok: false };
   }
 }
 
@@ -175,12 +180,16 @@ export async function sendUserContactConfirmation(
       `,
     });
 
+    if (result.error) {
+      logServerError('[email] User confirmation rejected.', result.error);
+      return { ok: false };
+    }
     return { ok: true, id: result.data?.id };
   } catch (error) {
-    console.error(
+    logServerError(
       '[email] Błąd wysyłania potwierdzenia do użytkownika przez Resend:',
       error,
     );
-    return { ok: false, error };
+    return { ok: false };
   }
 }

@@ -1,5 +1,7 @@
 'use server';
 
+import { logServerError } from '@/lib/serverLogger';
+
 import { auth } from '@/lib/auth/server';
 import { authErrorMessage } from '@/lib/authErrors';
 import { getCurrentLegalDocument } from '@/lib/legalDocuments';
@@ -59,7 +61,7 @@ export async function requestMagicLink(
     try {
       await recordTermsAcceptance(registrationConsent.consent);
     } catch (error) {
-      console.error(
+      logServerError(
         'Link logowania wysłano, ale nie udało się zapisać akceptacji Regulaminu.',
         error,
       );

@@ -71,6 +71,7 @@ export async function claimPendingMagicLinkAcceptance(
       email: email.trim().toLowerCase(),
       termsVersion,
       registrationMethod: 'MAGIC_LINK',
+      accountDeletionRequestedAt: null,
       acceptedAt: { gte: getPendingMagicLinkAcceptanceCutoff() },
     },
     orderBy: { acceptedAt: 'desc' },
@@ -84,6 +85,7 @@ export async function claimPendingMagicLinkAcceptance(
       where: {
         id: pending.id,
         userId: null,
+        accountDeletionRequestedAt: null,
       },
       data: {
         userId,

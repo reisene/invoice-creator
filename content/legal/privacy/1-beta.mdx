@@ -25,8 +25,9 @@ Inspektor ochrony danych nie został wyznaczony.
 - **Wybór cookies:** wybrana opcja, wersja komunikatu, data zapisu oraz — w przypadku zalogowanego Użytkownika —
   identyfikator Konta.
 - **Dane techniczne i bezpieczeństwa:** informacje dotyczące obsługi żądań i bezpieczeństwa. Upstash wykorzystuje
-  identyfikator Konta albo adres IP do limitowania żądań. Vercel rejestruje informacje o wykonaniu żądań i logi błędów
-  aplikacji. Resend przetwarza dane wiadomości i zdarzenia jej wysyłki, dostarczenia lub odrzucenia.
+  pseudonim wyliczony z identyfikatora Konta albo adresu IP za pomocą HMAC do limitowania żądań; aplikacja nie wysyła do
+  Upstash surowego identyfikatora Konta ani adresu IP jako klucza limitowania. Vercel rejestruje informacje o wykonaniu
+  żądań i logi błędów aplikacji. Resend przetwarza dane wiadomości i zdarzenia jej wysyłki, dostarczenia lub odrzucenia.
 
 Dane wpisane w generatorze bez zapisywania na Koncie mogą być przechowywane w pamięci bieżącej sesji przeglądarki dla
 funkcji podglądu. Nie należy wpisywać danych, których Użytkownik nie ma prawa przetwarzać.
@@ -50,8 +51,12 @@ Dane mogą być przetwarzane przez dostawców usług technicznych działających
 - Vercel — hosting i uruchamianie aplikacji; funkcje aplikacji są przypisane do regionu Frankfurt (fra1).
 - Resend — wysyłka wiadomości z formularza kontaktowego, w tym treści wiadomości, adresu e-mail, imienia lub nazwy i
   tematu; region przetwarzania EU.
-- Upstash — limitowanie żądań w Redis; region instancji EU, a identyfikatorem limitowania jest identyfikator Konta albo
-  adres IP.
+- Cloudflare Email Routing — przekierowywanie wiadomości z adresu kontaktowego w domenie Serwisu do skrzynki
+  Administratora.
+- Google (Gmail) — przechowywanie i obsługa korespondencji w dedykowanej skrzynce Administratora; Google Apps Script
+  służy do automatycznego usuwania korespondencji objętej retencją.
+- Upstash — limitowanie żądań w Redis; region instancji EU, a identyfikatorem limitowania jest pseudonim wyliczony za
+  pomocą HMAC z identyfikatora Konta albo adresu IP; surowe identyfikatory nie są przekazywane jako klucze limitowania.
 
 Odbiorcami mogą być także dostawcy poczty Użytkownika oraz organy publiczne, jeśli ujawnienie danych jest wymagane przez
 prawo. W zakresie, w jakim dostawcy przetwarzają dane w imieniu Administratora na potrzeby Serwisu, pełnią rolę
@@ -63,10 +68,19 @@ korzystać z dalszych podwykonawców zgodnie z własnymi warunkami.
 
 - Dane zapisane na Koncie są przechowywane do czasu usunięcia Konta przez Użytkownika, z zastrzeżeniem informacji, które
   trzeba zachować w innym celu prawnym.
-- Wiadomości z formularza kontaktowego są usuwane automatycznie po upływie 12 miesięcy od ich utworzenia. Kopie
-  wiadomości wysłane pocztą elektroniczną mogą być przechowywane oddzielnie w skrzynkach pocztowych.
-- Dowody akceptacji Regulaminu są przechowywane przez okres niezbędny do wykazania zawarcia Umowy oraz ustalenia,
-  dochodzenia lub obrony roszczeń.
+- Wiadomości z formularza kontaktowego zapisane w bazie aplikacji są usuwane automatycznie w najbliższym codziennym
+  cyklu retencji po upływie 12 miesięcy od ich utworzenia.
+- Kopie zgłoszeń i korespondencja dotycząca ich obsługi, w tym odpowiedzi Administratora, są przechowywane w dedykowanej
+  skrzynce pocztowej. Wiadomości objęte retencją są trwale usuwane automatycznie w najbliższym codziennym cyklu po
+  upływie 12 miesięcy od otrzymania lub wysłania każdej wiadomości. Wyjątek dotyczy korespondencji oznaczonej przez
+  Administratora jako niezbędna do rozpatrzenia konkretnego sporu lub ustalenia, dochodzenia albo obrony roszczeń
+  związanych z tym sporem. Po ustaniu tej potrzeby Administrator usuwa oznaczenie, a wiadomości, dla których upłynął
+  okres retencji, są usuwane w najbliższym codziennym cyklu. Usunięcie kopii ze skrzynki Administratora nie usuwa
+  wiadomości ze skrzynki Użytkownika.
+- Dowody akceptacji Regulaminu powiązane z Kontem są usuwane w ramach usunięcia Konta. Wyjątek dotyczy wyłącznie dowodów
+  oznaczonych jako niezbędne do rozpatrzenia konkretnego sporu lub ustalenia, dochodzenia albo obrony roszczeń
+  związanych z tym sporem. Po ustaniu tej potrzeby Administrator usuwa oznaczenie, a dowody są usuwane w najbliższym
+  codziennym cyklu retencji.
 - Niepowiązane z Kontem wpisy akceptacji Regulaminu z rejestracji linkiem są usuwane po 30 dniach. Dane mogą pozostawać
   w kopiach zapasowych przez okres wynikający z cyklu ich tworzenia i przechowywania.
 - Wpisy decyzji dotyczących cookies są przechowywane przez 30 dni.
@@ -75,11 +89,17 @@ korzystać z dalszych podwykonawców zgodnie z własnymi warunkami.
 
 ## 6. Usunięcie Konta i eksport
 
+Eksport dostępny w ustawieniach Konta obejmuje dane profilu (imię i nazwisko oraz adres e-mail), zapisane rachunki, dane
+kontrahentów, dane rachunku bankowego oraz historię wyborów cookies powiązaną z Kontem. Plik jest udostępniany w
+formacie JSON. Eksport nie obejmuje dowodów akceptacji Regulaminu ani wiadomości z formularza kontaktowego i nie
+zastępuje realizacji wniosku o dostęp do wszystkich danych osobowych. W sprawie dostępu do pozostałych danych można
+skontaktować się z Administratorem na zasadach opisanych w pkt 7.
+
 Użytkownik może zażądać usunięcia Konta i pobrać eksport zapisanych danych dostępny w Serwisie. Usunięcie Konta usuwa z
 aplikacji zapisane rachunki, dane kontrahentów, dane rachunku bankowego i powiązane sekwencje numeracji. Dowody
-akceptacji Regulaminu oraz wiadomości kontaktowe nie są usuwane w ramach tej operacji, jeśli ich dalsze przechowywanie
-jest uzasadnione wskazanymi wyżej celami. Wpisy decyzji dotyczących cookies powiązane z Kontem są usuwane. Dane w
-kopiach zapasowych są usuwane zgodnie z cyklem ich przechowywania przez dostawców.
+akceptacji Regulaminu są usuwane, z wyjątkiem dowodów niezbędnych w konkretnym sporze opisanych w pkt 5. Wiadomości
+kontaktowe podlegają odrębnemu okresowi przechowywania wskazanemu w pkt 5. Wpisy decyzji dotyczących cookies powiązane z
+Kontem są usuwane. Dane w kopiach zapasowych są usuwane zgodnie z cyklem ich przechowywania przez dostawców.
 
 ## 7. Prawa osób, których dane dotyczą
 

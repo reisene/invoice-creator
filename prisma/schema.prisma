@@ -120,6 +120,9 @@ model TermsAcceptance {
   acceptedAt                   DateTime              @default(now()) @db.Timestamptz(3)
   earlyServiceStartRequested   Boolean               @default(false)
   earlyServiceStartRequestedAt DateTime?             @db.Timestamptz(3)
+  retainedForDispute           Boolean               @default(false)
+  disputeReference             String?
+  accountDeletionRequestedAt   DateTime?             @db.Timestamptz(3)
 
   @@unique([userId, termsVersion])
   @@index([email, termsVersion, registrationMethod, userId, acceptedAt])

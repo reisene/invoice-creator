@@ -34,6 +34,51 @@ optimize and load [Geist](https://vercel.com/font), a new font family for Vercel
 
 ## Learn More
 
+### Privacy controls
+
+Account export at `/api/account/export` requires a signed-in session, but not
+acceptance of the current Terms. A download link is available on `/terms/accept`.
+The export scope is unchanged.
+
+Upstash rate-limit identifiers use policy-specific HMAC-SHA-256 pseudonyms,
+keyed with `INVOICE_DATA_ENCRYPTION_KEY` and a separate rate-limit domain prefix.
+This key must be configured even for anonymous requests when Upstash is enabled.
+Invalid or missing key configuration fails explicitly; raw identifiers are never
+used as a fallback. Rotating the key resets rate-limit identities.
+The `ratelimit:v2` namespace replaces the old raw-identifier namespace; old keys
+are not reused and expire according to their existing TTL.
+
+Application error logging uses fixed operation descriptions and allowlisted
+Prisma error codes or HTTP status codes, without raw error messages, stacks,
+request payloads or provider response bodies. Hosting and provider access logs
+have their own settings and retention.
+
+### Account deletion
+
+Signed-in users can delete their account at `/auth/delete-account` without
+accepting a new Terms version. The same form is available in account settings.
+Identity is confirmed with a password or a sign-in email OTP sent to the
+current account address (including passwordless accounts). Email OTP sign-in
+and user deletion must be enabled in Neon Auth.
+
+Application data is deleted transactionally before requesting identity deletion.
+If identity deletion fails or requires an email confirmation, the form reports
+that application data has already been removed. Terms acceptance evidence is
+deleted in the same transaction, including unlinked entries matching the current
+account email, unless explicitly retained for a concrete dispute. Contact messages
+remain subject to their separate retention rules.
+
+Before deleting an account involved in a concrete dispute, an authorized operator
+can set `TermsAcceptance.retainedForDispute = true` on only the necessary records
+and record an internal case reference in `disputeReference` (not the case contents).
+These fields are not editable through user-facing forms. Review holds as part of
+handling the case; do not use them for hypothetical future disputes.
+Deletion marks retained records with `accountDeletionRequestedAt`. When retention
+is no longer justified, set `retainedForDispute = false` and clear
+`disputeReference`. The daily retention job deletes released records marked for
+account deletion. Retained unlinked entries cannot be claimed by a new account
+after an account deletion request.
+
 To learn more about Next.js, take a look at the following resources:
 
 - [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.

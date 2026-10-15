@@ -20,30 +20,42 @@ export async function GET(request: Request) {
     return Response.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
-  const [contactMessages, pendingTermsAcceptances, cookieConsentLogs] =
-    await Promise.all([
-      prisma.contactMessage.deleteMany({
-        where: {
-          createdAt: { lt: getContactMessageRetentionCutoff() },
-        },
-      }),
-      prisma.termsAcceptance.deleteMany({
-        where: {
-          userId: null,
-          registrationMethod: 'MAGIC_LINK',
-          acceptedAt: { lt: getPendingMagicLinkAcceptanceCutoff() },
-        },
-      }),
-      prisma.cookieConsent.deleteMany({
-        where: {
-          createdAt: { lt: getCookieConsentLogCutoff() },
-        },
-      }),
-    ]);
+  const [
+    contactMessages,
+    pendingTermsAcceptances,
+    cookieConsentLogs,
+    releasedTermsAcceptances,
+  ] = await Promise.all([
+    prisma.contactMessage.deleteMany({
+      where: {
+        createdAt: { lt: getContactMessageRetentionCutoff() },
+      },
+    }),
+    prisma.termsAcceptance.deleteMany({
+      where: {
+        userId: null,
+        retainedForDispute: false,
+        registrationMethod: 'MAGIC_LINK',
+        acceptedAt: { lt: getPendingMagicLinkAcceptanceCutoff() },
+      },
+    }),
+    prisma.cookieConsent.deleteMany({
+      where: {
+        createdAt: { lt: getCookieConsentLogCutoff() },
+      },
+    }),
+    prisma.termsAcceptance.deleteMany({
+      where: {
+        retainedForDispute: false,
+        accountDeletionRequestedAt: { not: null },
+      },
+    }),
+  ]);
 
   return Response.json({
     deletedCount: contactMessages.count,
     deletedPendingTermsAcceptances: pendingTermsAcceptances.count,
     deletedCookieConsentLogs: cookieConsentLogs.count,
+    deletedReleasedTermsAcceptances: releasedTermsAcceptances.count,
   });
 }

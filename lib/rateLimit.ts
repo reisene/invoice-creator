@@ -2,6 +2,8 @@ import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { headers } from 'next/headers';
 import 'server-only';
+import { pseudonymizeRateLimitIdentifier } from './savedDataCrypto';
+import { logServerError } from './serverLogger';
 
 type Window = `${number} ${'s' | 'm' | 'h'}`;
 
@@ -42,7 +44,7 @@ function getLimiter(policy: RateLimitPolicy): Ratelimit | null {
     limiter = new Ratelimit({
       redis: client,
       limiter: Ratelimit.slidingWindow(requests, window),
-      prefix: `ratelimit:${policy}`,
+      prefix: `ratelimit:v2:${policy}`,
     });
     limiters.set(policy, limiter);
   }
@@ -70,11 +72,15 @@ export async function checkRateLimit(
   const limiter = getLimiter(policy);
   if (!limiter) return { ok: true };
 
+  const identifier = pseudonymizeRateLimitIdentifier(
+    policy,
+    userId ? `user:${userId}` : `ip:${await getClientIp()}`,
+  );
   try {
-    const identifier = userId ? `user:${userId}` : `ip:${await getClientIp()}`;
     const { success } = await limiter.limit(identifier);
     return success ? { ok: true } : { ok: false, message: TOO_MANY };
-  } catch {
+  } catch (error) {
+    logServerError('[rate-limit] Upstash request failed.', error);
     return { ok: true };
   }
 }

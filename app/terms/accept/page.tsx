@@ -5,6 +5,7 @@ import {
   hasCurrentTermsAcceptance,
 } from '@/lib/recordTermsAcceptance';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Alert, Card, Container } from 'react-bootstrap';
 import AcceptanceForm from './AcceptanceForm';
@@ -44,6 +45,14 @@ export default async function AcceptTermsPage() {
           czasie akceptacji.
         </Alert>
         <AcceptanceForm termsVersion={version} />
+        <p className='mt-3 mb-0'>
+          Nie akceptujesz nowych warunków?{' '}
+          <a href='/api/account/export'>Pobierz dane konta</a> lub{' '}
+          <Link href='/auth/delete-account'>
+            Usuń konto bez akceptacji Regulaminu
+          </Link>
+          .
+        </p>
       </Card>
     </Container>
   );

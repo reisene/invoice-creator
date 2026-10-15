@@ -1,5 +1,7 @@
 'use server';
 
+import { logServerError } from '@/lib/serverLogger';
+
 import { getCurrentUserId } from '@/lib/currentUser';
 import { prisma } from '@/lib/db';
 import {
@@ -122,7 +124,7 @@ export async function submitContactForm(
         'Dziękujemy za kontakt! Twoja wiadomość została pomyślnie przesłana. Odpowiemy na podany adres e-mail najszybciej jak to możliwe.',
     };
   } catch (error) {
-    console.error('Błąd zapisu wiadomości kontaktowej:', error);
+    logServerError('Błąd zapisu wiadomości kontaktowej:', error);
     return {
       ok: false,
       message:

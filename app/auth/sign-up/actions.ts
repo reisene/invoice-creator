@@ -1,5 +1,7 @@
 'use server';
 
+import { logServerError } from '@/lib/serverLogger';
+
 import { auth } from '@/lib/auth/server';
 import { authErrorMessage } from '@/lib/authErrors';
 import { getCurrentLegalDocument } from '@/lib/legalDocuments';
@@ -43,7 +45,7 @@ export async function signUpWithEmail(
     try {
       await recordTermsAcceptance(parsedConsent.consent, data.user.id);
     } catch (error) {
-      console.error('Nie udało się zapisać akceptacji Regulaminu.', error);
+      logServerError('Nie udało się zapisać akceptacji Regulaminu.', error);
       redirect(
         `/auth/verify-email?email=${encodeURIComponent(parsedConsent.consent.email)}`,
       );

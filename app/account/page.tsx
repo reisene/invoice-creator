@@ -40,10 +40,13 @@ export default async function AccountPage() {
         body
         className='border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 mb-4'
       >
-        <h2 className='h5 mb-2'>Eksport danych</h2>
+        <h2 className='h5 mb-2'>Eksport danych konta</h2>
         <p className='text-body-secondary small'>
-          Pobierz zapisane rachunki, dane stron i dane rachunku bankowego w
-          pliku JSON.
+          Pobierz dane profilu (imię i nazwisko oraz e-mail), zapisane rachunki,
+          dane stron, dane rachunku bankowego i historię wyborów cookies w pliku
+          JSON. Eksport nie obejmuje dowodów akceptacji Regulaminu ani zgłoszeń
+          kontaktowych. W sprawie dostępu do pozostałych danych skontaktuj się z
+          administratorem zgodnie z Polityką prywatności.
         </p>
         <div>
           <Button href='/api/account/export' variant='outline-primary'>

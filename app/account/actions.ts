@@ -1,8 +1,10 @@
 'use server';
 
+import { logServerError } from '@/lib/serverLogger';
+
 import { auth } from '@/lib/auth/server';
 import { authErrorMessage } from '@/lib/authErrors';
-import { getCurrentUserIdWithTerms } from '@/lib/currentUser';
+import { getCurrentUserId, getCurrentUserIdWithTerms } from '@/lib/currentUser';
 import { prisma } from '@/lib/db';
 import { getInvoiceNumberScope } from '@/lib/invoiceNumbering';
 import { checkRateLimit } from '@/lib/rateLimit';
@@ -272,11 +274,30 @@ export async function revokeAllSessions(): Promise<{
   redirect('/auth/sign-in');
 }
 
+export async function requestAccountDeletionCode(): Promise<AccountFormState> {
+  const { data: session } = await auth.getSession();
+  if (!session?.user) return { ok: false, message: NOT_SIGNED_IN };
+  const limit = await checkRateLimit('accountSensitive', session.user.id);
+  if (!limit.ok) return { ok: false, message: limit.message };
+
+  const { error } = await auth.emailOtp.sendVerificationOtp({
+    email: session.user.email,
+    type: 'sign-in',
+  });
+  if (error) {
+    return {
+      ok: false,
+      message: authErrorMessage(error, 'Nie udało się wysłać kodu.'),
+    };
+  }
+  return { ok: true, message: 'Kod wysłano na adres e-mail Twojego konta.' };
+}
+
 export async function deleteAccount(
   _prev: AccountFormState,
   formData: FormData,
 ): Promise<AccountFormState> {
-  const userId = await getCurrentUserIdWithTerms();
+  const userId = await getCurrentUserId();
   if (!userId) return { ok: false, message: NOT_SIGNED_IN };
   const limit = await checkRateLimit('accountSensitive', userId);
   if (!limit.ok) return { ok: false, message: limit.message };
@@ -285,33 +306,74 @@ export async function deleteAccount(
     return { ok: false, message: 'Potwierdź, że rozumiesz skutki usunięcia.' };
   }
   const password = String(formData.get('password') ?? '');
-  if (!password) return { ok: false, message: 'Podaj hasło.' };
+  const method = formData.get('method');
+  const otp = String(formData.get('otp') ?? '').trim();
+  if (method !== 'password' && method !== 'email-code') {
+    return { ok: false, message: 'Wybierz sposób potwierdzenia tożsamości.' };
+  }
+  if (method === 'password' && !password) {
+    return { ok: false, message: 'Podaj hasło.' };
+  }
+  if (method === 'email-code' && !/^\d{6}$/.test(otp)) {
+    return { ok: false, message: 'Podaj sześciocyfrowy kod z wiadomości.' };
+  }
 
   const { data: session } = await auth.getSession();
   const email = session?.user?.email;
   if (!email) return { ok: false, message: NOT_SIGNED_IN };
 
-  // Verify the password before touching any data.
-  const { error: passwordError } = await auth.signIn.email({ email, password });
-  if (passwordError) {
+  // Reauthenticate the same account before touching any application data.
+  const verification =
+    method === 'password'
+      ? await auth.signIn.email({ email, password })
+      : await auth.signIn.emailOtp({ email, otp });
+  if (verification.error) {
     return {
       ok: false,
-      message: authErrorMessage(passwordError, 'Nieprawidłowe hasło.'),
+      message: authErrorMessage(
+        verification.error,
+        'Nie udało się potwierdzić tożsamości.',
+      ),
+    };
+  }
+  if (verification.data?.user.id !== userId) {
+    console.error('[account/delete] Reauthentication account mismatch.');
+    return {
+      ok: false,
+      message: 'Nie udało się potwierdzić tożsamości konta.',
     };
   }
 
   // Data goes first: if this fails, the account still exists and the user can retry.
+  const acceptanceOwner = {
+    OR: [{ userId }, { userId: null, email: email.trim().toLowerCase() }],
+  };
   try {
     await prisma.$transaction([
       prisma.invoice.deleteMany({ where: { userId } }),
       prisma.savedParty.deleteMany({ where: { userId } }),
       prisma.userBankAccount.deleteMany({ where: { userId } }),
       prisma.cookieConsent.deleteMany({ where: { userId } }),
+      prisma.termsAcceptance.deleteMany({
+        where: { ...acceptanceOwner, retainedForDispute: false },
+      }),
+      prisma.termsAcceptance.updateMany({
+        where: {
+          ...acceptanceOwner,
+          retainedForDispute: true,
+          accountDeletionRequestedAt: null,
+        },
+        data: { accountDeletionRequestedAt: new Date() },
+      }),
       prisma.invoiceSequence.deleteMany({
         where: { scope: getInvoiceNumberScope(userId) },
       }),
     ]);
-  } catch {
+  } catch (error) {
+    logServerError(
+      '[account/delete] Failed to delete application data.',
+      error,
+    );
     return {
       ok: false,
       message:
@@ -319,12 +381,21 @@ export async function deleteAccount(
     };
   }
 
-  const { error } = await auth.deleteUser({ password });
+  const { data, error } = await auth.deleteUser(
+    method === 'password' ? { password } : {},
+  );
   if (error) {
     return {
       ok: false,
       message:
         'Dane zostały usunięte, ale nie udało się usunąć konta. Spróbuj ponownie.',
+    };
+  }
+  if (data?.message !== 'User deleted') {
+    return {
+      ok: false,
+      message:
+        'Dane aplikacji zostały usunięte. Usunięcie konta wymaga dodatkowego potwierdzenia — sprawdź pocztę e-mail.',
     };
   }
   redirect('/');

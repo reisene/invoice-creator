@@ -1,5 +1,7 @@
 'use server';
 
+import { logServerError } from '@/lib/serverLogger';
+
 import {
   COOKIE_CONSENT_COOKIE,
   COOKIE_CONSENT_VERSION,
@@ -51,7 +53,7 @@ export async function saveCookieConsent(
 
     return { ok: true };
   } catch (error) {
-    console.error(
+    logServerError(
       '[cookie-consent] Failed to record cookie preference.',
       error,
     );
@@ -68,7 +70,10 @@ export async function clearCookieConsent(): Promise<CookieConsentActionResult> {
     cookieStore.delete(COOKIE_CONSENT_COOKIE);
     return { ok: true };
   } catch (error) {
-    console.error('[cookie-consent] Failed to clear cookie preference.', error);
+    logServerError(
+      '[cookie-consent] Failed to clear cookie preference.',
+      error,
+    );
     return {
       ok: false,
       message: 'Nie udało się usunąć zapisanego wyboru. Spróbuj ponownie.',

@@ -88,6 +88,15 @@ export function signInvoiceNumberReservation(payload: string): string {
     .digest('hex');
 }
 
+export function pseudonymizeRateLimitIdentifier(
+  policy: string,
+  identifier: string,
+): string {
+  return createHmac('sha256', getEncryptionKey())
+    .update(`rate-limit:v1:${policy}:${identifier}`)
+    .digest('hex');
+}
+
 export function verifyInvoiceNumberReservation(
   payload: string,
   token: string,

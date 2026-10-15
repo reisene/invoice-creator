@@ -82,6 +82,7 @@
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "bootstrap": "^5.3.8",
+    "botid": "^1.5.11",
     "dotenv": "^18.0.7",
     "gray-matter": "^4.0.3",
     "next": "16.4.0",

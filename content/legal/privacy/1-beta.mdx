@@ -28,6 +28,8 @@ Inspektor ochrony danych nie został wyznaczony.
   pseudonim wyliczony z identyfikatora Konta albo adresu IP za pomocą HMAC do limitowania żądań; aplikacja nie wysyła do
   Upstash surowego identyfikatora Konta ani adresu IP jako klucza limitowania. Vercel rejestruje informacje o wykonaniu
   żądań i logi błędów aplikacji. Resend przetwarza dane wiadomości i zdarzenia jej wysyłki, dostarczenia lub odrzucenia.
+  Formularz kontaktowy jest chroniony przez Vercel BotID Basic, który weryfikuje techniczne sygnały z przeglądarki w
+  celu wykrywania automatycznych zgłoszeń i spamu.
 - **Opcjonalne pomiary:** po akceptacji opcjonalnej analityki Vercel Web Analytics zbiera statystyki odwiedzin, a Speed
   Insights mierzy wydajność strony. Pomiary mogą obejmować informacje o odwiedzanych stronach, urządzeniu, przeglądarce
   oraz czasie ładowania i responsywności strony. Nie przekazujemy w zdarzeniach treści rachunków ani formularzy.
@@ -49,13 +51,19 @@ istotnie wpływających na Użytkownika.
 Opcjonalne statystyki odwiedzin i pomiary wydajności służą ulepszaniu Serwisu i są uruchamiane na podstawie zgody
 Użytkownika. Zgodę można wycofać w ustawieniach cookies bez ograniczenia dostępu do Serwisu.
 
+Weryfikacja antyspamowa formularza kontaktowego przez BotID służy prawnie uzasadnionemu interesowi Administratora
+polegającemu na ochronie Serwisu przed nadużyciami. Jest niezależna od opcjonalnej analityki. W przypadku odrzucenia
+zgłoszenia Użytkownik może skontaktować się z Administratorem bezpośrednio przez e-mail.
+
 ## 4. Dostawcy i odbiorcy danych
 
 Dane mogą być przetwarzane przez dostawców usług technicznych działających na potrzeby aplikacji:
 
 - Neon — baza danych i uwierzytelnianie (Neon Auth); skonfigurowany region Frankfurt / EU Central.
 - Vercel — hosting i uruchamianie aplikacji; funkcje aplikacji są przypisane do regionu Frankfurt (fra1). Po uzyskaniu
-  zgody także Web Analytics — statystyki odwiedzin — oraz Speed Insights — pomiary wydajności.
+  zgody także Web Analytics — statystyki odwiedzin — oraz Speed Insights — pomiary wydajności. BotID Basic służy
+  ochronie formularza kontaktowego przed automatycznymi zgłoszeniami i nie jest uzależniony od zgody na opcjonalne
+  pomiary.
 - Resend — wysyłka wiadomości z formularza kontaktowego, w tym treści wiadomości, adresu e-mail, imienia lub nazwy i
   tematu; region przetwarzania EU.
 - Cloudflare Email Routing — przekierowywanie wiadomości z adresu kontaktowego w domenie Serwisu do skrzynki

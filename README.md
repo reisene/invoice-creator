@@ -36,6 +36,19 @@ optimize and load [Geist](https://vercel.com/font), a new font family for Vercel
 
 ## Learn More
 
+### Contact bot protection
+
+The contact form uses Vercel BotID Basic. `instrumentation-client.ts` protects
+POST requests to `/contact` (the page invoking the Server Action), and
+`next.config.ts` composes BotID rewrites with MDX configuration.
+The contact action verifies BotID before accessing user data, writing messages
+or sending email. Bot classification or verification failures reject submission
+with a visible message; Upstash limits and the honeypot remain in place.
+BotID is a security control independent of optional analytics consent.
+No BotID secret is required. Deploy to Vercel to verify real bot classification;
+local development intentionally returns `isBot: false` by default.
+Health endpoints, cron jobs and other forms are not protected by this integration.
+
 ### Dependency health
 
 The daily retention job at `/api/cron/contact-retention` sends a GET request to

@@ -9,6 +9,7 @@ import {
   sendUserContactConfirmation,
 } from '@/lib/email';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { checkBotId } from 'botid/server';
 
 export type ContactFormState = {
   ok: boolean;
@@ -21,6 +22,27 @@ export async function submitContactForm(
   _prevState: ContactFormState,
   formData: FormData,
 ): Promise<ContactFormState> {
+  try {
+    const verification = await checkBotId({
+      advancedOptions: { checkLevel: 'basic' },
+    });
+    if (verification.isBot) {
+      console.warn('[contact] BotID rejected submission.');
+      return {
+        ok: false,
+        message:
+          'Weryfikacja antyspamowa odrzuciła zgłoszenie. Jeśli to pomyłka, skontaktuj się bezpośrednio przez e-mail.',
+      };
+    }
+  } catch (error) {
+    logServerError('[contact] BotID verification failed.', error);
+    return {
+      ok: false,
+      message:
+        'Nie udało się zweryfikować zgłoszenia. Odśwież stronę i spróbuj ponownie lub skontaktuj się przez e-mail.',
+    };
+  }
+
   const userId = await getCurrentUserId();
 
   // Sprawdzenie limitu zapytań (Upstash Redis)

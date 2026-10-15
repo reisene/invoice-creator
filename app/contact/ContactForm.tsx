@@ -65,6 +65,11 @@ export default function ContactForm({
 
   return (
     <Form action={formAction} key={resetKey} noValidate={false}>
+      <p className='small text-body-secondary'>
+        Formularz jest chroniony przez Vercel BotID przed automatycznym spamem.
+        Weryfikacja wymaga JavaScript i działa niezależnie od zgody na
+        opcjonalną analitykę.
+      </p>
       {/* Pole antyspamowe (honeypot) ukryte przed użytkownikami */}
       <div style={{ display: 'none' }} aria-hidden='true' tabIndex={-1}>
         <label htmlFor='hp_website'>Nie wypełniaj tego pola:</label>

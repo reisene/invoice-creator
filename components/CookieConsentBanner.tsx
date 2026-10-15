@@ -2,6 +2,7 @@
 
 import { saveCookieConsent } from '@/app/cookie-consent/actions';
 import {
+  COOKIE_CONSENT_CHANGED_EVENT,
   COOKIE_SETTINGS_EVENT,
   type CookieConsentChoice,
 } from '@/lib/cookieConsent';
@@ -41,7 +42,8 @@ export default function CookieConsentBanner({
         return;
       }
 
-      setIsOpen(false);
+      window.dispatchEvent(new Event(COOKIE_CONSENT_CHANGED_EVENT));
+      window.location.reload();
     });
   }
 
@@ -86,10 +88,11 @@ export default function CookieConsentBanner({
           </div>
 
           <p className='text-body-secondary mb-3'>
-            Używamy cookies niezbędnych do logowania i działania Serwisu.
-            Obecnie nie korzystamy z cookies analitycznych ani reklamowych.
-            Możesz zaakceptować cookies opcjonalne albo pozostać przy
-            niezbędnych — wybór nie ogranicza dostępu do Serwisu.
+            Używamy cookies niezbędnych do logowania i działania Serwisu. Za
+            Twoją zgodą uruchomimy także Vercel Web Analytics do statystyk
+            odwiedzin oraz Speed Insights do pomiaru wydajności. Możesz
+            zaakceptować opcjonalne pomiary albo pozostać przy niezbędnych —
+            wybór nie ogranicza dostępu do Serwisu.
           </p>
 
           <Collapse in={showDetails}>
@@ -114,9 +117,11 @@ export default function CookieConsentBanner({
                   <div>
                     <p className='fw-semibold mb-1'>Opcjonalne</p>
                     <p className='small text-body-secondary mb-0'>
-                      Analityczne i reklamowe. Obecnie nie są używane. Jeśli
-                      zostaną dodane, Serwis poprosi o osobny wybór przed ich
-                      uruchomieniem.
+                      Vercel Web Analytics i Speed Insights uruchamiamy
+                      wyłącznie po akceptacji. Narzędzia nie korzystają z
+                      cookies do tych pomiarów, ale respektują Twój wybór
+                      dotyczący opcjonalnej analityki. Nie używamy narzędzi
+                      reklamowych. Zmiana wyboru przeładuje stronę.
                     </p>
                   </div>
                 </div>

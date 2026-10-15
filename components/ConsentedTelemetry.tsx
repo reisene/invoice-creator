@@ -1,0 +1,15 @@
+import VercelTelemetry from '@/components/VercelTelemetry';
+import {
+  COOKIE_CONSENT_COOKIE,
+  parseCookieConsentCookie,
+} from '@/lib/cookieConsent';
+import { cookies } from 'next/headers';
+
+export default async function ConsentedTelemetry() {
+  const cookieStore = await cookies();
+  const choice = parseCookieConsentCookie(
+    cookieStore.get(COOKIE_CONSENT_COOKIE)?.value,
+  );
+
+  return choice === 'ACCEPT_OPTIONAL' ? <VercelTelemetry /> : null;
+}

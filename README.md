@@ -36,6 +36,14 @@ optimize and load [Geist](https://vercel.com/font), a new font family for Vercel
 
 ### Privacy controls
 
+Vercel Web Analytics and Speed Insights are mounted from the root layout only
+when the current version of the `cookie-consent` cookie is `ACCEPT_OPTIONAL`.
+Enable both products in the Vercel project dashboard before deployment.
+Consent changes and clearing the preference reload the page to stop previously
+loaded scripts. Both integrations strip query strings and fragments from event
+URLs and drop events on auth, account, API and Terms acceptance routes.
+Consent version 2 requires a new choice before enabling these measurements.
+
 Account export at `/api/account/export` requires a signed-in session, but not
 acceptance of the current Terms. A download link is available on `/terms/accept`.
 The export scope is unchanged.

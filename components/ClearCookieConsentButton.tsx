@@ -1,6 +1,7 @@
 'use client';
 
 import { clearCookieConsent } from '@/app/cookie-consent/actions';
+import { COOKIE_CONSENT_CHANGED_EVENT } from '@/lib/cookieConsent';
 import { useState, useTransition } from 'react';
 import { Alert, Button } from 'react-bootstrap';
 
@@ -18,7 +19,10 @@ export default function ClearCookieConsentButton({
       const result = await clearCookieConsent();
       if (!result.ok) {
         setMessage(result.message);
+        return;
       }
+      window.dispatchEvent(new Event(COOKIE_CONSENT_CHANGED_EVENT));
+      window.location.reload();
     });
   }
 

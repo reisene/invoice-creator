@@ -28,6 +28,9 @@ Inspektor ochrony danych nie został wyznaczony.
   pseudonim wyliczony z identyfikatora Konta albo adresu IP za pomocą HMAC do limitowania żądań; aplikacja nie wysyła do
   Upstash surowego identyfikatora Konta ani adresu IP jako klucza limitowania. Vercel rejestruje informacje o wykonaniu
   żądań i logi błędów aplikacji. Resend przetwarza dane wiadomości i zdarzenia jej wysyłki, dostarczenia lub odrzucenia.
+- **Opcjonalne pomiary:** po akceptacji opcjonalnej analityki Vercel Web Analytics zbiera statystyki odwiedzin, a Speed
+  Insights mierzy wydajność strony. Pomiary mogą obejmować informacje o odwiedzanych stronach, urządzeniu, przeglądarce
+  oraz czasie ładowania i responsywności strony. Nie przekazujemy w zdarzeniach treści rachunków ani formularzy.
 
 Dane wpisane w generatorze bez zapisywania na Koncie mogą być przechowywane w pamięci bieżącej sesji przeglądarki dla
 funkcji podglądu. Nie należy wpisywać danych, których Użytkownik nie ma prawa przetwarzać.
@@ -43,12 +46,16 @@ uzasadniony interes administratora lub obowiązek prawny, stosuje się odpowiedn
 wykorzystywane do profilowania ani do zautomatyzowanego podejmowania decyzji wywołujących skutki prawne lub podobnie
 istotnie wpływających na Użytkownika.
 
+Opcjonalne statystyki odwiedzin i pomiary wydajności służą ulepszaniu Serwisu i są uruchamiane na podstawie zgody
+Użytkownika. Zgodę można wycofać w ustawieniach cookies bez ograniczenia dostępu do Serwisu.
+
 ## 4. Dostawcy i odbiorcy danych
 
 Dane mogą być przetwarzane przez dostawców usług technicznych działających na potrzeby aplikacji:
 
 - Neon — baza danych i uwierzytelnianie (Neon Auth); skonfigurowany region Frankfurt / EU Central.
-- Vercel — hosting i uruchamianie aplikacji; funkcje aplikacji są przypisane do regionu Frankfurt (fra1).
+- Vercel — hosting i uruchamianie aplikacji; funkcje aplikacji są przypisane do regionu Frankfurt (fra1). Po uzyskaniu
+  zgody także Web Analytics — statystyki odwiedzin — oraz Speed Insights — pomiary wydajności.
 - Resend — wysyłka wiadomości z formularza kontaktowego, w tym treści wiadomości, adresu e-mail, imienia lub nazwy i
   tematu; region przetwarzania EU.
 - Cloudflare Email Routing — przekierowywanie wiadomości z adresu kontaktowego w domenie Serwisu do skrzynki
@@ -118,12 +125,19 @@ przetwarzania i odpowiednim uregulowaniu powierzenia danych.
 ## 8. Pliki cookies i pamięć przeglądarki
 
 Serwis korzysta z technicznych mechanizmów niezbędnych do uwierzytelniania i utrzymania sesji. Funkcja podglądu może
-zapisać dane robocze w pamięci sesyjnej przeglądarki. Serwis nie korzysta z narzędzi analitycznych ani reklamowych ani
-obecnie nie zapisuje cookies opcjonalnych. Baner umożliwia zaakceptowanie albo odrzucenie cookies opcjonalnych. Wybór
-jest zapisywany w niezbędnym cookie `cookie-consent` przez 12 miesięcy. Neon Auth ustawia niezbędne cookies
-`__Secure-neon-auth.session_token` i `__Secure-neon-auth.local.session_data` do logowania i obsługi sesji; ich czas
-życia wynika z konfiguracji sesji Neon Auth. Wpis w rejestrze decyzji jest przechowywany przez 30 dni; wpisy powiązane z
-Kontem są usuwane wraz z Kontem. Ustawienie można zmienić przyciskiem „Ustawienia cookies” w stopce Serwisu.
+zapisać dane robocze w pamięci sesyjnej przeglądarki. Vercel Web Analytics i Speed Insights nie są uruchamiane przed
+akceptacją opcjonalnych pomiarów w banerze. Odmowa pozostawia oba narzędzia wyłączone. Same narzędzia nie używają
+cookies do tych pomiarów; Serwis uzależnia ich uruchomienie od zgody na opcjonalną analitykę. Nie używamy narzędzi
+reklamowych. Zmiana wyboru lub usunięcie zapamiętanego wyboru przeładowuje stronę; wycofanie zgody zatrzymuje dalsze
+pomiary, ale nie usuwa automatycznie wcześniej przekazanych danych. Wybór jest zapisywany w niezbędnym cookie
+`cookie-consent` przez 12 miesięcy. Neon Auth ustawia niezbędne cookies `__Secure-neon-auth.session_token` i
+`__Secure-neon-auth.local.session_data` do logowania i obsługi sesji; ich czas życia wynika z konfiguracji sesji Neon
+Auth. Wpis w rejestrze decyzji jest przechowywany przez 30 dni; wpisy powiązane z Kontem są usuwane wraz z Kontem.
+Ustawienie można zmienić przyciskiem „Ustawienia cookies” w stopce Serwisu.
+
+W zdarzeniach obu narzędzi aplikacja usuwa parametry zapytania i fragment adresu oraz pomija zdarzenia ze stron
+logowania, Konta, akceptacji Regulaminu i endpointów API. Wprowadzenie tych pomiarów zmienia wersję komunikatu zgody;
+wcześniejszy wybór nie uruchamia nowych narzędzi bez ponownej akceptacji.
 
 ## 9. Dane osób niepełnoletnich
 

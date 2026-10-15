@@ -50,3 +50,7 @@ content/legal/registry.generated.ts
 workspace.xml
 
 .vercel
+
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md

@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { saveUserBankAccountAction } from '@/app/actions/savedData';
 import {
   cleanPolishBankAccount,
@@ -142,7 +143,11 @@ export default function InvoiceForm({
           text: res.error,
         });
       }
-    } catch {
+    } catch (error) {
+      Sentry.withScope((scope) => {
+        scope.setTag('error.area', 'generator.bank-account.save');
+        Sentry.captureException(error);
+      });
       setSaveAccountFeedback({
         ok: false,
         text: 'Wystąpił błąd podczas zapisywania rachunku. Spróbuj ponownie.',

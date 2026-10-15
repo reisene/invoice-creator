@@ -1,5 +1,6 @@
 'use client';
 
+import * as Sentry from '@sentry/nextjs';
 import { useRouter } from 'next/navigation';
 import { useRef, useState, useTransition } from 'react';
 import { Alert, Button, Card, Form } from 'react-bootstrap';
@@ -47,7 +48,11 @@ export function ImportDataCard() {
         } else {
           setError(result.error);
         }
-      } catch {
+      } catch (error) {
+        Sentry.withScope((scope) => {
+          scope.setTag('error.area', 'account.import.preview');
+          Sentry.captureException(error);
+        });
         setError('Wystąpił błąd. Spróbuj ponownie.');
       }
     });
@@ -66,7 +71,11 @@ export function ImportDataCard() {
         } else {
           setError(result.error);
         }
-      } catch {
+      } catch (error) {
+        Sentry.withScope((scope) => {
+          scope.setTag('error.area', 'account.import.commit');
+          Sentry.captureException(error);
+        });
         setError('Wystąpił błąd. Spróbuj ponownie.');
       }
     });

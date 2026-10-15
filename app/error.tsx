@@ -1,11 +1,13 @@
 'use client';
 
+import * as Sentry from '@sentry/nextjs';
 import { Button, Container } from 'react-bootstrap';
 import {
   BsArrowClockwise,
   BsExclamationTriangle,
   BsHouse,
 } from 'react-icons/bs';
+import { useEffect } from 'react';
 
 export default function Error({
   error,
@@ -14,6 +16,10 @@ export default function Error({
   error: Error & { digest?: string };
   retry: () => void;
 }) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
   return (
     <Container className='py-5 page-medium text-center'>
       <BsExclamationTriangle

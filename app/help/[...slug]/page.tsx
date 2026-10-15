@@ -4,6 +4,7 @@ import {
   getArticleBySlug,
   getCategoryArticles,
 } from '@/lib/helpArticles';
+import * as Sentry from '@sentry/nextjs';
 import { socialImage } from '@/lib/socialImage';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -78,7 +79,12 @@ export default async function HelpSlugPage({ params }: HelpSlugPageProps) {
       `@/content/help/${article.slug.join('/')}.mdx`
     );
     MDXContent = imported.default;
-  } catch {
+  } catch (error) {
+    Sentry.withScope((scope) => {
+      scope.setTag('error.area', 'help.article.load');
+      scope.setContext('help_article', { slug: article.slugPath });
+      Sentry.captureException(error);
+    });
     notFound();
   }
 

@@ -7,6 +7,7 @@ import { prisma } from '@/lib/db';
 import { getInvoiceNumberScope } from '@/lib/invoiceNumbering';
 import { parseParty } from '@/lib/parseParty';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { logServerError } from '@/lib/serverLogger';
 import { sanitizeInvoiceForm } from '@/lib/sanitizeInvoiceForm';
 import {
   getSavedPartiesForUser,
@@ -282,7 +283,8 @@ export async function importUserData(
             ]
           : []),
       ]);
-    } catch {
+    } catch (error) {
+      logServerError('[account/import] Failed to commit imported data.', error);
       return {
         ok: false,
         error:

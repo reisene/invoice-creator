@@ -51,7 +51,10 @@ export async function signUpWithEmail(
       );
     }
   } else {
-    console.error('Rejestracja zakończyła się bez identyfikatora użytkownika.');
+      logServerError(
+        'Rejestracja zakończyła się bez identyfikatora użytkownika.',
+        new Error('Sign-up completed without a user ID.'),
+      );
   }
 
   redirect(

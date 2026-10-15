@@ -1,5 +1,6 @@
 'use client';
 
+import * as Sentry from '@sentry/nextjs';
 import { reserveInvoiceNumber, saveInvoice } from '@/app/actions/savedData';
 import InvoiceForm from '@/components/generator/InvoiceForm';
 import InvoicePreview from '@/components/generator/InvoicePreview';
@@ -196,7 +197,11 @@ export default function GeneratorClient({
       } else {
         setSaveMessage({ variant: 'danger', text: result.error });
       }
-    } catch {
+    } catch (error) {
+      Sentry.withScope((scope) => {
+        scope.setTag('error.area', 'generator.invoice.save');
+        Sentry.captureException(error);
+      });
       setSaveMessage({
         variant: 'danger',
         text: 'Nie udało się zapisać rachunku. Spróbuj ponownie.',
@@ -244,7 +249,11 @@ export default function GeneratorClient({
       downloadLink.click();
       downloadLink.remove();
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-    } catch {
+    } catch (error) {
+      Sentry.withScope((scope) => {
+        scope.setTag('error.area', 'generator.invoice.pdf');
+        Sentry.captureException(error);
+      });
       setPdfError('Nie udało się wygenerować pliku PDF.');
     } finally {
       setIsGeneratingPdf(false);

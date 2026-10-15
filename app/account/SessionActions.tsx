@@ -1,5 +1,6 @@
 'use client';
 
+import * as Sentry from '@sentry/nextjs';
 import { useState, useTransition } from 'react';
 import { Alert, Button } from 'react-bootstrap';
 import {
@@ -49,7 +50,11 @@ export function SessionActionButton({
               : await revokeAllSessions();
         // Pomyślne wylogowanie ze wszystkich sesji przekierowuje na logowanie.
         if (result) setFeedback(result);
-      } catch {
+      } catch (error) {
+        Sentry.withScope((scope) => {
+          scope.setTag('error.area', 'account.sessions.revoke');
+          Sentry.captureException(error);
+        });
         setFeedback({
           ok: false,
           message: 'Wystąpił błąd. Spróbuj ponownie.',

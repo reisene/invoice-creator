@@ -1,5 +1,6 @@
 'use client';
 
+import * as Sentry from '@sentry/nextjs';
 import {
   deleteAllInvoices,
   deleteAllParties,
@@ -69,7 +70,11 @@ export default function DeleteSavedDataButton({
             message: `Usunięto wszystkie dane stron (${result.data}).`,
           });
         }
-      } catch {
+      } catch (error) {
+        Sentry.withScope((scope) => {
+          scope.setTag('error.area', 'account.saved-data.delete');
+          Sentry.captureException(error);
+        });
         setFeedback({
           ok: false,
           message: 'Nie udało się usunąć danych. Spróbuj ponownie.',

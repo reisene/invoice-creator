@@ -1,5 +1,6 @@
 'use client';
 
+import * as Sentry from '@sentry/nextjs';
 import InvoicePreview from '@/components/generator/InvoicePreview';
 import { calculateInvoice } from '@/lib/calculateInvoice';
 import {
@@ -102,7 +103,11 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
       downloadLink.click();
       downloadLink.remove();
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-    } catch {
+    } catch (error) {
+      Sentry.withScope((scope) => {
+        scope.setTag('error.area', 'preview.pdf.generate');
+        Sentry.captureException(error);
+      });
       setPdfError('Nie udało się wygenerować pliku PDF.');
     } finally {
       setIsGeneratingPdf(false);

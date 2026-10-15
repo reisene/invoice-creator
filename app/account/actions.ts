@@ -337,7 +337,10 @@ export async function deleteAccount(
     };
   }
   if (verification.data?.user.id !== userId) {
-    console.error('[account/delete] Reauthentication account mismatch.');
+      logServerError(
+        '[account/delete] Reauthentication account mismatch.',
+        new Error('Reauthentication account mismatch.'),
+      );
     return {
       ok: false,
       message: 'Nie udało się potwierdzić tożsamości konta.',

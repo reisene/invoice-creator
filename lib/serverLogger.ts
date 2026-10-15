@@ -1,4 +1,5 @@
 import 'server-only';
+import * as Sentry from '@sentry/nextjs';
 
 export function logServerError(context: string, error: unknown): void {
   const details: { code?: string; statusCode?: number } = {};
@@ -21,4 +22,9 @@ export function logServerError(context: string, error: unknown): void {
     }
   }
   console.error(context, details);
+  Sentry.withScope((scope) => {
+    scope.setTag('error.source', 'serverLogger');
+    scope.setContext('server_error', { context, ...details });
+    Sentry.captureException(error);
+  });
 }

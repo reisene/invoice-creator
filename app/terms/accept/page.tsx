@@ -1,9 +1,9 @@
 import { auth } from '@/lib/auth/server';
-import { getCurrentLegalDocument } from '@/lib/legalDocuments';
+import { getCurrentLegalDocument } from '@/lib/legal/legalDocuments';
 import {
   claimPendingMagicLinkAcceptance,
   hasCurrentTermsAcceptance,
-} from '@/lib/recordTermsAcceptance';
+} from '@/lib/legal/recordTermsAcceptance';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';

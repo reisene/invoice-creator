@@ -1,24 +1,24 @@
 'use server';
 
 import type { Prisma } from '@/generated/prisma';
-import { calculateInvoice } from '@/lib/calculateInvoice';
 import { getCurrentUserIdWithTerms } from '@/lib/currentUser';
 import { prisma } from '@/lib/db';
-import { getInvoiceNumberScope } from '@/lib/invoiceNumbering';
-import { parseParty } from '@/lib/parseParty';
+import { calculateInvoice } from '@/lib/invoice/calculateInvoice';
+import { getInvoiceNumberScope } from '@/lib/invoice/invoiceNumbering';
+import { parseParty } from '@/lib/invoice/parseParty';
+import { sanitizeInvoiceForm } from '@/lib/invoice/sanitizeInvoiceForm';
+import { getAllTaxParams } from '@/lib/invoice/taxParams';
+import {
+  isValidPolishBankAccount,
+  validateInvoiceForm,
+} from '@/lib/invoice/validateInvoiceForm';
 import { checkRateLimit } from '@/lib/rateLimit';
-import { logServerError } from '@/lib/serverLogger';
-import { sanitizeInvoiceForm } from '@/lib/sanitizeInvoiceForm';
 import {
   getSavedPartiesForUser,
   getUserBankAccount,
 } from '@/lib/savedDataAccess';
 import { encryptJson, encryptText } from '@/lib/savedDataCrypto';
-import { getAllTaxParams } from '@/lib/taxParams';
-import {
-  isValidPolishBankAccount,
-  validateInvoiceForm,
-} from '@/lib/validateInvoiceForm';
+import { logServerError } from '@/lib/serverLogger';
 import type { ActionResult } from '@/types/savedData';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'node:crypto';

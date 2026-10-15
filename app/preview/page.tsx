@@ -1,4 +1,4 @@
-import { getAllTaxParams } from '@/lib/taxParams';
+import { getAllTaxParams } from '@/lib/invoice/taxParams';
 import type { Metadata } from 'next';
 import PreviewClient from './PreviewClient';
 

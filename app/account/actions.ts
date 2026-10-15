@@ -6,10 +6,10 @@ import { auth } from '@/lib/auth/server';
 import { authErrorMessage } from '@/lib/authErrors';
 import { getCurrentUserId, getCurrentUserIdWithTerms } from '@/lib/currentUser';
 import { prisma } from '@/lib/db';
-import { getInvoiceNumberScope } from '@/lib/invoiceNumbering';
+import { getInvoiceNumberScope } from '@/lib/invoice/invoiceNumbering';
+import { isValidPolishBankAccount } from '@/lib/invoice/validateInvoiceForm';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { encryptText } from '@/lib/savedDataCrypto';
-import { isValidPolishBankAccount } from '@/lib/validateInvoiceForm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
@@ -337,10 +337,10 @@ export async function deleteAccount(
     };
   }
   if (verification.data?.user.id !== userId) {
-      logServerError(
-        '[account/delete] Reauthentication account mismatch.',
-        new Error('Reauthentication account mismatch.'),
-      );
+    logServerError(
+      '[account/delete] Reauthentication account mismatch.',
+      new Error('Reauthentication account mismatch.'),
+    );
     return {
       ok: false,
       message: 'Nie udało się potwierdzić tożsamości konta.',

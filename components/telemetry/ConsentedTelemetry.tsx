@@ -1,4 +1,4 @@
-import VercelTelemetry from '@/components/VercelTelemetry';
+import VercelTelemetry from '@/components/telemetry/VercelTelemetry';
 import {
   COOKIE_CONSENT_COOKIE,
   parseCookieConsentCookie,

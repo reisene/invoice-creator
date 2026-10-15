@@ -1,4 +1,4 @@
-import ClearCookieConsentButton from '@/components/ClearCookieConsentButton';
+import ClearCookieConsentButton from '@/components/consent/ClearCookieConsentButton';
 import { auth } from '@/lib/auth/server';
 import {
   COOKIE_CONSENT_COOKIE,
@@ -15,10 +15,11 @@ import { Badge, Card, CardBody, Container, Table } from 'react-bootstrap';
 export const metadata: Metadata = { title: 'Ustawienia cookies' };
 export const dynamic = 'force-dynamic';
 
-const choiceLabels: Record<CookieConsentChoice, string> = {
-  ACCEPT_OPTIONAL: 'Akceptacja cookies opcjonalnych',
-  REJECT_OPTIONAL: 'Tylko cookies niezbędne',
-};
+function getChoiceLabel(choice: CookieConsentChoice): string {
+  return choice === 'ACCEPT_OPTIONAL'
+    ? 'Akceptacja cookies opcjonalnych'
+    : 'Tylko cookies niezbędne';
+}
 
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat('pl-PL', {
@@ -66,7 +67,7 @@ export default async function CookieSettingsPage() {
           <h2 className='h5'>Bieżący wybór na tym urządzeniu</h2>
           {currentChoice ? (
             <p className='mb-0'>
-              <Badge bg='secondary'>{choiceLabels[currentChoice]}</Badge>
+              <Badge bg='secondary'>{getChoiceLabel(currentChoice)}</Badge>
             </p>
           ) : (
             <p className='mb-0 text-body-secondary'>
@@ -170,7 +171,7 @@ export default async function CookieSettingsPage() {
                           {formatDate(item.createdAt)}
                         </time>
                       </td>
-                      <td>{choiceLabels[item.choice]}</td>
+                      <td>{getChoiceLabel(item.choice)}</td>
                       <td>{item.consentVersion}</td>
                     </tr>
                   ))}

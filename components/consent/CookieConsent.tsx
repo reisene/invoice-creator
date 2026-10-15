@@ -1,4 +1,4 @@
-import CookieConsentBanner from '@/components/CookieConsentBanner';
+import CookieConsentBanner from '@/components/consent/CookieConsentBanner';
 import {
   COOKIE_CONSENT_COOKIE,
   parseCookieConsentCookie,

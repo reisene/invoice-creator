@@ -33,7 +33,11 @@ export function getCurrentLegalDocument(
   now = new Date(),
 ): LegalDocument {
   const today = getWarsawDate(now);
-  const document = legalDocumentRegistry[kind]
+  const documents =
+    kind === 'terms'
+      ? legalDocumentRegistry.terms
+      : legalDocumentRegistry.privacy;
+  const document = documents
     .filter((candidate) => candidate.effectiveDate <= today)
     .at(-1);
 

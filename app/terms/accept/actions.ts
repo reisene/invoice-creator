@@ -3,11 +3,11 @@
 import { logServerError } from '@/lib/serverLogger';
 
 import { auth } from '@/lib/auth/server';
-import { getCurrentLegalDocument } from '@/lib/legalDocuments';
+import { getCurrentLegalDocument } from '@/lib/legal/legalDocuments';
 import {
   hasCurrentTermsAcceptance,
   recordTermsAcceptance,
-} from '@/lib/recordTermsAcceptance';
+} from '@/lib/legal/recordTermsAcceptance';
 import { redirect } from 'next/navigation';
 
 export type AcceptTermsState = { error: string } | null;

@@ -1,4 +1,4 @@
-import { formatPolishBankAccount } from '@/lib/bankUtils';
+import { formatPolishBankAccount } from '@/lib/invoice/bankUtils';
 import { getSiteDisplayUrl } from '@/lib/siteUrl';
 import { numberToWords } from '@/lib/toWords';
 import type { InvoiceData } from '@/types/invoice';

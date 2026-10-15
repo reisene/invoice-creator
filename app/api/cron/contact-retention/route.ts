@@ -1,7 +1,7 @@
 import { getContactMessageRetentionCutoff } from '@/lib/contactMessageRetention';
 import { getCookieConsentLogCutoff } from '@/lib/cookieConsent';
 import { prisma } from '@/lib/db';
-import { getPendingMagicLinkAcceptanceCutoff } from '@/lib/recordTermsAcceptance';
+import { getPendingMagicLinkAcceptanceCutoff } from '@/lib/legal/recordTermsAcceptance';
 import { sendRetentionHeartbeat } from '@/lib/retentionHeartbeat';
 
 export const dynamic = 'force-dynamic';

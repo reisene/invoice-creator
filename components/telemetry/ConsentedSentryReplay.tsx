@@ -1,4 +1,4 @@
-import ConsentedSentryReplayClient from '@/components/ConsentedSentryReplayClient';
+import ConsentedSentryReplayClient from '@/components/telemetry/ConsentedSentryReplayClient';
 import {
   COOKIE_CONSENT_COOKIE,
   parseCookieConsentCookie,

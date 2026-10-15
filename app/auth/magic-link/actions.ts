@@ -4,9 +4,9 @@ import { logServerError } from '@/lib/serverLogger';
 
 import { auth } from '@/lib/auth/server';
 import { authErrorMessage } from '@/lib/authErrors';
-import { getCurrentLegalDocument } from '@/lib/legalDocuments';
-import { recordTermsAcceptance } from '@/lib/recordTermsAcceptance';
-import { parseRegistrationConsent } from '@/lib/termsAcceptance';
+import { getCurrentLegalDocument } from '@/lib/legal/legalDocuments';
+import { recordTermsAcceptance } from '@/lib/legal/recordTermsAcceptance';
+import { parseRegistrationConsent } from '@/lib/legal/termsAcceptance';
 import { headers } from 'next/headers';
 
 type MagicLinkActionState =

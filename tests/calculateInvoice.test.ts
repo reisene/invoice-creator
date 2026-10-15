@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { calculateInvoice } from '../lib/calculateInvoice';
+import { calculateInvoice } from '../lib/invoice/calculateInvoice';
 import type { InvoiceFormData } from '../types/invoiceForm';
 import type { TaxParams } from '../types/taxParams';
 

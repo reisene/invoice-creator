@@ -1,6 +1,5 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
 import { reserveInvoiceNumber, saveInvoice } from '@/app/actions/savedData';
 import InvoiceForm from '@/components/generator/InvoiceForm';
 import InvoicePreview from '@/components/generator/InvoicePreview';
@@ -8,9 +7,9 @@ import SavedPartiesPanel from '@/components/generator/SavedPartiesPanel';
 import {
   cleanPolishBankAccount,
   formatPolishBankAccount,
-} from '@/lib/bankUtils';
-import { calculateInvoice } from '@/lib/calculateInvoice';
-import { validateInvoiceForm } from '@/lib/validateInvoiceForm';
+} from '@/lib/invoice/bankUtils';
+import { calculateInvoice } from '@/lib/invoice/calculateInvoice';
+import { validateInvoiceForm } from '@/lib/invoice/validateInvoiceForm';
 import type { InvoiceData } from '@/types/invoice';
 import type { InvoiceFormData } from '@/types/invoiceForm';
 import type {
@@ -19,6 +18,7 @@ import type {
   UserBankAccountDto,
 } from '@/types/savedData';
 import type { TaxParams } from '@/types/taxParams';
+import * as Sentry from '@sentry/nextjs';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, Button, Col, Container, Row } from 'react-bootstrap';
 

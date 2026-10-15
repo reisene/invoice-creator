@@ -1,9 +1,6 @@
 import type { InvoiceFormData } from '@/types/invoiceForm';
 import type { TaxParams } from '@/types/taxParams';
 
-const PESEL_WEIGHTS = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
-const NIP_WEIGHTS = [6, 5, 7, 2, 3, 4, 5, 6, 7];
-
 function digitsOnly(value: string): string {
   return value.replace(/[\s-]/g, '');
 }
@@ -12,10 +9,17 @@ export function isValidPesel(value: string): boolean {
   const pesel = digitsOnly(value);
   if (!/^\d{11}$/.test(pesel)) return false;
 
-  const sum = PESEL_WEIGHTS.reduce(
-    (acc, weight, i) => acc + weight * Number(pesel[i]),
-    0,
-  );
+  const sum =
+    Number(pesel.charAt(0)) +
+    3 * Number(pesel.charAt(1)) +
+    7 * Number(pesel.charAt(2)) +
+    9 * Number(pesel.charAt(3)) +
+    Number(pesel.charAt(4)) +
+    3 * Number(pesel.charAt(5)) +
+    7 * Number(pesel.charAt(6)) +
+    9 * Number(pesel.charAt(7)) +
+    Number(pesel.charAt(8)) +
+    3 * Number(pesel.charAt(9));
   return (10 - (sum % 10)) % 10 === Number(pesel[10]);
 }
 
@@ -23,10 +27,16 @@ export function isValidNip(value: string): boolean {
   const nip = digitsOnly(value);
   if (!/^\d{10}$/.test(nip)) return false;
 
-  const sum = NIP_WEIGHTS.reduce(
-    (acc, weight, i) => acc + weight * Number(nip[i]),
-    0,
-  );
+  const sum =
+    6 * Number(nip.charAt(0)) +
+    5 * Number(nip.charAt(1)) +
+    7 * Number(nip.charAt(2)) +
+    2 * Number(nip.charAt(3)) +
+    3 * Number(nip.charAt(4)) +
+    4 * Number(nip.charAt(5)) +
+    5 * Number(nip.charAt(6)) +
+    6 * Number(nip.charAt(7)) +
+    7 * Number(nip.charAt(8));
   const control = sum % 11;
   return control !== 10 && control === Number(nip[9]);
 }
@@ -54,15 +64,27 @@ export function birthDateFromPesel(value: string): string | null {
   const yy = Number(pesel.slice(0, 2));
   const mmRaw = Number(pesel.slice(2, 4));
   const dd = Number(pesel.slice(4, 6));
-  const centuryByOffset: Record<number, number> = {
-    8: 1800,
-    0: 1900,
-    1: 2000,
-    2: 2100,
-    3: 2200,
-  };
-  const century = centuryByOffset[Math.floor(mmRaw / 20)];
-  if (century === undefined) return null;
+  const centuryOffset = Math.floor(mmRaw / 20);
+  let century: number;
+  switch (centuryOffset) {
+    case 8:
+      century = 1800;
+      break;
+    case 0:
+      century = 1900;
+      break;
+    case 1:
+      century = 2000;
+      break;
+    case 2:
+      century = 2100;
+      break;
+    case 3:
+      century = 2200;
+      break;
+    default:
+      return null;
+  }
 
   const month = mmRaw % 20;
   const year = century + yy;

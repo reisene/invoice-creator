@@ -4,9 +4,9 @@ import { logServerError } from '@/lib/serverLogger';
 
 import { auth } from '@/lib/auth/server';
 import { authErrorMessage } from '@/lib/authErrors';
-import { getCurrentLegalDocument } from '@/lib/legalDocuments';
-import { recordTermsAcceptance } from '@/lib/recordTermsAcceptance';
-import { parseRegistrationConsent } from '@/lib/termsAcceptance';
+import { getCurrentLegalDocument } from '@/lib/legal/legalDocuments';
+import { recordTermsAcceptance } from '@/lib/legal/recordTermsAcceptance';
+import { parseRegistrationConsent } from '@/lib/legal/termsAcceptance';
 import { redirect } from 'next/navigation';
 
 export async function signUpWithEmail(
@@ -51,10 +51,10 @@ export async function signUpWithEmail(
       );
     }
   } else {
-      logServerError(
-        'Rejestracja zakończyła się bez identyfikatora użytkownika.',
-        new Error('Sign-up completed without a user ID.'),
-      );
+    logServerError(
+      'Rejestracja zakończyła się bez identyfikatora użytkownika.',
+      new Error('Sign-up completed without a user ID.'),
+    );
   }
 
   redirect(

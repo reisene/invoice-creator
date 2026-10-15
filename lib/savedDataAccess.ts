@@ -2,8 +2,8 @@ import { prisma } from '@/lib/db';
 import {
   getInvoiceNumberScope,
   reserveInvoiceNumberForScope,
-} from '@/lib/invoiceNumbering';
-import { sanitizeInvoiceForm } from '@/lib/sanitizeInvoiceForm';
+} from '@/lib/invoice/invoiceNumbering';
+import { sanitizeInvoiceForm } from '@/lib/invoice/sanitizeInvoiceForm';
 import {
   decryptJson,
   decryptLegacyText,

@@ -4,7 +4,7 @@ import { auth } from '@/lib/auth/server';
 import {
   claimPendingMagicLinkAcceptance,
   hasCurrentTermsAcceptance,
-} from '@/lib/recordTermsAcceptance';
+} from '@/lib/legal/recordTermsAcceptance';
 import type { Route } from 'next';
 import { redirect } from 'next/navigation';
 

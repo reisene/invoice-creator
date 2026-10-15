@@ -1,4 +1,4 @@
-import { isValidNip, isValidPesel } from '@/lib/validateInvoiceForm';
+import { isValidNip, isValidPesel } from '@/lib/invoice/validateInvoiceForm';
 
 export type ValidParty = {
   kind: 'CLIENT' | 'CONTRACTOR';

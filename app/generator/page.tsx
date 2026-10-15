@@ -1,11 +1,11 @@
 import GeneratorClient from '@/components/generator/GeneratorClient';
 import { getCurrentUserIdWithTerms } from '@/lib/currentUser';
+import { getAllTaxParams } from '@/lib/invoice/taxParams';
 import {
   getSavedInvoiceForUser,
   getSavedPartiesForUser,
   getUserBankAccount,
 } from '@/lib/savedDataAccess';
-import { getAllTaxParams } from '@/lib/taxParams';
 import type { InvoiceFormData } from '@/types/invoiceForm';
 import type { SavedPartyDto } from '@/types/savedData';
 import type { Metadata } from 'next';

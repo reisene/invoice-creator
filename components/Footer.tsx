@@ -1,4 +1,4 @@
-import CookieSettingsButton from '@/components/CookieSettingsButton';
+import CookieSettingsButton from '@/components/consent/CookieSettingsButton';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { Container } from 'react-bootstrap';

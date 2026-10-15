@@ -3,8 +3,8 @@ import {
   cleanPolishBankAccount,
   formatPolishBankAccount,
   getPolishBankName,
-} from '@/lib/bankUtils';
-import { isValidPolishBankAccount } from '@/lib/validateInvoiceForm';
+} from '@/lib/invoice/bankUtils';
+import { isValidPolishBankAccount } from '@/lib/invoice/validateInvoiceForm';
 import type {
   ClientType,
   ContractorStatus,

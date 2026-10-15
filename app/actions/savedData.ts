@@ -1,22 +1,22 @@
 'use server';
 
-import { calculateInvoice } from '@/lib/calculateInvoice';
 import { getCurrentUserIdWithTerms } from '@/lib/currentUser';
 import { prisma } from '@/lib/db';
+import { calculateInvoice } from '@/lib/invoice/calculateInvoice';
 import {
   getInvoiceNumberScope,
   isReservationForScope,
   reserveInvoiceNumberForScope,
-} from '@/lib/invoiceNumbering';
-import { parseParty } from '@/lib/parseParty';
-import { checkRateLimit } from '@/lib/rateLimit';
-import { sanitizeInvoiceForm } from '@/lib/sanitizeInvoiceForm';
-import { encryptJson, encryptText } from '@/lib/savedDataCrypto';
-import { getAllTaxParams } from '@/lib/taxParams';
+} from '@/lib/invoice/invoiceNumbering';
+import { parseParty } from '@/lib/invoice/parseParty';
+import { sanitizeInvoiceForm } from '@/lib/invoice/sanitizeInvoiceForm';
+import { getAllTaxParams } from '@/lib/invoice/taxParams';
 import {
   isValidPolishBankAccount,
   validateInvoiceForm,
-} from '@/lib/validateInvoiceForm';
+} from '@/lib/invoice/validateInvoiceForm';
+import { checkRateLimit } from '@/lib/rateLimit';
+import { encryptJson, encryptText } from '@/lib/savedDataCrypto';
 import type {
   ActionResult,
   InvoiceNumberReservation,

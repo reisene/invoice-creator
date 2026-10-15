@@ -1,8 +1,7 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
 import InvoicePreview from '@/components/generator/InvoicePreview';
-import { calculateInvoice } from '@/lib/calculateInvoice';
+import { calculateInvoice } from '@/lib/invoice/calculateInvoice';
 import {
   SAMPLE_INVOICE_PRESETS,
   type SampleInvoicePreset,
@@ -10,6 +9,7 @@ import {
 import type { InvoiceData } from '@/types/invoice';
 import type { InvoiceFormData } from '@/types/invoiceForm';
 import type { TaxParams } from '@/types/taxParams';
+import * as Sentry from '@sentry/nextjs';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import {

@@ -1,4 +1,4 @@
-import { getCurrentLegalDocument } from '@/lib/legalDocuments';
+import { getCurrentLegalDocument } from '@/lib/legal/legalDocuments';
 import type { Metadata } from 'next';
 import { connection } from 'next/server';
 import { Badge, Card, Container } from 'react-bootstrap';

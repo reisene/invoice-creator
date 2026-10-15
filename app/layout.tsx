@@ -1,9 +1,9 @@
 import AppNavbar from '@/components/AppNavbar';
 import AuthButtons from '@/components/AuthButtons';
-import ConsentedSentryReplay from '@/components/ConsentedSentryReplay';
-import ConsentedTelemetry from '@/components/ConsentedTelemetry';
-import CookieConsent from '@/components/CookieConsent';
+import CookieConsent from '@/components/consent/CookieConsent';
 import Footer from '@/components/Footer';
+import ConsentedSentryReplay from '@/components/telemetry/ConsentedSentryReplay';
+import ConsentedTelemetry from '@/components/telemetry/ConsentedTelemetry';
 import { siteUrl } from '@/lib/siteUrl';
 import { socialImage } from '@/lib/socialImage';
 import 'bootstrap/dist/css/bootstrap.min.css';

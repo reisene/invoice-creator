@@ -2,6 +2,9 @@
 
 [![Better Stack Badge](https://incidents.betterstack.com/status-badges/v1/monitor/30soy.svg)](https://incidents.betterstack.com/?utm_source=status_badge)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/47f0903270ca44c29b6de5f570582732)](https://app.codacy.com/gh/reisene/invoice-creator/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Freisene%2Finvoice-creator)
+[![Visual Studio Code](https://img.shields.io/badge/Editor-Visual%20Studio%20Code-007ACC?logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/)
+[![WebStorm](https://img.shields.io/badge/Editor-WebStorm-000000?logo=webstorm&logoColor=white)](https://www.jetbrains.com/webstorm/)
 
 Polskojęzyczny generator rachunków do umowy zlecenia. Oblicza składki i zaliczkę na podatek na podstawie danych formularza, pokazuje podgląd dokumentu i pozwala pobrać rachunek jako PDF. Konto jest opcjonalne do przygotowania rachunku; po zalogowaniu można zapisywać i ponownie otwierać dane.
 
@@ -132,5 +135,7 @@ npm test
 Aktualny zestaw testów zawiera testy jednostkowe kalkulacji rachunku; projekt nie deklaruje w tym README pokrycia testami E2E ani integracyjnymi.
 
 ## Licencja
+
+![GitHub License](https://img.shields.io/github/license/reisene/invoice-creator)
 
 Projekt jest udostępniany na licencji GNU General Public License v3.0 lub nowszej. Szczegóły zawiera [LICENSE](./LICENSE).

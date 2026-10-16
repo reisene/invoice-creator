@@ -1,13 +1,13 @@
 'use client';
 
 import * as Sentry from '@sentry/nextjs';
+import { useEffect } from 'react';
 import { Button, Container } from 'react-bootstrap';
 import {
   BsArrowClockwise,
   BsExclamationTriangle,
   BsHouse,
 } from 'react-icons/bs';
-import { useEffect } from 'react';
 
 export default function Error({
   error,

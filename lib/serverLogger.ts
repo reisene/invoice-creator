@@ -1,5 +1,5 @@
-import 'server-only';
 import * as Sentry from '@sentry/nextjs';
+import 'server-only';
 
 export function logServerError(context: string, error: unknown): void {
   const details: { code?: string; statusCode?: number } = {};

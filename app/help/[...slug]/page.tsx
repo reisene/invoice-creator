@@ -4,8 +4,8 @@ import {
   getArticleBySlug,
   getCategoryArticles,
 } from '@/lib/helpArticles';
-import * as Sentry from '@sentry/nextjs';
 import { socialImage } from '@/lib/socialImage';
+import * as Sentry from '@sentry/nextjs';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';

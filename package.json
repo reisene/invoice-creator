@@ -85,24 +85,24 @@
     "@vercel/speed-insights": "^2.0.0",
     "bootstrap": "^5.3.8",
     "botid": "^1.5.11",
-    "dotenv": "^18.0.7",
+    "dotenv": "^18.0.8",
     "gray-matter": "^4.0.3",
-    "next": "16.4.0",
-    "react": "19.3.0",
+    "next": "16.4.2",
+    "react": "19.3.1",
     "react-bootstrap": "^2.10.10",
-    "react-dom": "19.3.0",
+    "react-dom": "19.3.1",
     "react-icons": "^5.7.0",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
     "remark-mdx-frontmatter": "^6.0.0",
-    "resend": "^6.32.1",
-    "to-words": "^7.1.0"
+    "resend": "^6.33.0",
+    "to-words": "^7.2.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
     "@eslint/js": "^10.0.1",
-    "@next/eslint-plugin-next": "^16.4.0",
+    "@next/eslint-plugin-next": "^16.4.2",
     "@release-it/conventional-changelog": "^12.0.2",
     "@types/node": "26.6.5",
     "@types/react": "19.3.0",
@@ -110,13 +110,13 @@
     "@typescript/native": "npm:typescript@^7.0.2",
     "@vercel/config": "^0.12.0",
     "eslint": "^10.12.0",
-    "eslint-config-next": "16.4.0",
+    "eslint-config-next": "16.4.2",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
     "lint-staged": "17.6.0",
     "prettier": "^3.9.10",
     "prettier-plugin-organize-imports": "^4.3.0",
-    "prisma": "^7.10.0",
+    "prisma": "^7.10.1",
     "release-it": "^21.1.1",
     "tsx": "^4.23.15",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
@@ -124,5 +124,10 @@
   },
   "overrides": {
     "path-to-regexp": "6.3.0"
+  },
+  "allowScripts": {
+    "@prisma/engines@7.10.1": true,
+    "prisma@7.10.1": true,
+    "esbuild@0.28.2": true
   }
 }

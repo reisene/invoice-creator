@@ -8,6 +8,7 @@ import type { VercelConfig } from '@vercel/config/v1';
 export const config: VercelConfig = {
   regions: ['fra1'],
   cleanUrls: true,
+  trailingSlash: false,
   framework: 'nextjs',
   installCommand: 'npm i',
   crons: [

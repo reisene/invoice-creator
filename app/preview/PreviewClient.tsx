@@ -301,6 +301,7 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                           ...prev,
                           taxReduction: amount > 0,
                           taxReductionAmount: amount,
+                          noTaxAdvanceRequest: false,
                         }));
                       }}
                     >
@@ -309,6 +310,28 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                       <option value={100}>100 zł (3 płatników)</option>
                       <option value={0}>Brak ulgi (0 zł)</option>
                     </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col sm={6}>
+                  <Form.Group>
+                    <Form.Check
+                      type='checkbox'
+                      id='preview-no-tax-advance-request'
+                      label='Nie pobieraj zaliczek do 30 000 zł'
+                      checked={formData.noTaxAdvanceRequest ?? false}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          noTaxAdvanceRequest: e.target.checked,
+                          taxReduction: e.target.checked
+                            ? false
+                            : prev.taxReduction,
+                        }))
+                      }
+                    />
+                    <Form.Text muted>
+                      Podatek po przekroczeniu limitu jest liczony od nadwyżki.
+                    </Form.Text>
                   </Form.Group>
                 </Col>
               </Row>

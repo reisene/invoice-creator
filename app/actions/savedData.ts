@@ -16,7 +16,7 @@ import {
   validateInvoiceForm,
 } from '@/lib/invoice/validateInvoiceForm';
 import { checkRateLimit } from '@/lib/rateLimit';
-import { encryptJson, encryptText } from '@/lib/savedDataCrypto';
+import { decryptJson, encryptJson, encryptText } from '@/lib/savedDataCrypto';
 import type {
   ActionResult,
   InvoiceNumberReservation,
@@ -26,6 +26,72 @@ import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'node:crypto';
 
 const NOT_SIGNED_IN = 'Zaloguj się, aby zapisywać dane.';
+
+export async function getYearToDateInvoiceTaxableIncome(
+  year: number,
+  excludedInvoiceId?: string,
+): Promise<ActionResult<number>> {
+  const userId = await getCurrentUserIdWithTerms();
+  if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+  if (!Number.isInteger(year) || year < 2000 || year > 9999) {
+    return { ok: false, error: 'Nieprawidłowy rok dochodu.' };
+  }
+  if (
+    excludedInvoiceId !== undefined &&
+    (typeof excludedInvoiceId !== 'string' || excludedInvoiceId.length > 100)
+  ) {
+    return { ok: false, error: 'Nieprawidłowy identyfikator rachunku.' };
+  }
+
+  const limit = await checkRateLimit('annualIncomeLookup', userId);
+  if (!limit.ok) return { ok: false, error: limit.message };
+
+  const [savedInvoices, allTaxParams] = await Promise.all([
+    prisma.invoice.findMany({
+      where: {
+        userId,
+        periodStart: { startsWith: `${year}-` },
+        ...(excludedInvoiceId ? { id: { not: excludedInvoiceId } } : {}),
+      },
+      select: { data: true },
+    }),
+    getAllTaxParams(),
+  ]);
+  const taxParams = [...allTaxParams]
+    .reverse()
+    .find((params) => params.year <= year);
+  if (!taxParams) {
+    return {
+      ok: false,
+      error: `Brak parametrów podatkowych dla roku ${year}; nie można zsumować rachunków.`,
+    };
+  }
+
+  let totalTaxableIncome = 0;
+  for (const savedInvoice of savedInvoices) {
+    const form = sanitizeInvoiceForm(decryptJson(savedInvoice.data).data);
+    if (!form) {
+      return {
+        ok: false,
+        error:
+          'Nie udało się odczytać jednego z zapisanych rachunków. Popraw lub usuń ten rachunek, aby wyliczyć dochód roczny.',
+      };
+    }
+    const { calculations } = calculateInvoice(
+      {
+        ...form,
+        yearToDateTaxableIncome: 0,
+        yearToDateEmploymentIncome: 0,
+        noTaxAdvanceRequest: false,
+        taxReduction: false,
+      },
+      taxParams,
+    );
+    totalTaxableIncome += calculations.taxableBase;
+  }
+
+  return { ok: true, data: totalTaxableIncome };
+}
 
 export async function reserveInvoiceNumber(
   year: number,

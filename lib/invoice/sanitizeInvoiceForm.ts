@@ -40,6 +40,8 @@ export function sanitizeInvoiceForm(input: unknown): InvoiceFormData | null {
   const taxReductionAmount = oneOf(v.taxReductionAmount, [
     0, 100, 150, 300,
   ] as const);
+  const noTaxAdvanceRequest =
+    v.noTaxAdvanceRequest === undefined ? false : v.noTaxAdvanceRequest;
   const paymentMethod =
     v.paymentMethod === undefined
       ? ''
@@ -67,6 +69,10 @@ export function sanitizeInvoiceForm(input: unknown): InvoiceFormData | null {
   const hourlyRate = optionalNum(v.hourlyRate);
   const hoursWorked = optionalNum(v.hoursWorked);
   const yearToDateTaxableIncome = num(v.yearToDateTaxableIncome);
+  const yearToDateEmploymentIncome =
+    v.yearToDateEmploymentIncome === undefined
+      ? 0
+      : num(v.yearToDateEmploymentIncome);
   const yearToDateYoungReliefIncome = num(v.yearToDateYoungReliefIncome);
   const notes = optionalText(v.notes, 2000);
   const bankAccountHolder = optionalText(v.bankAccountHolder, 200);
@@ -99,6 +105,7 @@ export function sanitizeInvoiceForm(input: unknown): InvoiceFormData | null {
     hourlyRate === null ||
     hoursWorked === null ||
     yearToDateTaxableIncome === null ||
+    yearToDateEmploymentIncome === null ||
     yearToDateYoungReliefIncome === null ||
     notes === null ||
     bankAccountHolder === null ||
@@ -106,6 +113,7 @@ export function sanitizeInvoiceForm(input: unknown): InvoiceFormData | null {
     bankAccountNumber === null ||
     typeof v.voluntarySickness !== 'boolean' ||
     typeof v.youngRelief !== 'boolean' ||
+    typeof noTaxAdvanceRequest !== 'boolean' ||
     typeof v.taxReduction !== 'boolean'
   ) {
     return null;
@@ -136,7 +144,9 @@ export function sanitizeInvoiceForm(input: unknown): InvoiceFormData | null {
     costType,
     youngRelief: v.youngRelief,
     yearToDateTaxableIncome,
+    yearToDateEmploymentIncome,
     yearToDateYoungReliefIncome,
+    noTaxAdvanceRequest,
     taxReduction: v.taxReduction,
     taxReductionAmount,
     paymentMethod,

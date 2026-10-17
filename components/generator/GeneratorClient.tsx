@@ -1,6 +1,10 @@
 'use client';
 
-import { reserveInvoiceNumber, saveInvoice } from '@/app/actions/savedData';
+import {
+  getYearToDateInvoiceTaxableIncome,
+  reserveInvoiceNumber,
+  saveInvoice,
+} from '@/app/actions/savedData';
 import InvoiceForm from '@/components/generator/InvoiceForm';
 import InvoicePreview from '@/components/generator/InvoicePreview';
 import SavedPartiesPanel from '@/components/generator/SavedPartiesPanel';
@@ -67,6 +71,7 @@ function getInitialData(
     yearToDateTaxableIncome: 0,
     yearToDateYoungReliefIncome: 0,
 
+    noTaxAdvanceRequest: false,
     taxReduction: true,
     taxReductionAmount: 300,
     paymentMethod: 'TRANSFER',
@@ -126,6 +131,9 @@ export default function GeneratorClient({
   } | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
+  const [savedInvoiceTaxableIncome, setSavedInvoiceTaxableIncome] = useState(0);
+  const [isLoadingSavedIncome, setIsLoadingSavedIncome] = useState(signedIn);
+  const [savedIncomeError, setSavedIncomeError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!initialInvoice && !duplicateData) {
@@ -150,15 +158,62 @@ export default function GeneratorClient({
   }, [initialInvoice, duplicateData]);
 
   const taxYear = Number(formData.periodStart.slice(0, 4));
+
+  useEffect(() => {
+    if (!signedIn) {
+      setIsLoadingSavedIncome(false);
+      return;
+    }
+
+    let active = true;
+    setIsLoadingSavedIncome(true);
+    setSavedIncomeError(null);
+
+    void getYearToDateInvoiceTaxableIncome(taxYear, invoiceId)
+      .then((result) => {
+        if (!active) return;
+        if (!result.ok) {
+          setSavedIncomeError(result.error);
+          return;
+        }
+        setSavedInvoiceTaxableIncome(result.data);
+      })
+      .catch((error: unknown) => {
+        Sentry.withScope((scope) => {
+          scope.setTag('error.area', 'generator.invoice.annual-income');
+          Sentry.captureException(error);
+        });
+        if (active) {
+          setSavedIncomeError(
+            'Nie udało się zsumować zapisanych rachunków. Odśwież stronę i spróbuj ponownie.',
+          );
+        }
+      })
+      .finally(() => {
+        if (active) setIsLoadingSavedIncome(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [signedIn, taxYear, invoiceId]);
   const selectedTaxParams = [...taxParams]
     .reverse()
     .find((params) => params.year <= taxYear);
 
-  const invoiceData: InvoiceData | null = useMemo(
-    () =>
-      selectedTaxParams ? calculateInvoice(formData, selectedTaxParams) : null,
-    [formData, selectedTaxParams],
-  );
+  const invoiceData: InvoiceData | null = useMemo(() => {
+    if (!selectedTaxParams) return null;
+
+    return calculateInvoice(
+      {
+        ...formData,
+        yearToDateTaxableIncome:
+          formData.yearToDateTaxableIncome +
+          (signedIn ? savedInvoiceTaxableIncome : 0),
+      },
+      selectedTaxParams,
+    );
+  }, [formData, savedInvoiceTaxableIncome, selectedTaxParams, signedIn]);
 
   const validationErrors = useMemo(
     () => validateInvoiceForm(formData, selectedTaxParams),
@@ -280,6 +335,9 @@ export default function GeneratorClient({
             taxParams={selectedTaxParams}
             bankAccount={userBankAccount}
             signedIn={signedIn}
+            savedInvoiceTaxableIncome={savedInvoiceTaxableIncome}
+            isLoadingSavedIncome={isLoadingSavedIncome}
+            savedIncomeError={savedIncomeError}
             onBankAccountSaved={setUserBankAccount}
           />
         </Col>
@@ -297,7 +355,12 @@ export default function GeneratorClient({
                   <Button
                     variant='outline-primary'
                     onClick={handleSave}
-                    disabled={isSaving || validationErrors.length > 0}
+                    disabled={
+                      isSaving ||
+                      isLoadingSavedIncome ||
+                      savedIncomeError !== null ||
+                      validationErrors.length > 0
+                    }
                   >
                     {isSaving
                       ? 'Zapisywanie…'
@@ -309,7 +372,12 @@ export default function GeneratorClient({
                 <Button
                   variant='primary'
                   onClick={handleDownloadPdf}
-                  disabled={isGeneratingPdf || validationErrors.length > 0}
+                  disabled={
+                    isGeneratingPdf ||
+                    (signedIn &&
+                      (isLoadingSavedIncome || savedIncomeError !== null)) ||
+                    validationErrors.length > 0
+                  }
                 >
                   {isGeneratingPdf ? 'Generowanie PDF…' : 'Pobierz PDF'}
                 </Button>

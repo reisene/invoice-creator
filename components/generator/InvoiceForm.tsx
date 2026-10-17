@@ -33,6 +33,9 @@ interface InvoiceFormProps {
   taxParams?: TaxParams;
   bankAccount: UserBankAccountDto | null;
   signedIn?: boolean;
+  savedInvoiceTaxableIncome?: number;
+  isLoadingSavedIncome?: boolean;
+  savedIncomeError?: string | null;
   onBankAccountSaved?: (account: UserBankAccountDto) => void;
 }
 
@@ -44,6 +47,9 @@ export default function InvoiceForm({
   taxParams,
   bankAccount,
   signedIn = false,
+  savedInvoiceTaxableIncome = 0,
+  isLoadingSavedIncome = false,
+  savedIncomeError = null,
   onBankAccountSaved,
 }: InvoiceFormProps) {
   const fullReduction = taxParams?.monthlyTaxReduction ?? 300;
@@ -727,7 +733,7 @@ export default function InvoiceForm({
         <Col md={6}>
           <Form.Group>
             <Form.Label>
-              Dochód do opodatkowania uzyskany od początku roku
+              Dochód do opodatkowania z innych źródeł od początku roku
             </Form.Label>
             <Form.Control
               type='number'
@@ -741,14 +747,57 @@ export default function InvoiceForm({
                 );
               }}
               required
+              aria-describedby='year-to-date-income-help'
             />
-            <Form.Text>
-              Wpisz dotychczasową podstawę opodatkowania według skali z tego
-              roku, bez bieżącego rachunku. Jeśli jej nie znasz, pozostaw 0.
+            <Form.Text id='year-to-date-income-help'>
+              Wpisz podstawę opodatkowania uzyskaną w tym roku z innych źródeł.
+              Jeśli jej nie masz, pozostaw 0.
             </Form.Text>
+            {signedIn ? (
+              <div className='small mt-2' aria-live='polite'>
+                {isLoadingSavedIncome
+                  ? 'Sumowanie zapisanych rachunków…'
+                  : `Podstawa z zapisanych rachunków w tym roku: ${savedInvoiceTaxableIncome.toLocaleString('pl-PL')} zł. Kwota wpisana powyżej zostanie do niej dodana.`}
+              </div>
+            ) : null}
+            {savedIncomeError ? (
+              <div className='text-danger small mt-2' role='alert'>
+                {savedIncomeError}
+              </div>
+            ) : null}
           </Form.Group>
         </Col>
       </Row>
+
+      {data.contractorStatus === 'with_employment' ? (
+        <Row className='mb-3'>
+          <Col md={6}>
+            <Form.Group>
+              <Form.Label>
+                Dochód do opodatkowania z umowy o pracę od początku roku
+              </Form.Label>
+              <Form.Control
+                type='number'
+                step='1'
+                min={0}
+                value={data.yearToDateEmploymentIncome ?? 0}
+                onChange={(e) => {
+                  updateField(
+                    'yearToDateEmploymentIncome',
+                    e.target.value ? Number(e.target.value) : 0,
+                  );
+                }}
+                aria-describedby='employment-income-help'
+              />
+              <Form.Text id='employment-income-help'>
+                Podaj narastającą podstawę opodatkowania z UoP (po składkach
+                społecznych i kosztach uzyskania, przed PIT), nie kwotę brutto
+                ani netto. Uwzględnij ją tylko raz.
+              </Form.Text>
+            </Form.Group>
+          </Col>
+        </Row>
+      ) : null}
 
       <Row className='mb-3'>
         <Col md={6}>
@@ -825,9 +874,15 @@ export default function InvoiceForm({
                 type='checkbox'
                 id='taxReduction'
                 label='Kwota zmniejszająca podatek (oświadczenie PIT-2)'
-                checked={data.taxReduction}
+                checked={data.taxReduction && !data.noTaxAdvanceRequest}
                 onChange={(e) => {
-                  updateField('taxReduction', e.target.checked);
+                  onChange({
+                    ...data,
+                    taxReduction: e.target.checked,
+                    noTaxAdvanceRequest: e.target.checked
+                      ? false
+                      : data.noTaxAdvanceRequest,
+                  });
                 }}
               />
               <Link
@@ -842,13 +897,41 @@ export default function InvoiceForm({
               </Link>
             </div>
             <Form.Text muted>
-              Możesz złożyć PIT-2 maksymalnie 3 płatnikom w danym miesiącu.
+              Możesz podzielić kwotę zmniejszającą między maksymalnie 3
+              płatników.
             </Form.Text>
           </Form.Group>
         </Col>
       </Row>
 
-      {data.taxReduction && (
+      <Row className='mb-3'>
+        <Col md={8}>
+          <Form.Group>
+            <Form.Check
+              type='checkbox'
+              id='noTaxAdvanceRequest'
+              label='Wniosek o niepobieranie zaliczek PIT do 30 000 zł dochodu'
+              checked={data.noTaxAdvanceRequest ?? false}
+              onChange={(e) => {
+                onChange({
+                  ...data,
+                  noTaxAdvanceRequest: e.target.checked,
+                  taxReduction: e.target.checked ? false : data.taxReduction,
+                });
+              }}
+            />
+            <Form.Text muted>
+              Zaznacz, jeśli złożono płatnikowi taki wniosek. Wpisany dochód
+              narastająco powinien uwzględniać podstawę opodatkowania z innych
+              źródeł. Do limitu zaliczka wynosi 0 zł; po jego przekroczeniu
+              podatek jest liczony od nadwyżki. Ta opcja zastępuje miesięczną
+              kwotę PIT-2.
+            </Form.Text>
+          </Form.Group>
+        </Col>
+      </Row>
+
+      {data.taxReduction && !data.noTaxAdvanceRequest && (
         <Row className='mb-3'>
           <Col md={6}>
             <Form.Group>

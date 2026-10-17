@@ -53,6 +53,7 @@ function buildPresetFormData(
     youngRelief: status === 'student_under_26',
     yearToDateTaxableIncome: 0,
     yearToDateYoungReliefIncome: 0,
+    noTaxAdvanceRequest: false,
     taxReduction: status !== 'student_under_26',
     taxReductionAmount: 300,
     paymentMethod: 'TRANSFER',

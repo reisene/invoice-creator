@@ -11,6 +11,7 @@ const POLICIES = {
   importData: { requests: 10, window: '10 m' },
   exportData: { requests: 10, window: '10 m' },
   saveInvoice: { requests: 60, window: '1 m' },
+  annualIncomeLookup: { requests: 60, window: '1 m' },
   reserveNumber: { requests: 30, window: '1 m' },
   saveParty: { requests: 60, window: '1 m' },
   saveBankAccount: { requests: 30, window: '1 m' },

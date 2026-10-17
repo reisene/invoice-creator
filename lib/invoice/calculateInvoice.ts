@@ -1,9 +1,22 @@
 import type { InvoiceData } from '@/types/invoice';
 import type { InvoiceFormData } from '@/types/invoiceForm';
 import type { TaxParams } from '@/types/taxParams';
+import { YEARLY_TAX_FREE_AMOUNT } from './taxConstants';
 
 const round2 = (value: number): number =>
   Math.round((value + 1e-9) * 100) / 100;
+
+function calculateAnnualTax(income: number, P: TaxParams): number {
+  const taxableAboveFirstRate = Math.max(0, income - P.taxThreshold);
+  const taxBeforeTaxFreeAmount =
+    Math.min(income, P.taxThreshold) * P.taxRate1 +
+    taxableAboveFirstRate * P.taxRate2;
+
+  return Math.max(
+    0,
+    taxBeforeTaxFreeAmount - YEARLY_TAX_FREE_AMOUNT * P.taxRate1,
+  );
+}
 
 export function calculateInvoice(
   data: InvoiceFormData,
@@ -94,21 +107,37 @@ export function calculateInvoice(
   const taxableBase = Math.max(0, Math.round(taxableBaseUnrounded));
 
   // 8. PIT wg skali podatkowej
-  const taxableIncomeAfterInvoice = data.yearToDateTaxableIncome + taxableBase;
+  const employmentIncome =
+    data.contractorStatus === 'with_employment'
+      ? (data.yearToDateEmploymentIncome ?? 0)
+      : 0;
+  const taxableIncomeBeforeInvoice =
+    data.yearToDateTaxableIncome + employmentIncome;
+  const taxableIncomeAfterInvoice = taxableIncomeBeforeInvoice + taxableBase;
+  const taxableIncomeAboveTaxFreeAmount = data.noTaxAdvanceRequest
+    ? Math.max(0, taxableIncomeAfterInvoice - YEARLY_TAX_FREE_AMOUNT) -
+      Math.max(0, taxableIncomeBeforeInvoice - YEARLY_TAX_FREE_AMOUNT)
+    : 0;
   const incomeAtFirstRate = Math.max(
     0,
     Math.min(taxableIncomeAfterInvoice, P.taxThreshold) -
-      Math.min(data.yearToDateTaxableIncome, P.taxThreshold),
+      Math.min(taxableIncomeBeforeInvoice, P.taxThreshold),
   );
-  const incomeAtSecondRate = Math.max(0, taxableBase - incomeAtFirstRate);
+  const incomeAtSecondRate =
+    Math.max(0, taxableIncomeAfterInvoice - P.taxThreshold) -
+    Math.max(0, taxableIncomeBeforeInvoice - P.taxThreshold);
   const taxBeforeReduction = round2(
-    incomeAtFirstRate * P.taxRate1 + incomeAtSecondRate * P.taxRate2,
+    data.noTaxAdvanceRequest
+      ? calculateAnnualTax(taxableIncomeAfterInvoice, P) -
+          calculateAnnualTax(taxableIncomeBeforeInvoice, P)
+      : incomeAtFirstRate * P.taxRate1 + incomeAtSecondRate * P.taxRate2,
   );
 
   // 9. Kwota zmniejszająca podatek (PIT-2, maksymalnie miesięczny limit z parametrów)
-  const taxReductionAmountApplied = data.taxReduction
-    ? Math.min(data.taxReductionAmount, P.monthlyTaxReduction)
-    : 0;
+  const taxReductionAmountApplied =
+    data.taxReduction && !data.noTaxAdvanceRequest
+      ? Math.min(data.taxReductionAmount, P.monthlyTaxReduction)
+      : 0;
 
   // 10. Zaliczka na PIT po kwocie zmniejszającej podatek, zaokrąglona do pełnych zł (art. 63 § 1 Ordynacji podatkowej)
   const tax =
@@ -160,6 +189,7 @@ export function calculateInvoice(
     voluntarySickness: data.voluntarySickness,
     costType: data.costType,
     youngRelief: data.youngRelief,
+    noTaxAdvanceRequest: data.noTaxAdvanceRequest ?? false,
     taxReduction: data.taxReduction,
     taxReductionAmount: data.taxReductionAmount,
     calculations: {
@@ -174,6 +204,7 @@ export function calculateInvoice(
       youngReliefIncomeApplied,
       taxableBaseUnrounded,
       taxableBase,
+      taxableIncomeAboveTaxFreeAmount,
       taxBeforeReduction,
       taxReductionAmountApplied,
       tax,

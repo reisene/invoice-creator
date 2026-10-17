@@ -341,7 +341,15 @@ export default function createInvoicePdfDocument(
             label='Podstawa opodatkowania'
             value={formatCurrency(calculations.taxableBase)}
           />
-          {data.taxReduction ? (
+          {data.noTaxAdvanceRequest ? (
+            <PdfRow
+              label='Podstawa opodatkowana powyżej 30 000 zł'
+              value={formatCurrency(
+                calculations.taxableIncomeAboveTaxFreeAmount,
+              )}
+            />
+          ) : null}
+          {data.taxReduction && !data.noTaxAdvanceRequest ? (
             <>
               <PdfRow
                 label='Zaliczka na PIT przed zmniejszeniem'

@@ -46,6 +46,7 @@ export interface InvoiceData {
   voluntarySickness: boolean;
   costType: '20' | '50';
   youngRelief: boolean;
+  noTaxAdvanceRequest: boolean;
   taxReduction: boolean;
   taxReductionAmount: 0 | 100 | 150 | 300;
 
@@ -75,6 +76,7 @@ export interface InvoiceData {
     taxableBase: number; // po zaokrągleniu
 
     // Zaliczka na PIT
+    taxableIncomeAboveTaxFreeAmount: number;
     taxBeforeReduction: number;
     taxReductionAmountApplied: number;
     tax: number; // po uldze

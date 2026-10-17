@@ -46,9 +46,11 @@ export interface InvoiceFormData {
   costType: CostType;
   youngRelief: boolean;
   yearToDateTaxableIncome: number;
+  yearToDateEmploymentIncome?: number;
   yearToDateYoungReliefIncome: number;
 
   // Ulga podatkowa
+  noTaxAdvanceRequest?: boolean;
   taxReduction: boolean;
   taxReductionAmount: TaxReductionAmount;
 

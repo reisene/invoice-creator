@@ -212,6 +212,9 @@ export function validateInvoiceForm(
   if (data.yearToDateTaxableIncome < 0) {
     errors.push('Dochód od początku roku nie może być ujemny.');
   }
+  if ((data.yearToDateEmploymentIncome ?? 0) < 0) {
+    errors.push('Dochód z umowy o pracę nie może być ujemny.');
+  }
 
   if (data.contractorStatus === 'student_under_26') {
     const birthDate = birthDateFromPesel(data.contractorPesel);

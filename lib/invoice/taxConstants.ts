@@ -1,5 +1,7 @@
 import type { TaxParams } from '@/types/taxParams';
 
+export const YEARLY_TAX_FREE_AMOUNT = 30_000;
+
 export const DEFAULT_TAX_PARAMS: TaxParams = {
   year: 2026,
   pensionRate: 0.0976,

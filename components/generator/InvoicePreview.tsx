@@ -219,7 +219,18 @@ export default function InvoicePreview({
                 </td>
               </tr>
 
-              {data.taxReduction && (
+              {data.noTaxAdvanceRequest ? (
+                <tr>
+                  <td>Podstawa opodatkowana powyżej 30 000 zł</td>
+                  <td className='text-end'>
+                    {formatCurrency(
+                      calculations.taxableIncomeAboveTaxFreeAmount,
+                    )}
+                  </td>
+                </tr>
+              ) : null}
+
+              {data.taxReduction && !data.noTaxAdvanceRequest && (
                 <>
                   <tr>
                     <td>Zaliczka na PIT przed zmniejszeniem</td>

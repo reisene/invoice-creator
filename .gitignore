@@ -49,8 +49,8 @@ content/legal/registry.generated.ts
 .env
 workspace.xml
 
-.vercel
-
+# Vitest
+coverage
 
 #Ignore vscode AI rules
 .github/instructions/codacy.instructions.md

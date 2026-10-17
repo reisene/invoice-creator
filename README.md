@@ -80,7 +80,9 @@ Wartości związane z pocztą kontaktową i weryfikacją e-mail znajdują się r
 - `npm start` — uruchamia zbudowaną aplikację.
 - `npm run lint` — uruchamia ESLint.
 - `npm run typecheck` — generuje rejestr dokumentów i sprawdza typy TypeScript.
-- `npm test` — uruchamia testy Node.js przez `tsx`.
+- `npm test` — jednokrotnie uruchamia testy jednostkowe przez Vitest w środowisku jsdom.
+- `npm run test:watch` — uruchamia Vitest w trybie obserwowania zmian.
+- `npm run test:coverage` — uruchamia testy i generuje raporty pokrycia w katalogu `coverage/`.
 - `npm run db:seed` — wypełnia bazę przykładowymi parametrami podatkowymi.
 - `npm run format:check` — sprawdza formatowanie Prettierem.
 

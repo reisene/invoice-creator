@@ -4,30 +4,105 @@
 }
 
 :root[data-bs-theme='dark'] {
-  --bs-body-color: #f1f3f5;
-  --bs-body-color-rgb: 241, 243, 245;
-  --bs-body-bg: #171b20;
-  --bs-body-bg-rgb: 23, 27, 32;
-  --bs-secondary-color: #c7cdd3;
-  --bs-secondary-color-rgb: 199, 205, 211;
-  --bs-tertiary-color: #aeb8c2;
-  --bs-tertiary-color-rgb: 174, 184, 194;
-  --bs-secondary-bg: #282e34;
-  --bs-secondary-bg-rgb: 40, 46, 52;
-  --bs-tertiary-bg: #20262c;
-  --bs-tertiary-bg-rgb: 32, 38, 44;
-  --bs-border-color: #727c86;
-  --bs-border-color-translucent: rgba(255, 255, 255, 0.32);
-  --bs-secondary-border-subtle: #727c86;
-  --bs-primary-border-subtle: var(--bs-primary-text-emphasis);
-  --bs-success-border-subtle: var(--bs-success-text-emphasis);
-  --bs-info-border-subtle: var(--bs-info-text-emphasis);
-  --bs-warning-border-subtle: var(--bs-warning-text-emphasis);
-  --bs-danger-border-subtle: var(--bs-danger-text-emphasis);
-  --bs-link-color: #9ec5fe;
-  --bs-link-color-rgb: 158, 197, 254;
-  --bs-link-hover-color: #cfe2ff;
-  --bs-link-hover-color-rgb: 207, 226, 255;
+  color-scheme: dark;
+  --bs-body-color: #f5f8ff;
+  --bs-body-color-rgb: 245, 248, 255;
+  --bs-body-bg: #0c1424;
+  --bs-body-bg-rgb: 12, 20, 36;
+  --bs-secondary-color: #d2ddf0;
+  --bs-secondary-color-rgb: 210, 221, 240;
+  --bs-tertiary-color: #b5c4dd;
+  --bs-tertiary-color-rgb: 181, 196, 221;
+  --bs-secondary-bg: #1b2a43;
+  --bs-secondary-bg-rgb: 27, 42, 67;
+  --bs-tertiary-bg: #142139;
+  --bs-tertiary-bg-rgb: 20, 33, 57;
+  --bs-border-color: #647895;
+  --bs-border-color-translucent: rgba(173, 198, 235, 0.3);
+  --bs-primary: #3b82f6;
+  --bs-primary-rgb: 59, 130, 246;
+  --bs-primary-text-emphasis: #93c5fd;
+  --bs-secondary-text-emphasis: #d2ddf0;
+  --bs-success: #22c55e;
+  --bs-success-rgb: 34, 197, 94;
+  --bs-success-text-emphasis: #86efac;
+  --bs-info: #06b6d4;
+  --bs-info-rgb: 6, 182, 212;
+  --bs-info-text-emphasis: #67e8f9;
+  --bs-warning: #f59e0b;
+  --bs-warning-rgb: 245, 158, 11;
+  --bs-warning-text-emphasis: #fcd34d;
+  --bs-danger: #f43f5e;
+  --bs-danger-rgb: 244, 63, 94;
+  --bs-danger-text-emphasis: #fda4af;
+  --bs-primary-bg-subtle: #102d59;
+  --bs-success-bg-subtle: #103a2a;
+  --bs-info-bg-subtle: #0b3844;
+  --bs-warning-bg-subtle: #44320d;
+  --bs-danger-bg-subtle: #451c2a;
+  --bs-secondary-bg-subtle: #1b2a43;
+  --bs-secondary-border-subtle: #647895;
+  --bs-primary-border-subtle: #3b82f6;
+  --bs-success-border-subtle: #22c55e;
+  --bs-info-border-subtle: #06b6d4;
+  --bs-warning-border-subtle: #f59e0b;
+  --bs-danger-border-subtle: #f43f5e;
+  --bs-link-color: #60a5fa;
+  --bs-link-color-rgb: 96, 165, 250;
+  --bs-link-hover-color: #bfdbfe;
+  --bs-link-hover-color-rgb: 191, 219, 254;
+}
+
+:root[data-bs-theme='dark'] .btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #2563eb;
+  --bs-btn-border-color: #3b82f6;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #1d4ed8;
+  --bs-btn-hover-border-color: #60a5fa;
+  --bs-btn-focus-shadow-rgb: 96, 165, 250;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #1e40af;
+  --bs-btn-active-border-color: #3b82f6;
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: #2563eb;
+  --bs-btn-disabled-border-color: #3b82f6;
+}
+
+body {
+  background:
+    radial-gradient(
+      ellipse at 12% 0%,
+      rgba(37, 99, 235, 0.2),
+      transparent 32rem
+    ),
+    radial-gradient(
+      ellipse at 94% 8%,
+      rgba(124, 58, 237, 0.14),
+      transparent 28rem
+    ),
+    var(--bs-body-bg);
+}
+
+:root[data-bs-theme='dark'] .navbar,
+:root[data-bs-theme='dark'] footer {
+  background-color: rgba(12, 20, 36, 0.92) !important;
+  backdrop-filter: blur(14px);
+}
+
+:root[data-bs-theme='dark'] .card {
+  box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.24);
+}
+
+a:not(.btn):not(.nav-link):not(.navbar-brand) {
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 0.08em;
+}
+
+:focus-visible {
+  outline: 3px solid #fff !important;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px #0b1724 !important;
 }
 
 .page-narrow {
@@ -352,11 +427,6 @@
 [data-bs-theme='dark'] .btn-outline-danger {
   --bs-btn-color: var(--bs-danger-text-emphasis);
   --bs-btn-border-color: var(--bs-danger-text-emphasis);
-}
-
-[data-bs-theme='dark'] :focus-visible {
-  outline: 3px solid var(--bs-emphasis-color) !important;
-  outline-offset: 3px;
 }
 
 [data-bs-theme='dark'] .form-control::placeholder,

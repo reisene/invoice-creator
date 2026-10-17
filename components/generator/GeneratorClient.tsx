@@ -155,7 +155,7 @@ export default function GeneratorClient({
         // Ignoruj błąd odczytu z pamięci podręcznej
       }
     }
-  }, [initialInvoice, duplicateData]);
+  }, [initialInvoice, duplicateData, bankAccount]);
 
   const taxYear = Number(formData.periodStart.slice(0, 4));
 

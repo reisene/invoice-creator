@@ -1,5 +1,6 @@
 'use client';
 
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useActionState } from 'react';
@@ -65,6 +66,7 @@ function SignInFormInner() {
         >
           Zaloguj się linkiem e-mail
         </Button>
+        <GoogleSignInButton />
 
         <p className='text-center text-body-secondary small mt-3 mb-0'>
           Nie masz konta? <Link href='/auth/sign-up'>Zarejestruj się</Link>

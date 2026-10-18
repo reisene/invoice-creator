@@ -1,5 +1,6 @@
 'use client';
 
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 import Link from 'next/link';
 import { useActionState } from 'react';
 import { Alert, Button, Card, Container, Form } from 'react-bootstrap';
@@ -96,6 +97,7 @@ export default function SignUpForm({ termsVersion }: { termsVersion: string }) {
         >
           Zarejestruj się linkiem e-mail
         </Button>
+        <GoogleSignInButton />
 
         <p className='text-center text-body-secondary small mt-3 mb-0'>
           Masz już konto? <Link href='/auth/sign-in'>Zaloguj się</Link>

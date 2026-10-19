@@ -118,6 +118,74 @@ Projekt jest skonfigurowany pod Next.js i Vercel (region `fra1`). Przed wdrożen
 
 Nie uruchamiaj `prisma migrate reset` na bazie zawierającej dane, których nie chcesz usunąć.
 
+## Backup bazy danych
+
+Workflow `.github/workflows/database-backup.yml` wykonuje codzienny backup o **02:37 UTC**
+(03:37 zimą / 04:37 latem w Polsce). Można go też uruchomić ręcznie przez
+**Actions → Daily database backup → Run workflow**. Harmonogram działa po umieszczeniu
+workflow na domyślnej gałęzi repozytorium; GitHub może opóźnić wykonanie.
+
+Wymagane sekrety GitHub Actions, również synchronizowane z Dopplera:
+
+| Sekret                 | Zawartość                                                                |
+| ---------------------- | ------------------------------------------------------------------------ |
+| `DATABASE_URL`         | Bezpośrednie połączenie do bazy, której kopia ma powstać, bez poolingu   |
+| `R2_ACCESS_KEY_ID`     | Access Key ID z uprawnieniami Object Read & Write tylko do bucketa kopii |
+| `R2_SECRET_ACCESS_KEY` | Odpowiadający Secret Access Key                                          |
+| `R2_ENDPOINT`          | Endpoint HTTPS S3 z Cloudflare, bez ścieżki bucketa                      |
+| `R2_BUCKET_NAME`       | Nazwa prywatnego bucketa                                                 |
+| `BACKUP_AGE_RECIPIENT` | Publiczny klucz odbiorcy age, zaczynający się od `age1`                  |
+
+Konfiguracja Dopplera musi wskazywać właściwą bazę: nazwa konfiguracji `dev` nie
+gwarantuje, że `DATABASE_URL` dotyczy produkcji. Workflow nie potrzebuje tokena
+Cloudflare REST API, tokena Dopplera ani `DATABASE_URL_POOLED`.
+
+Przed pierwszym uruchomieniem zainstaluj lokalnie [age](https://github.com/FiloSottile/age)
+i wygeneruj klucz **poza repozytorium**:
+
+```bash
+age-keygen -o backup-key.txt
+age-keygen -y backup-key.txt
+```
+
+Wynik drugiego polecenia to publiczny klucz do `BACKUP_AGE_RECIPIENT`. Prywatny plik
+`backup-key.txt` przechowuj bezpiecznie poza GitHubem, z osobną kopią zapasową.
+Bez niego nie odszyfrujesz backupów. Zachowaj też niezależnie
+`INVOICE_DATA_ENCRYPTION_KEY`, w tym poprzednie wersje klucza odpowiadające kopiom:
+sam dump nie zawiera klucza szyfrującego dane aplikacji.
+
+Workflow dobiera wersję `pg_dump` do głównej wersji serwera, tworzy archiwum custom,
+sprawdza jego spis zawartości, szyfruje przez age i wysyła wyłącznie zaszyfrowany plik
+do `daily/` w R2. Sprawdza też rozmiar zapisanego obiektu i usuwa lokalne pliki po
+zakończeniu zadania. Kopie nie trafiają do repozytorium ani artefaktów Actions.
+Każdy błąd przerywa zadanie; włącz powiadomienia GitHub Actions o nieudanych workflow.
+
+Bucket pozostaw prywatny, bez publicznego URL i domeny. Retencją zarządzaj przez
+regułę lifecycle R2 dla prefiksu `daily/`, np. usuwanie po 30 dniach. Workflow sam
+nie usuwa starych obiektów. Reguła lifecycle usuwa je również wtedy, gdy kolejne
+backupy przestają działać, dlatego monitoruj wykonania.
+
+### Odtwarzanie
+
+Pobierz wybrany plik z R2 na zaufany komputer. Odszyfruj go i odtwórz **w osobnej,
+pustej bazie**, używając klienta PostgreSQL w wersji zgodnej z kopią. Przykład dla
+Bash z bezpośrednim adresem bazy docelowej w `RESTORE_DATABASE_URL`:
+
+```bash
+age --decrypt --identity backup-key.txt --output database.dump downloaded.dump.age
+PGDATABASE="$RESTORE_DATABASE_URL" PGSSLMODE=require pg_restore \
+  --exit-on-error --no-owner --no-acl database.dump
+```
+
+Nie wskazuj produkcyjnej bazy podczas próby odtworzenia. Sprawdzenie archiwum i
+rozmiaru uploadu nie zastępuje próbnego odtworzenia oraz sprawdzenia danych aplikacji.
+Po sprawdzeniu usuń lokalny odszyfrowany dump.
+
+Kopia obejmuje schemat i dane dostępne dla roli z `DATABASE_URL`, nie konfigurację
+usług Neon, OAuth, SMTP, sekrety ani role i uprawnienia PostgreSQL. Odtwarzanie
+zarządzanych schematów Neon Auth wymaga osobnej weryfikacji. Kopia raz dziennie
+oznacza możliwość utraty zmian od ostatniej udanej kopii.
+
 ## Rozwój i wkład
 
 Przed większą zmianą otwórz issue. Zasady współpracy znajdują się w:

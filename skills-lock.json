@@ -7,6 +7,11 @@
       "skillPath": "skills/ba-prd-skills/SKILL.md",
       "computedHash": "3655954e2c35925b94e842c8196508a178711304a06b65acd140b0b4b6d6fbfb"
     },
+    "accessibility": {
+      "source": "addyosmani/web-quality-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "2174f783a038a7ca4869c4c18e14726ec13b9c6b705d59253f647d0ca37cb78d"
+    },
     "ai-sdk-6-skills": {
       "source": "gocallum/nextjs16-agent-skills",
       "sourceType": "github",
@@ -25,6 +30,21 @@
       "skillPath": "skills/clerk-nextjs-skills/SKILL.md",
       "computedHash": "83333fe1e8dfe48234ab15f455b7d01b368204accfd8a329a795c7c4b710accc"
     },
+    "composition-patterns": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "c124390cc3441844903ada94cb5820b23d922f2d0ad34e01e029e410197c8a32"
+    },
+    "deploy-to-vercel": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "698dfb0ec0cf3e8d97c3f181e13b37b3b8fbc872a4b031d812adb4193f66035e"
+    },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "a4e6516a601f72ffd8bcd0d64609e8ba724d2ce92569a059a6890a5caadf072b"
+    },
     "mcp-server-skills": {
       "source": "gocallum/nextjs16-agent-skills",
       "sourceType": "github",
@@ -37,11 +57,26 @@
       "skillPath": "skills/neon/SKILL.md",
       "computedHash": "d684e62509ddab4e39743186875fa8344e115dcf10db07d8b251cdd4af02bede"
     },
+    "next-cache-components-adoption": {
+      "source": "vercel/next.js",
+      "sourceType": "autoskills-registry",
+      "computedHash": "1642ae2a1bc48f484240cb9c9669e32846aa5e4f9fa68cd650ad4817fa070711"
+    },
     "nextjs16-skills": {
       "source": "gocallum/nextjs16-agent-skills",
       "sourceType": "github",
       "skillPath": "skills/nextjs16-skills/SKILL.md",
       "computedHash": "80fe177f4f80c22606a16952a65e06f73c87d40f5d082d0f9cec4725f103dd41"
+    },
+    "nodejs-backend-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "autoskills-registry",
+      "computedHash": "ec099fc7d7ece12e8a89c24b12eff36f27dd243db15c5a70f3df8406ec9c738e"
+    },
+    "nodejs-best-practices": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "2c543ab51c9c4093c8a94aa615f39ca55d93835816aeeaa5bbd89261d85c584c"
     },
     "prisma-cli": {
       "source": "prisma/skills",
@@ -49,17 +84,47 @@
       "skillPath": "prisma-cli/SKILL.md",
       "computedHash": "f1e28c22e9dd3457eebc05c53a7921f96f8b9fdcf50edb93a0b1de73b78fa2c5"
     },
+    "prisma-client-api": {
+      "source": "prisma/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "e4a709bc916691bcaa1ad6bac6d00cd388c2093857c065a699a0d046f237311d"
+    },
+    "prisma-database-setup": {
+      "source": "prisma/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "d5de5d8c2750b1078caaddaacac147aba3f54f4d5653c0a543904c7a1820fc77"
+    },
     "prisma-orm-v7-skills": {
       "source": "gocallum/nextjs16-agent-skills",
       "sourceType": "github",
       "skillPath": "skills/prisma-orm-v7-skills/SKILL.md",
       "computedHash": "371d23a97d15be1fdd5ae350b4b2a151045e8fabf83aed0b2d716e747f7ea6d2"
     },
+    "prisma-postgres": {
+      "source": "prisma/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "bb2725342147ce5251a4e618118700e224cd5e5472b6e85bb1f12918f6a985f0"
+    },
+    "react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "502eb06700e2c3cb1bd7f710860528f72281320bd5171a2087b05a090b573dc1"
+    },
     "resend-integration-skills": {
       "source": "gocallum/nextjs16-agent-skills",
       "sourceType": "github",
       "skillPath": "skills/resend-integration-skills/SKILL.md",
       "computedHash": "c5a75810da769677c0aac070bb0b542391801b02b7e3dd0442068afc2f4fe376"
+    },
+    "seo": {
+      "source": "addyosmani/web-quality-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "7495da57766c99f787a729d4a21234ecb5d29d90f304a0d9a5996dcdc1eec048"
+    },
+    "typescript-advanced-types": {
+      "source": "wshobson/agents",
+      "sourceType": "autoskills-registry",
+      "computedHash": "cb5d18bc19191b388cc49c15ff98dcbc714fa343373d078be00833e8a18ef291"
     },
     "ui-builder": {
       "source": "johnfattore/fattorestreet",
@@ -78,6 +143,11 @@
       "sourceType": "github",
       "skillPath": "skills/react-best-practices/SKILL.md",
       "computedHash": "ca7b0c0c6e5f2750043f7f0cd72d16ac4e2abc48f9b5500d047a4b77a2506212"
+    },
+    "vitest": {
+      "source": "antfu/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "bbb3d22f611fb721b9b475f014b323882732dc3f724e0f3de229c38795d77e8f"
     }
   }
 }

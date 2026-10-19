@@ -10,6 +10,10 @@
       "env": {
         "CODACY_ACCOUNT_TOKEN": "$CODACY_ACCOUNT_TOKEN"
       }
+    },
+    "neon": {
+      "type": "http",
+      "url": "https://mcp.neon.tech/mcp"
     }
   }
 }

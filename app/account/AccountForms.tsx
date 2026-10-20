@@ -31,7 +31,7 @@ export function ProfileForm({
       body
       className='border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 mb-4'
     >
-      <h2 className='h5 mb-3'>Dane konta</h2>
+      <h3 className='h5 mb-3'>Dane konta</h3>
       <Form action={formAction}>
         <Form.Group className='mb-3' controlId='name'>
           <Form.Label>Imię i nazwisko</Form.Label>
@@ -83,7 +83,7 @@ export function PasswordForm() {
       body
       className='border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 mb-4'
     >
-      <h2 className='h5 mb-3'>Zmiana hasła</h2>
+      <h3 className='h5 mb-3'>Zmiana hasła</h3>
       <Form action={formAction} key={state?.ok ? 'done' : 'form'}>
         <Form.Group className='mb-3' controlId='currentPassword'>
           <Form.Label>Obecne hasło</Form.Label>
@@ -149,7 +149,7 @@ export function BankAccountForm({
       body
       className='border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 mb-4'
     >
-      <h2 className='h5 mb-2'>Rachunek bankowy</h2>
+      <h3 className='h5 mb-2'>Rachunek bankowy</h3>
       <p className='text-body-secondary small'>
         Zapisany rachunek możesz wybrać jako formę wypłaty w generatorze.
         Szczegóły są przechowywane w postaci zaszyfrowanej.
@@ -238,7 +238,9 @@ export function DeleteAccountForm() {
       body
       className='border border-danger-subtle bg-danger-subtle bg-opacity-10 shadow-sm rounded-4 mb-4'
     >
-      <h2 className='h5 text-danger mb-3'>Usuń konto</h2>
+      <h2 id='usun-konto-heading' className='h5 text-danger mb-3'>
+        Usuń konto
+      </h2>
       <p className='small text-muted'>
         Usunięcie konta jest nieodwracalne. Razem z nim zostaną trwale skasowane
         wszystkie zapisane rachunki, dane stron i dane konta bankowego. Jeśli
@@ -338,8 +340,11 @@ export function EmailChangeForm() {
   const [newEmail, setNewEmail] = useState('');
 
   return (
-    <Card body className='shadow-sm mb-4'>
-      <h2 className='h5 mb-3'>Zmiana adresu e-mail</h2>
+    <Card
+      body
+      className='border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 mb-4'
+    >
+      <h3 className='h5 mb-3'>Zmiana adresu e-mail</h3>
       {confirmState?.ok ? (
         <Alert variant='success'>{confirmState.message}</Alert>
       ) : (

@@ -117,6 +117,10 @@ a:not(.btn):not(.nav-link):not(.navbar-brand) {
   max-width: 800px;
 }
 
+.account-page > section {
+  scroll-margin-top: 6rem;
+}
+
 .invoice-preview {
   min-height: 800px;
   background-color: var(--bs-body-bg);

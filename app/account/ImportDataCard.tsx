@@ -92,7 +92,7 @@ export function ImportDataCard() {
       body
       className='border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 mb-4'
     >
-      <h2 className='h5 mb-2'>Import danych</h2>
+      <h3 className='h5 mb-2'>Import danych</h3>
       <p className='text-body-secondary small'>
         Wczytaj plik JSON wyeksportowany wcześniej z tej aplikacji. Najpierw
         zobaczysz podgląd zmian. Istniejące dane nie są nadpisywane ani usuwane,

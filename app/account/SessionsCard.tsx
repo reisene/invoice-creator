@@ -44,7 +44,7 @@ export default async function SessionsCard() {
       body
       className='border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 mb-4'
     >
-      <h2 className='h5 mb-3'>Aktywne sesje</h2>
+      <h3 className='h5 mb-3'>Aktywne sesje</h3>
       <Table responsive className='align-middle'>
         <thead>
           <tr>

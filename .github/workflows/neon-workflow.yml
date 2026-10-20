@@ -35,6 +35,7 @@ jobs:
       github.event.action == 'synchronize'
       || github.event.action == 'opened'
       || github.event.action == 'reopened')
+      && github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Get branch expiration date as an env variable (2 weeks from now)

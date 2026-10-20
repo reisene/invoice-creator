@@ -13,6 +13,7 @@ export default defineConfig([
     'node_modules/**',
     '.agents/**',
     'generated/**',
+    'coverage/**',
   ]),
 
   eslint.configs.recommended,

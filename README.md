@@ -30,7 +30,7 @@ Obliczenia mają charakter pomocniczy. Przed wykorzystaniem rachunku sprawdź da
 
 ## Wymagania
 
-- Node.js 24 lub nowszy (zgodnie z `engines` w `package.json`).
+- Node.js 24.x (zgodnie z `.nvmrc` i `engines` w `package.json`). W ustawieniach projektu Vercel wybierz tę samą linię Node.js.
 - npm oraz dostęp do PostgreSQL skonfigurowanego dla aplikacji.
 - Dla zalogowanych funkcji: skonfigurowany projekt Neon Auth.
 - Doppler CLI dla zalecanego polecenia `npm run dev`.
@@ -85,6 +85,8 @@ Wartości związane z pocztą kontaktową i weryfikacją e-mail znajdują się r
 - `npm run test:coverage` — uruchamia testy i generuje raporty pokrycia w katalogu `coverage/`.
 - `npm run db:seed` — wypełnia bazę przykładowymi parametrami podatkowymi.
 - `npm run format:check` — sprawdza formatowanie Prettierem.
+
+Workflow `Code quality` sprawdza lintowanie i formatowanie dla pull requestów oraz zmian w `main` i `develop`. Nie uruchamia testów. Aby blokował scalanie przy błędach, dodaj kontrolę `Lint and formatting` do wymaganych kontroli w regułach ochrony gałęzi GitHub. Instalacja na Vercelu i w tym workflow korzysta z `npm ci`, bez aktualizowania lockfile.
 
 ## Prywatność i bezpieczeństwo
 

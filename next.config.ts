@@ -36,9 +36,6 @@ const nextConfig: NextConfig = {
       },
     },
   },
-  experimental: {
-    useTypeScriptCli: true,
-  },
 };
 
 const withMDX = createMDX({

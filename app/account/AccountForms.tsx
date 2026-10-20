@@ -75,8 +75,31 @@ export function ProfileForm({
   );
 }
 
-export function PasswordForm() {
+export function PasswordForm({ hasPassword }: { hasPassword: boolean | null }) {
   const [state, formAction, isPending] = useActionState(changePassword, null);
+
+  if (hasPassword !== true) {
+    return (
+      <Card
+        body
+        className='border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 mb-4'
+      >
+        <h3 className='h5 mb-3'>Zmiana hasła</h3>
+        {hasPassword === null ? (
+          <Alert variant='danger' className='mb-0'>
+            Nie udało się sprawdzić metody logowania. Odśwież stronę, aby
+            spróbować ponownie.
+          </Alert>
+        ) : (
+          <p className='mb-0'>
+            Konto nie ma ustawionego hasła, więc formularz zmiany hasła go nie
+            dotyczy. Nadal możesz logować się dotychczasową metodą, np. przez
+            Google lub link e-mail.
+          </p>
+        )}
+      </Card>
+    );
+  }
 
   return (
     <Card
@@ -338,6 +361,10 @@ export function EmailChangeForm() {
     null,
   );
   const [newEmail, setNewEmail] = useState('');
+  const requestedEmail = requestState?.ok ? requestState.newEmail : undefined;
+  const canConfirm =
+    requestedEmail !== undefined &&
+    newEmail.trim().toLowerCase() === requestedEmail;
 
   return (
     <Card
@@ -356,6 +383,7 @@ export function EmailChangeForm() {
                 name='newEmail'
                 type='email'
                 required
+                disabled={requesting || confirming}
                 autoComplete='email'
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
@@ -364,7 +392,7 @@ export function EmailChangeForm() {
             <Button
               type='submit'
               variant='outline-primary'
-              disabled={requesting}
+              disabled={requesting || confirming}
             >
               {requesting ? 'Wysyłanie…' : 'Wyślij kod'}
             </Button>
@@ -379,9 +407,14 @@ export function EmailChangeForm() {
             </Alert>
           )}
 
-          {requestState?.ok && (
-            <Form action={confirmAction} className='mt-3'>
-              <input type='hidden' name='newEmail' value={newEmail} />
+          {requestedEmail && !canConfirm && (
+            <p className='mt-3 mb-0' role='status'>
+              Adres został zmieniony. Wyślij nowy kod, aby go potwierdzić.
+            </p>
+          )}
+          {canConfirm && (
+            <Form action={confirmAction} key={requestedEmail} className='mt-3'>
+              <input type='hidden' name='newEmail' value={requestedEmail} />
               <Form.Group className='mb-3' controlId='emailChangeOtp'>
                 <Form.Label>Kod z wiadomości</Form.Label>
                 <Form.Control
@@ -394,7 +427,7 @@ export function EmailChangeForm() {
               {confirmState && (
                 <Alert variant='danger'>{confirmState.message}</Alert>
               )}
-              <Button type='submit' disabled={confirming}>
+              <Button type='submit' disabled={confirming || requesting}>
                 {confirming ? 'Sprawdzanie…' : 'Potwierdź zmianę'}
               </Button>
             </Form>

@@ -14,6 +14,10 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 export type AccountFormState = { ok: boolean; message: string } | null;
+export type EmailChangeRequestState =
+  | { ok: true; message: string; newEmail: string }
+  | { ok: false; message: string }
+  | null;
 
 const NOT_SIGNED_IN = 'Zaloguj się, aby edytować konto.';
 
@@ -141,9 +145,9 @@ export async function changePassword(
 }
 
 export async function requestEmailChange(
-  _prev: AccountFormState,
+  _prev: EmailChangeRequestState,
   formData: FormData,
-): Promise<AccountFormState> {
+): Promise<EmailChangeRequestState> {
   const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, message: NOT_SIGNED_IN };
   const limit = await checkRateLimit('accountSensitive', userId);
@@ -169,6 +173,7 @@ export async function requestEmailChange(
   return {
     ok: true,
     message: `Wysłaliśmy kod na adres ${newEmail}. Wpisz go poniżej.`,
+    newEmail,
   };
 }
 

@@ -28,7 +28,7 @@ export function ImportDataCard() {
     if (inputRef.current) inputRef.current.value = '';
   }
 
-  async function handleFile(file: File | undefined) {
+  function handleFile(file: File | undefined) {
     setError(null);
     setDone(null);
     setPreview(null);
@@ -38,9 +38,9 @@ export function ImportDataCard() {
       setError('Plik jest zbyt duży (maks. ok. 5 MB).');
       return;
     }
-    const text = await file.text();
     startTransition(async () => {
       try {
+        const text = await file.text();
         const result = await importUserData(text, false);
         if (result.ok) {
           setRaw(text);
@@ -53,7 +53,9 @@ export function ImportDataCard() {
           scope.setTag('error.area', 'account.import.preview');
           Sentry.captureException(error);
         });
-        setError('Wystąpił błąd. Spróbuj ponownie.');
+        setError(
+          'Nie udało się odczytać lub sprawdzić pliku. Wybierz go ponownie i spróbuj jeszcze raz.',
+        );
       }
     });
   }
@@ -98,13 +100,18 @@ export function ImportDataCard() {
         zobaczysz podgląd zmian. Istniejące dane nie są nadpisywane ani usuwane,
         duplikaty są pomijane.
       </p>
-      <Form.Control
-        ref={inputRef}
-        type='file'
-        accept='application/json,.json'
-        disabled={pending}
-        onChange={(e) => handleFile((e.target as HTMLInputElement).files?.[0])}
-      />
+      <Form.Group controlId='account-import-file'>
+        <Form.Label>Plik eksportu danych (JSON, maks. 5 MB)</Form.Label>
+        <Form.Control
+          ref={inputRef}
+          type='file'
+          accept='application/json,.json'
+          disabled={pending}
+          onChange={(e) =>
+            handleFile((e.target as HTMLInputElement).files?.[0])
+          }
+        />
+      </Form.Group>
 
       {error && (
         <Alert className='mt-3 mb-0' variant='danger' role='alert'>

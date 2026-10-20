@@ -10,7 +10,7 @@ export const config: VercelConfig = {
   cleanUrls: true,
   trailingSlash: false,
   framework: 'nextjs',
-  installCommand: 'npm i',
+  installCommand: 'npm ci',
   crons: [
     {
       path: '/api/cron/contact-retention',

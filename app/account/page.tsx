@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth/server';
 import { getUserBankAccount } from '@/lib/savedDataAccess';
+import { logServerError } from '@/lib/serverLogger';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import {
@@ -28,7 +29,23 @@ export default async function AccountPage() {
   const { data: session } = await auth.getSession();
   const user = session?.user;
   if (!user) redirect('/auth/sign-in');
-  const bankAccount = await getUserBankAccount(user.id);
+  const [bankAccount, accountsResult] = await Promise.all([
+    getUserBankAccount(user.id),
+    auth.listAccounts(),
+  ]);
+  const accountsError =
+    accountsResult.error ??
+    (accountsResult.data == null
+      ? new Error('Missing linked accounts response')
+      : null);
+  if (accountsError) {
+    logServerError('account.listAccounts', accountsError);
+  }
+  const hasPassword = accountsError
+    ? null
+    : (accountsResult.data?.some(
+        (account) => account.providerId === 'credential',
+      ) ?? false);
 
   return (
     <Container className='account-page py-4 page-medium'>
@@ -109,7 +126,7 @@ export default async function AccountPage() {
         <h2 id='bezpieczenstwo-heading' className='h4 border-bottom pb-2 mb-3'>
           Bezpieczeństwo
         </h2>
-        <PasswordForm />
+        <PasswordForm hasPassword={hasPassword} />
         <SessionsCard />
       </section>
 

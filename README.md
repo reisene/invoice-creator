@@ -79,7 +79,7 @@ Wartości związane z pocztą kontaktową i weryfikacją e-mail znajdują się r
 - `npm run build` — generuje klienta Prisma i buduje aplikację Next.js; hook `prebuild` generuje rejestr dokumentów prawnych.
 - `npm start` — uruchamia zbudowaną aplikację.
 - `npm run lint` — uruchamia ESLint.
-- `npm run typecheck` — generuje rejestr dokumentów i sprawdza typy TypeScript.
+- `npm run typecheck` — generuje rejestr dokumentów, klienta Prisma i typy tras Next.js, a następnie sprawdza typy TypeScript. Wymaga ustawionej zmiennej `DATABASE_URL` do wczytania konfiguracji Prisma; nie wykonuje migracji ani zapytań do bazy.
 - `npm test` — jednokrotnie uruchamia testy jednostkowe przez Vitest w środowisku jsdom.
 - `npm run test:watch` — uruchamia Vitest w trybie obserwowania zmian.
 - `npm run test:coverage` — uruchamia testy i generuje raporty pokrycia w katalogu `coverage/`.

@@ -56,22 +56,40 @@ Seed wstawia przykładowe parametry podatkowe. Nie uruchamiaj go na produkcyjnej
 
 ## Zmienne środowiskowe
 
-`.env.example` zawiera szablon nazw i formatów. Najważniejsze ustawienia:
+`.env.example` zawiera szablon nazw i formatów. Źródłem sekretów jest Doppler: konfiguracja `dev` służy do lokalnego `npm run dev` i jest synchronizowana do sekretów GitHub Actions, a konfiguracje `stg` i `prd` są synchronizowane ze środowiskami Vercel (odpowiednio Preview i Production). Zmiany zmiennych wprowadzaj w Dopplerze, nie bezpośrednio w panelu Vercel ani GitHub, bo synchronizacja je nadpisze. Lokalny plik `.env.dev` odzwierciedla wartości używane przez GitHub Actions. Żadnego pliku `.env*` poza `.env.example` nie commituj.
 
-- `DATABASE_URL` — bezpośrednie połączenie PostgreSQL dla Prisma CLI i migracji.
-- `DATABASE_URL_POOLED` — pooled connection aplikacji do Neon.
-- `NEON_AUTH_BASE_URL` i `NEON_AUTH_COOKIE_SECRET` — konfiguracja Neon Auth.
-- `INVOICE_DATA_ENCRYPTION_KEY` — klucz szyfrujący zapisane dane rachunków i stron oraz pseudonimizujący identyfikatory rate limitingu.
-- `SITE_URL` i `NEXT_PUBLIC_SITE_URL` — kanoniczny adres serwisu i linki w wiadomościach.
+### Wymagane w runtime
+
+Serwer Node.js sprawdza te zmienne przy starcie (`instrumentation.ts` → `lib/serverEnvironment.ts`). Jeśli którejś brakuje lub ma zły format, aplikacja nie wystartuje, a błąd poda nazwy zmiennych bez ich wartości.
+
+| Zmienna                       | Wymaganie              | Zastosowanie                                                                               |
+| ----------------------------- | ---------------------- | ------------------------------------------------------------------------------------------ |
+| `DATABASE_URL_POOLED`         | URL `postgres(ql)://`  | Pooled connection aplikacji do Neon                                                        |
+| `NEON_AUTH_BASE_URL`          | URL `http(s)://`       | Neon Auth                                                                                  |
+| `NEON_AUTH_COOKIE_SECRET`     | min. 32 bajty          | Podpis ciasteczek sesji Neon Auth                                                          |
+| `INVOICE_DATA_ENCRYPTION_KEY` | dokładnie 64 znaki hex | Szyfrowanie zapisanych danych i pseudonimizacja identyfikatorów limitów (32-bajtowy klucz) |
+| `CRON_SECRET`                 | min. 16 bajtów         | Autoryzacja zadania retencji                                                               |
+| `HEALTH_CHECK_SECRET`         | min. 32 bajty          | Autoryzacja endpointu diagnostycznego                                                      |
+
+Dodatkowo `DATABASE_URL` (bezpośrednie połączenie, bez poolingu) jest wymagane przez Prisma CLI: migracje, `prisma generate` w `npm run typecheck` oraz backup bazy.
+
+### Opcjonalne
+
+- `SITE_URL` i `NEXT_PUBLIC_SITE_URL` — kanoniczny adres serwisu i linki w wiadomościach; `NEXT_PUBLIC_SITE_URL` ma pierwszeństwo, domyślnie `http://localhost:3000`.
 - `SERVICE_PROVIDER_NAME` i `SERVICE_PROVIDER_ADDRESS` — dane usługodawcy renderowane w dokumentach prawnych.
-- `UPSTASH_REDIS_REST_URL` i `UPSTASH_REDIS_REST_TOKEN` — opcjonalne limitowanie żądań; bez konfiguracji limity nie są egzekwowane.
-- `RESEND_API_KEY` — wysyłanie e-maili i sonda Resend w health checku.
-- `SENTRY_DSN` i `NEXT_PUBLIC_SENTRY_DSN` — raportowanie błędów na serwerze/Edge i w przeglądarce.
-- `CRON_SECRET` — autoryzacja zaplanowanego zadania retencji.
-- `HEALTH_CHECK_SECRET` — oddzielny sekret autoryzujący endpoint diagnostyczny.
-- `RETENTION_HEARTBEAT_URL` — opcjonalny adres monitoringu wywoływany po udanym zadaniu retencji.
+- `UPSTASH_REDIS_REST_URL` i `UPSTASH_REDIS_REST_TOKEN` — limitowanie żądań; bez konfiguracji limity nie są egzekwowane.
+- `RESEND_API_KEY` — wysyłanie e-maili i sonda Resend w health checku; bez klucza wysyłka jest pomijana.
+- `CONTACT_FROM_EMAIL`, `CONTACT_NOTIFY_EMAIL`, `CONTACT_REPLY_TO` — adresy poczty kontaktowej; mają wartości domyślne.
+- `SENTRY_DSN` i `NEXT_PUBLIC_SENTRY_DSN` — raportowanie błędów na serwerze/Edge i w przeglądarce. `SENTRY_AUTH_TOKEN` jest potrzebny tylko w buildzie do wysyłki source map.
+- `RETENTION_HEARTBEAT_URL` — adres monitoringu wywoływany po udanym zadaniu retencji.
 
-Wartości związane z pocztą kontaktową i weryfikacją e-mail znajdują się również w `.env.example`. Upstash, Resend, Sentry, heartbeat i health check można konfigurować zależnie od używanych funkcji; wymagania konkretnego wdrożenia należy sprawdzić przed publikacją. Nie zapisuj sekretów w kodzie, README ani po stronie klienta.
+### Zarezerwowane i zapasowe
+
+- `AWS_*` i `S3_BUCKET` w konfiguracji aplikacji — zarezerwowane pod przyszłe przechowywanie plików; obecnie nieużywane przez aplikację. Workflow backupu ustawia własne `AWS_*` z sekretów `R2_*`.
+- `RESEND_SMTP_API_KEY` — zapasowy klucz Resend (SMTP); aplikacja go nie odczytuje.
+- `RESEND_VERIFICATION_EMAIL` — flaga weryfikacji e-mail; aplikacja jej nie odczytuje.
+
+Zmienne GitHub Actions dla backupu opisuje sekcja [Backup bazy danych](#backup-bazy-danych). Nie zapisuj sekretów w kodzie, README ani po stronie klienta.
 
 ## Przydatne polecenia
 
@@ -86,7 +104,7 @@ Wartości związane z pocztą kontaktową i weryfikacją e-mail znajdują się r
 - `npm run db:seed` — wypełnia bazę przykładowymi parametrami podatkowymi.
 - `npm run format:check` — sprawdza formatowanie Prettierem.
 
-Workflow `Code quality` sprawdza lintowanie i formatowanie dla pull requestów oraz zmian w `main` i `develop`. Nie uruchamia testów. Aby blokował scalanie przy błędach, dodaj kontrolę `Lint and formatting` do wymaganych kontroli w regułach ochrony gałęzi GitHub. Instalacja na Vercelu i w tym workflow korzysta z `npm ci`, bez aktualizowania lockfile.
+Workflow `Code quality` sprawdza lintowanie i formatowanie dla pull requestów oraz zmian w `main` i `develop`. Nie uruchamia testów. Build sprawdza Vercel przy każdym wdrożeniu (także preview). Pozostałe workflow: CodeQL, gałąź Neon dla pull requestów (wygasa po 14 dniach; wymaga sekretu `NEON_API_KEY` i zmiennej `NEON_PROJECT_ID`), labeler oraz codzienny backup bazy. Zależności aktualizuje cotygodniowo Dependabot. Aby blokował scalanie przy błędach, dodaj kontrolę `Lint and formatting` do wymaganych kontroli w regułach ochrony gałęzi GitHub. Instalacja na Vercelu i w tym workflow korzysta z `npm ci`, bez aktualizowania lockfile.
 
 ## Prywatność i bezpieczeństwo
 
@@ -112,7 +130,7 @@ Formularz kontaktowy korzysta z Vercel BotID Basic, honeypota i opcjonalnego lim
 
 Projekt jest skonfigurowany pod Next.js i Vercel (region `fra1`). Przed wdrożeniem:
 
-1. Ustaw w środowisku docelowym wymagane połączenia i sekrety z `.env.example`.
+1. Ustaw wymagane połączenia i sekrety z `.env.example` w konfiguracji Dopplera `stg` (Preview) lub `prd` (Production); synchronizacja przeniesie je do Vercel.
 2. Wykonaj migracje produkcyjne poleceniem `npx prisma migrate deploy` przed uruchomieniem nowej wersji aplikacji.
 3. Włącz wymagane produkty w panelach Neon, Resend, Upstash, Sentry i Vercel stosownie do używanych funkcji.
 4. Skonfiguruj `CRON_SECRET`; jeśli używasz monitoringu cyklu retencji, ustaw także `RETENTION_HEARTBEAT_URL` i monitoruj harmonogram cron.
@@ -204,7 +222,7 @@ npm run typecheck
 npm test
 ```
 
-Aktualny zestaw testów zawiera testy jednostkowe kalkulacji rachunku; projekt nie deklaruje w tym README pokrycia testami E2E ani integracyjnymi.
+Aktualny zestaw testów zawiera testy jednostkowe kalkulacji rachunku i walidacji zmiennych środowiskowych; projekt nie deklaruje w tym README pokrycia testami E2E ani integracyjnymi.
 
 ## Licencja
 

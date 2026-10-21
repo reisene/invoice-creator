@@ -42,9 +42,18 @@ function createImportName(kind: DocumentKind, version: string): string {
   return `${kind}_${suffix}`;
 }
 
+function readDocumentEntries(kind: DocumentKind) {
+  switch (kind) {
+    case 'terms':
+      return readdir('content/legal/terms', { withFileTypes: true });
+    case 'privacy':
+      return readdir('content/legal/privacy', { withFileTypes: true });
+  }
+}
+
 async function readDocuments(kind: DocumentKind): Promise<LegalDocument[]> {
   const directory = path.join(legalDirectory, kind);
-  const entries = await readdir(directory, { withFileTypes: true });
+  const entries = await readDocumentEntries(kind);
   const documents: LegalDocument[] = [];
 
   for (const entry of entries) {
@@ -101,22 +110,23 @@ async function readDocuments(kind: DocumentKind): Promise<LegalDocument[]> {
 }
 
 async function main() {
-  const documentsByKind = Object.fromEntries(
-    await Promise.all(
-      documentKinds.map(async (kind) => [kind, await readDocuments(kind)]),
-    ),
-  ) as Record<DocumentKind, LegalDocument[]>;
+  const documentsByKind = await Promise.all(
+    documentKinds.map(async (kind) => ({
+      kind,
+      documents: await readDocuments(kind),
+    })),
+  );
 
-  const imports = documentKinds
-    .flatMap((kind) => documentsByKind[kind])
+  const imports = documentsByKind
+    .flatMap(({ documents }) => documents)
     .map(
       ({ importName, importPath }) =>
         `import ${importName} from ${JSON.stringify(importPath)};`,
     );
 
-  const entries = documentKinds
-    .map((kind) => {
-      const documents = documentsByKind[kind].map(
+  const entries = documentsByKind
+    .map(({ kind, documents: kindDocuments }) => {
+      const documents = kindDocuments.map(
         ({ version, effectiveDate, importName }) =>
           `    { version: ${JSON.stringify(version)}, effectiveDate: ${JSON.stringify(effectiveDate)}, Content: ${importName} },`,
       );

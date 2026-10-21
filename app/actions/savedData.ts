@@ -1,24 +1,97 @@
 'use server';
 
-import { calculateInvoice } from '@/lib/calculateInvoice';
-import { getCurrentUserId } from '@/lib/currentUser';
+import { getCurrentUserIdWithTerms } from '@/lib/currentUser';
 import { prisma } from '@/lib/db';
+import { calculateInvoice } from '@/lib/invoice/calculateInvoice';
 import {
   getInvoiceNumberScope,
   isReservationForScope,
   reserveInvoiceNumberForScope,
-} from '@/lib/invoiceNumbering';
-import { sanitizeInvoiceForm } from '@/lib/sanitizeInvoiceForm';
-import { encryptJson, encryptText } from '@/lib/savedDataCrypto';
-import { getAllTaxParams } from '@/lib/taxParams';
+} from '@/lib/invoice/invoiceNumbering';
+import { parseParty } from '@/lib/invoice/parseParty';
+import { sanitizeInvoiceForm } from '@/lib/invoice/sanitizeInvoiceForm';
+import { getAllTaxParams } from '@/lib/invoice/taxParams';
 import {
-  isValidNip,
-  isValidPesel,
+  isValidPolishBankAccount,
   validateInvoiceForm,
-} from '@/lib/validateInvoiceForm';
-import type { ActionResult, InvoiceNumberReservation } from '@/types/savedData';
+} from '@/lib/invoice/validateInvoiceForm';
+import { checkRateLimit } from '@/lib/rateLimit';
+import { decryptJson, encryptJson, encryptText } from '@/lib/savedDataCrypto';
+import type {
+  ActionResult,
+  InvoiceNumberReservation,
+  UserBankAccountDto,
+} from '@/types/savedData';
+import { revalidatePath } from 'next/cache';
+import { randomUUID } from 'node:crypto';
 
 const NOT_SIGNED_IN = 'Zaloguj się, aby zapisywać dane.';
+
+export async function getYearToDateInvoiceTaxableIncome(
+  year: number,
+  excludedInvoiceId?: string,
+): Promise<ActionResult<number>> {
+  const userId = await getCurrentUserIdWithTerms();
+  if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+  if (!Number.isInteger(year) || year < 2000 || year > 9999) {
+    return { ok: false, error: 'Nieprawidłowy rok dochodu.' };
+  }
+  if (
+    excludedInvoiceId !== undefined &&
+    (typeof excludedInvoiceId !== 'string' || excludedInvoiceId.length > 100)
+  ) {
+    return { ok: false, error: 'Nieprawidłowy identyfikator rachunku.' };
+  }
+
+  const limit = await checkRateLimit('annualIncomeLookup', userId);
+  if (!limit.ok) return { ok: false, error: limit.message };
+
+  const [savedInvoices, allTaxParams] = await Promise.all([
+    prisma.invoice.findMany({
+      where: {
+        userId,
+        periodStart: { startsWith: `${year}-` },
+        ...(excludedInvoiceId ? { id: { not: excludedInvoiceId } } : {}),
+      },
+      select: { data: true },
+    }),
+    getAllTaxParams(),
+  ]);
+  const taxParams = [...allTaxParams]
+    .reverse()
+    .find((params) => params.year <= year);
+  if (!taxParams) {
+    return {
+      ok: false,
+      error: `Brak parametrów podatkowych dla roku ${year}; nie można zsumować rachunków.`,
+    };
+  }
+
+  let totalTaxableIncome = 0;
+  for (const savedInvoice of savedInvoices) {
+    const form = sanitizeInvoiceForm(decryptJson(savedInvoice.data).data);
+    if (!form) {
+      return {
+        ok: false,
+        error:
+          'Nie udało się odczytać jednego z zapisanych rachunków. Popraw lub usuń ten rachunek, aby wyliczyć dochód roczny.',
+      };
+    }
+    const { calculations } = calculateInvoice(
+      {
+        ...form,
+        yearToDateTaxableIncome: 0,
+        yearToDateEmploymentIncome: 0,
+        noTaxAdvanceRequest: false,
+        taxReduction: false,
+      },
+      taxParams,
+    );
+    totalTaxableIncome += calculations.taxableBase;
+  }
+
+  return { ok: true, data: totalTaxableIncome };
+}
 
 export async function reserveInvoiceNumber(
   year: number,
@@ -27,7 +100,9 @@ export async function reserveInvoiceNumber(
     return { ok: false, error: 'Nieprawidłowy rok numeracji.' };
   }
 
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
+  const limit = await checkRateLimit('reserveNumber', userId);
+  if (!limit.ok) return { ok: false, error: limit.message };
   const reservation = await reserveInvoiceNumberForScope(
     getInvoiceNumberScope(userId),
     year,
@@ -39,9 +114,12 @@ export async function saveInvoice(
   input: unknown,
   invoiceId?: string,
   reservation?: InvoiceNumberReservation,
+  saveAccountToProfile?: boolean,
 ): Promise<ActionResult<{ id: string; invoiceNumber: string }>> {
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+  const limit = await checkRateLimit('saveInvoice', userId);
+  if (!limit.ok) return { ok: false, error: limit.message };
 
   const form = sanitizeInvoiceForm(input);
   if (!form) return { ok: false, error: 'Nieprawidłowe dane formularza.' };
@@ -60,6 +138,36 @@ export async function saveInvoice(
   const errors = validateInvoiceForm(form, params);
   if (errors.length > 0) return { ok: false, error: errors[0] };
 
+  if (
+    saveAccountToProfile &&
+    form.paymentMethod === 'TRANSFER' &&
+    form.transferTarget === 'SAVED_ACCOUNT' &&
+    form.bankAccountNumber &&
+    form.bankName &&
+    form.bankAccountHolder &&
+    isValidPolishBankAccount(form.bankAccountNumber)
+  ) {
+    const accNum = form.bankAccountNumber
+      .replace(/[\s-]/g, '')
+      .toUpperCase()
+      .replace(/^PL/, '');
+    await prisma.userBankAccount.upsert({
+      where: { userId },
+      create: {
+        userId,
+        accountHolder: encryptText(form.bankAccountHolder.trim()),
+        bankName: encryptText(form.bankName.trim()),
+        accountNumber: encryptText(accNum),
+      },
+      update: {
+        accountHolder: encryptText(form.bankAccountHolder.trim()),
+        bankName: encryptText(form.bankName.trim()),
+        accountNumber: encryptText(accNum),
+      },
+    });
+    revalidatePath('/account');
+  }
+
   const { calculations } = calculateInvoice(form, params);
   const scope = getInvoiceNumberScope(userId);
   const values = {
@@ -69,6 +177,8 @@ export async function saveInvoice(
     contractNumber: form.contractNumber
       ? encryptText(form.contractNumber)
       : null,
+    issuePlace: form.issuePlace?.trim() || null,
+    issueDate: form.issueDate || null,
     periodStart: form.periodStart,
     net: calculations.net,
     data: encryptJson(form),
@@ -120,6 +230,7 @@ export async function saveInvoice(
     data: {
       ...values,
       userId,
+      uid: randomUUID(),
       invoiceNumber: assigned.number,
     },
     select: { id: true, invoiceNumber: true },
@@ -130,8 +241,10 @@ export async function saveInvoice(
   };
 }
 
-export async function deleteInvoice(invoiceId: string): Promise<ActionResult> {
-  const userId = await getCurrentUserId();
+export async function deleteInvoice(
+  invoiceId: string,
+): Promise<ActionResult<number>> {
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
   if (
     typeof invoiceId !== 'string' ||
@@ -141,57 +254,25 @@ export async function deleteInvoice(invoiceId: string): Promise<ActionResult> {
     return { ok: false, error: 'Nieprawidłowy identyfikator rachunku.' };
   }
 
-  await prisma.invoice.deleteMany({ where: { id: invoiceId, userId } });
-  return { ok: true, data: undefined };
+  const { count } = await prisma.invoice.deleteMany({
+    where: { id: invoiceId, userId },
+  });
+  if (count === 0) return { ok: false, error: 'Nie znaleziono rachunku.' };
+  revalidatePath('/account/invoices');
+  return { ok: true, data: count };
 }
 
 export async function saveParty(
   input: unknown,
 ): Promise<ActionResult<{ id: string }>> {
-  const userId = await getCurrentUserId();
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+  const limit = await checkRateLimit('saveParty', userId);
+  if (!limit.ok) return { ok: false, error: limit.message };
 
-  if (typeof input !== 'object' || input === null) {
-    return { ok: false, error: 'Nieprawidłowe dane strony.' };
-  }
-
-  const value = input as Record<string, unknown>;
-  if (
-    (value.kind !== 'CLIENT' && value.kind !== 'CONTRACTOR') ||
-    (value.clientType !== undefined &&
-      value.clientType !== 'company' &&
-      value.clientType !== 'private') ||
-    typeof value.name !== 'string' ||
-    value.name.length > 200 ||
-    typeof value.address !== 'string' ||
-    value.address.length > 300 ||
-    (value.nip !== undefined && typeof value.nip !== 'string') ||
-    (value.pesel !== undefined && typeof value.pesel !== 'string')
-  ) {
-    return { ok: false, error: 'Nieprawidłowe dane strony.' };
-  }
-
-  const name = value.name.trim();
-  const address = value.address.trim();
-  const nip = (value.nip ?? '').toString().trim() || null;
-  const pesel = (value.pesel ?? '').toString().trim() || null;
-  const kind = value.kind;
-  const clientType = kind === 'CLIENT' ? (value.clientType ?? 'company') : null;
-
-  if (nip && nip.length > 20) {
-    return { ok: false, error: 'NIP jest zbyt długi.' };
-  }
-  if (pesel && pesel.length > 20) {
-    return { ok: false, error: 'PESEL jest zbyt długi.' };
-  }
-
-  if (!name || !address) return { ok: false, error: 'Podaj nazwę i adres.' };
-  if (nip && !isValidNip(nip)) {
-    return { ok: false, error: 'NIP jest nieprawidłowy.' };
-  }
-  if (pesel && !isValidPesel(pesel)) {
-    return { ok: false, error: 'PESEL jest nieprawidłowy.' };
-  }
+  const parsed = parseParty(input);
+  if (!parsed.ok) return parsed;
+  const { kind, clientType, name, address, nip, pesel } = parsed.party;
 
   const existing = await prisma.savedParty.count({ where: { userId } });
   if (existing >= 100) {
@@ -213,8 +294,11 @@ export async function saveParty(
   return { ok: true, data: { id: created.id } };
 }
 
-export async function deleteParty(partyId: string): Promise<ActionResult> {
-  const userId = await getCurrentUserId();
+export async function updateParty(
+  partyId: string,
+  input: unknown,
+): Promise<ActionResult> {
+  const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, error: NOT_SIGNED_IN };
   if (
     typeof partyId !== 'string' ||
@@ -224,6 +308,120 @@ export async function deleteParty(partyId: string): Promise<ActionResult> {
     return { ok: false, error: 'Nieprawidłowy identyfikator danych strony.' };
   }
 
-  await prisma.savedParty.deleteMany({ where: { id: partyId, userId } });
+  const parsed = parseParty(input);
+  if (!parsed.ok) return parsed;
+  const { kind, clientType, name, address, nip, pesel } = parsed.party;
+
+  const result = await prisma.savedParty.updateMany({
+    where: { id: partyId, userId },
+    data: {
+      kind,
+      label: encryptText(name),
+      clientType,
+      name: encryptText(name),
+      address: encryptText(address),
+      nip: nip === null ? null : encryptText(nip),
+      pesel: pesel === null ? null : encryptText(pesel),
+    },
+  });
+  if (result.count === 0) return { ok: false, error: 'Nie znaleziono wpisu.' };
   return { ok: true, data: undefined };
+}
+
+export async function deleteParty(
+  partyId: string,
+): Promise<ActionResult<number>> {
+  const userId = await getCurrentUserIdWithTerms();
+  if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+  if (
+    typeof partyId !== 'string' ||
+    partyId.length === 0 ||
+    partyId.length > 100
+  ) {
+    return { ok: false, error: 'Nieprawidłowy identyfikator danych strony.' };
+  }
+
+  const { count } = await prisma.savedParty.deleteMany({
+    where: { id: partyId, userId },
+  });
+  if (count === 0) return { ok: false, error: 'Nie znaleziono wpisu.' };
+  revalidatePath('/account/invoices');
+  return { ok: true, data: count };
+}
+
+export async function deleteAllInvoices(): Promise<ActionResult<number>> {
+  const userId = await getCurrentUserIdWithTerms();
+  if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+
+  const { count } = await prisma.invoice.deleteMany({ where: { userId } });
+  revalidatePath('/account/invoices');
+  return { ok: true, data: count };
+}
+
+export async function deleteAllParties(): Promise<ActionResult<number>> {
+  const userId = await getCurrentUserIdWithTerms();
+  if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+
+  const { count } = await prisma.savedParty.deleteMany({ where: { userId } });
+  revalidatePath('/account/invoices');
+  return { ok: true, data: count };
+}
+
+export async function saveUserBankAccountAction(data: {
+  accountHolder: string;
+  bankName: string;
+  accountNumber: string;
+}): Promise<ActionResult<UserBankAccountDto>> {
+  const userId = await getCurrentUserIdWithTerms();
+  if (!userId) return { ok: false, error: NOT_SIGNED_IN };
+
+  const limit = await checkRateLimit('saveBankAccount', userId);
+  if (!limit.ok) return { ok: false, error: limit.message };
+
+  const accountHolder = data.accountHolder.trim();
+  const bankName = data.bankName.trim();
+  const accountNumber = data.accountNumber
+    .replace(/[\s-]/g, '')
+    .toUpperCase()
+    .replace(/^PL/, '');
+
+  if (!accountHolder || accountHolder.length > 200) {
+    return { ok: false, error: 'Podaj nazwę właściciela rachunku.' };
+  }
+  if (!bankName || bankName.length > 100) {
+    return { ok: false, error: 'Podaj nazwę banku.' };
+  }
+  if (!isValidPolishBankAccount(accountNumber)) {
+    return {
+      ok: false,
+      error: 'Podaj prawidłowy polski numer rachunku bankowego (26 cyfr).',
+    };
+  }
+
+  await prisma.userBankAccount.upsert({
+    where: { userId },
+    create: {
+      userId,
+      accountHolder: encryptText(accountHolder),
+      bankName: encryptText(bankName),
+      accountNumber: encryptText(accountNumber),
+    },
+    update: {
+      accountHolder: encryptText(accountHolder),
+      bankName: encryptText(bankName),
+      accountNumber: encryptText(accountNumber),
+    },
+  });
+
+  revalidatePath('/account');
+  revalidatePath('/generator');
+
+  return {
+    ok: true,
+    data: {
+      accountHolder,
+      bankName,
+      accountNumber,
+    },
+  };
 }

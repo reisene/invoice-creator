@@ -1,3 +1,5 @@
+import { formatPolishBankAccount } from '@/lib/invoice/bankUtils';
+import { getSiteDisplayUrl } from '@/lib/siteUrl';
 import { numberToWords } from '@/lib/toWords';
 import type { InvoiceData } from '@/types/invoice';
 import notoSansLatin from '@fontsource/noto-sans/files/noto-sans-latin-400-normal.woff';
@@ -58,10 +60,23 @@ const latinExtRanges = [
 function Text({
   children: textChildren,
   style,
+  render,
+  fixed,
 }: {
   children?: ReactNode;
   style?: ComponentProps<typeof Page>['style'];
+  render?: (props: {
+    pageNumber: number;
+    totalPages: number;
+    subPageNumber: number;
+    subPageTotalPages: number;
+  }) => ReactNode;
+  fixed?: boolean;
 }) {
+  if (render) {
+    return <ReactPdfText style={style} render={render} fixed={fixed} />;
+  }
+
   const children = Children.map(textChildren, (child) => {
     if (typeof child !== 'string') return child;
 
@@ -101,7 +116,9 @@ function Text({
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    paddingTop: 36,
+    paddingHorizontal: 40,
+    paddingBottom: 50,
     fontFamily: 'Noto Sans Latin',
     fontSize: 10,
     color: '#212529',
@@ -165,10 +182,31 @@ const styles = StyleSheet.create({
     borderTopColor: '#212529',
     paddingTop: 6,
   },
+  footer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 40,
+    right: 40,
+    paddingTop: 6,
+    borderTopWidth: 0.5,
+    borderTopColor: '#dee2e6',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 7.5,
+    color: '#6c757d',
+  },
 });
 
 function formatCurrency(value: number): string {
   return `${value.toFixed(2).replace('.', ',')} zł`;
+}
+
+function formatIssueDate(value: string): string {
+  const [year, month, day] = value.split('-');
+  return year && month && day ? `${day}.${month}.${year}` : value;
 }
 
 function PdfRow({
@@ -205,6 +243,13 @@ export default function createInvoicePdfDocument(
         <Text style={[styles.line, { textAlign: 'center', marginBottom: 16 }]}>
           Numer rachunku: {invoiceNumber}
         </Text>
+        {data.issuePlace && data.issueDate ? (
+          <Text
+            style={[styles.line, { textAlign: 'center', marginBottom: 16 }]}
+          >
+            {data.issuePlace}, {formatIssueDate(data.issueDate)}
+          </Text>
+        ) : null}
 
         <View style={styles.columns}>
           <View style={styles.column}>
@@ -296,14 +341,22 @@ export default function createInvoicePdfDocument(
             label='Podstawa opodatkowania'
             value={formatCurrency(calculations.taxableBase)}
           />
-          {data.taxReduction ? (
+          {data.noTaxAdvanceRequest ? (
+            <PdfRow
+              label='Podstawa opodatkowana powyżej 30 000 zł'
+              value={formatCurrency(
+                calculations.taxableIncomeAboveTaxFreeAmount,
+              )}
+            />
+          ) : null}
+          {data.taxReduction && !data.noTaxAdvanceRequest ? (
             <>
               <PdfRow
-                label='Zaliczka na PIT przed ulgą'
+                label='Zaliczka na PIT przed zmniejszeniem'
                 value={formatCurrency(calculations.taxBeforeReduction)}
               />
               <PdfRow
-                label='Ulga podatkowa'
+                label='Kwota zmniejszająca podatek'
                 value={formatCurrency(calculations.taxReductionAmountApplied)}
               />
             </>
@@ -321,6 +374,38 @@ export default function createInvoicePdfDocument(
         </View>
 
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Forma wypłaty</Text>
+          {data.payment.method === 'CASH' ? (
+            <Text>Gotówka</Text>
+          ) : data.payment.method === 'TRANSFER' &&
+            data.payment.transferTarget === 'DECLARATION' ? (
+            <Text>
+              Przelew na rachunek bankowy zgodnie ze złożonym oświadczeniem.
+            </Text>
+          ) : data.payment.method === 'TRANSFER' ? (
+            <>
+              <Text style={styles.line}>Przelew na rachunek bankowy</Text>
+              {data.payment.accountHolder ? (
+                <Text style={styles.line}>
+                  Właściciel: {data.payment.accountHolder}
+                </Text>
+              ) : null}
+              {data.payment.bankName ? (
+                <Text style={styles.line}>Bank: {data.payment.bankName}</Text>
+              ) : null}
+              {data.payment.accountNumber ? (
+                <Text style={styles.line}>
+                  Numer rachunku:{' '}
+                  {formatPolishBankAccount(data.payment.accountNumber)}
+                </Text>
+              ) : null}
+            </>
+          ) : (
+            <Text>Nie wybrano formy wypłaty.</Text>
+          )}
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Uwagi</Text>
           <Text>{data.notes || '—'}</Text>
         </View>
@@ -332,6 +417,19 @@ export default function createInvoicePdfDocument(
           <View style={styles.signature}>
             <Text>Podpis zleceniobiorcy</Text>
           </View>
+        </View>
+
+        <View style={styles.footer} fixed>
+          <Text style={styles.footerText}>
+            Dokument wygenerowany za pomocą Invoice Creator –{' '}
+            {getSiteDisplayUrl()}
+          </Text>
+          <Text
+            style={styles.footerText}
+            render={({ pageNumber, totalPages }) =>
+              `Strona ${pageNumber} z ${totalPages}`
+            }
+          />
         </View>
       </Page>
     </Document>

@@ -1,13 +1,15 @@
 'use server';
 
 import { auth } from '@/lib/auth/server';
+import { authErrorMessage } from '@/lib/authErrors';
 import { headers } from 'next/headers';
 
 export async function requestPasswordReset(
   _prevState: { error?: string; success?: boolean } | null,
   formData: FormData,
 ) {
-  const email = (formData.get('email') as string)?.trim();
+  const emailField = formData.get('email');
+  const email = typeof emailField === 'string' ? emailField.trim() : '';
 
   if (!email) {
     return { error: 'Podaj adres e-mail.' };
@@ -21,7 +23,9 @@ export async function requestPasswordReset(
   });
 
   if (error) {
-    return { error: error.message || 'Nie udało się wysłać wiadomości.' };
+    return {
+      error: authErrorMessage(error, 'Nie udało się wysłać wiadomości.'),
+    };
   }
 
   return { success: true };

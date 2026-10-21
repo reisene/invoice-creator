@@ -41,9 +41,24 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# prisma generated files
+# generated files
 generated/prisma
+content/legal/registry.generated.ts
 
 # From EnvUi
 .env
 workspace.xml
+
+# Vitest
+coverage
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md
+
+# Sentry Config File
+.env.sentry-build-plugin
+
+*.log
+
+# Ignore the following files and directories
+backup/

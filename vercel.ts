@@ -8,12 +8,20 @@ import type { VercelConfig } from '@vercel/config/v1';
 export const config: VercelConfig = {
   regions: ['fra1'],
   cleanUrls: true,
+  trailingSlash: false,
   framework: 'nextjs',
-  installCommand: 'npm i',
+  installCommand: 'npm ci',
+  crons: [
+    {
+      path: '/api/cron/contact-retention',
+      schedule: '0 3 * * *',
+    },
+  ],
   git: {
     deploymentEnabled: {
       'experiment/*': false,
       'test/*': false,
+      '*/test': false,
     },
   },
 };

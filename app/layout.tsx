@@ -1,6 +1,11 @@
 import AppNavbar from '@/components/AppNavbar';
 import AuthButtons from '@/components/AuthButtons';
+import CookieConsent from '@/components/consent/CookieConsent';
 import Footer from '@/components/Footer';
+import ConsentedSentryReplay from '@/components/telemetry/ConsentedSentryReplay';
+import ConsentedTelemetry from '@/components/telemetry/ConsentedTelemetry';
+import { siteUrl } from '@/lib/siteUrl';
+import { socialImage } from '@/lib/socialImage';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
@@ -8,7 +13,6 @@ import { IconType } from 'react-icons';
 import { BsGithub } from 'react-icons/bs';
 import './globals.css';
 
-const siteUrl: string = process.env.SITE_URL || 'localhost:3000';
 const author: { name: string; url: string; ico: IconType } = {
   name: 'DraugSköll',
   url: 'https://github.com/reisene',
@@ -25,26 +29,53 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+const siteName = 'Invoice Creator';
+const description =
+  'Darmowy generator rachunków do umowy zlecenia: oblicza składki, zaliczkę na podatek i kwotę do wypłaty oraz tworzy gotowy plik PDF.';
+
 export const metadata: Metadata = {
-  title: {
-    default: 'Invoice Creator',
-    template: '% | Invoice Creator',
-  },
-  description:
-    'Invoice Creator is for creating invoices for contracts of mandate',
   metadataBase: new URL(siteUrl),
-  icons: [
-    {
-      url: 'favicon.ico',
-      type: 'image/x-icon',
-      rel: 'icon',
-    },
+  title: {
+    default: `${siteName} – rachunki do umowy zlecenia`,
+    template: `%s | ${siteName}`,
+  },
+  description,
+  applicationName: siteName,
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  keywords: [
+    'rachunek do umowy zlecenia',
+    'generator rachunków',
+    'umowa zlecenie',
+    'rachunek PDF',
   ],
   authors: [{ name: author.name, url: author.url }],
   publisher: author.name,
   creator: author.name,
+  openGraph: {
+    type: 'website',
+    locale: 'pl_PL',
+    siteName,
+    title: siteName,
+    description,
+    url: '/',
+    images: [socialImage],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: siteName,
+    description,
+    images: [socialImage],
+  },
+  alternates: { canonical: '/' },
 };
-
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -53,13 +84,16 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html
-      lang='en'
-      className={`${geistSans.variable} ${geistMono.variable} vh-100`}
+      lang='pl'
+      className={`${geistSans.variable} ${geistMono.variable}`}
       data-bs-theme='dark'
     >
       <body className='min-vh-100 d-flex flex-column'>
         <AppNavbar authButtons={<AuthButtons />} />
-        <main className={'py-5'}>{children}</main>
+        <main className='py-5 flex-grow-1'>{children}</main>
+        <CookieConsent />
+        <ConsentedTelemetry />
+        <ConsentedSentryReplay />
         <Footer author={author} />
       </body>
     </html>

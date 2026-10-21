@@ -1,3 +1,5 @@
+import CookieSettingsButton from '@/components/consent/CookieSettingsButton';
+import type { Route } from 'next';
 import Link from 'next/link';
 import { Container } from 'react-bootstrap';
 import type { IconType } from 'react-icons';
@@ -11,16 +13,12 @@ function getYear(): number | string {
     : `${startYear} - ${currentYear}`;
 }
 
-const links: {
-  href: string;
-  label: string;
-  target?: string;
-  rel?: string;
-}[] = [
-  {
-    href: '/privacy',
-    label: 'Polityka prywatności',
-  },
+const internalLinks: { href: Route; label: string }[] = [
+  { href: '/terms', label: 'Regulamin' },
+  { href: '/privacy', label: 'Polityka prywatności' },
+];
+
+const externalLinks = [
   {
     href: 'https://github.com/reisene/invoice-creator',
     label: 'Repozytorium',
@@ -54,28 +52,34 @@ export default function Footer({
         >
           <span className={'small'}> Copyright &copy; {getYear()}</span>
 
-          <Link
+          <a
             href={author.url}
             target={'_blank'}
             rel={'noopener noreferrer'}
-            className={'text-decoration-none text-reset fw-bold small'}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.25rem',
-            }}
+            className={
+              'd-inline-flex align-items-center gap-1 text-decoration-none text-reset fw-bold small'
+            }
           >
             <Icon aria-hidden={true} size={16} />
             {author.name}
-          </Link>
+          </a>
 
           <span className='d-none d-sm-inline' aria-hidden='true'>
             |
           </span>
 
           <div className='d-inline-flex gap-2 small'>
-            {links.map((link) => (
+            {internalLinks.map((link) => (
               <Link
+                key={link.href}
+                href={link.href}
+                className='text-decoration-none text-reset'
+              >
+                {link.label}
+              </Link>
+            ))}
+            {externalLinks.map((link) => (
+              <a
                 key={link.href}
                 href={link.href}
                 target={link.target}
@@ -83,8 +87,9 @@ export default function Footer({
                 className='text-decoration-none text-reset'
               >
                 {link.label}
-              </Link>
+              </a>
             ))}
+            <CookieSettingsButton />
           </div>
         </div>
       </Container>

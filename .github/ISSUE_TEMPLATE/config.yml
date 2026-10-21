@@ -1,8 +1,9 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-issue-config.json
 blank_issues_enabled: true
 contact_links:
   - name: Questions / support
-    url: https://github.com/reisene/invoce-creator/discussions
+    url: https://github.com/reisene/invoice-creator/discussions
     about: Please ask general questions and get support here.
   - name: Security vulnerability
-    url: https://github.com/reisene/invoce-creator/security/advisories/new
+    url: https://github.com/reisene/invoice-creator/security/advisories/new
     about: Please report security issues privately through GitHub Security Advisories.

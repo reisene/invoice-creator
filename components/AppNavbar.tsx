@@ -3,8 +3,8 @@
 import { Fira_Mono } from 'next/font/google';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import type { ReactNode } from 'react';
-import { Container, Nav, Navbar } from 'react-bootstrap';
+import { type ReactNode, useState } from 'react';
+import { Container, Image, Nav, Navbar } from 'react-bootstrap';
 import { IconType } from 'react-icons';
 import {
   BsCalculatorFill,
@@ -26,7 +26,7 @@ const navLinks: {
 }[] = [
   {
     href: '/',
-    label: 'Home',
+    label: 'Start',
     icon: BsFillHousesFill,
   },
   {
@@ -36,33 +36,38 @@ const navLinks: {
   },
   {
     href: '/preview',
-    label: 'Preview',
+    label: 'Wzory',
     icon: BsFillFileEarmarkTextFill,
   },
   {
     href: '/help',
-    label: 'Help',
+    label: 'Pomoc',
     icon: BsQuestionCircleFill,
   },
   {
     href: '/contact',
-    label: 'Contact',
+    label: 'Kontakt',
     icon: BsEnvelopeFill,
   },
 ];
 
 export default function AppNavbar({ authButtons }: { authButtons: ReactNode }) {
   const pathname = usePathname();
+  const [expanded, setExpanded] = useState(false);
   const isLinkActive = (href: string) => {
     if (href === '/') {
       return pathname === '/';
     }
     return pathname === href || pathname.startsWith(`${href}/`);
   };
+  const logo = '/logo.svg';
 
   return (
     <Navbar
+      aria-label='Nawigacja główna'
       expand={'lg'}
+      expanded={expanded}
+      onToggle={setExpanded}
       sticky={'top'}
       bg={'body-tertiary'}
       className={mono.className}
@@ -71,32 +76,43 @@ export default function AppNavbar({ authButtons }: { authButtons: ReactNode }) {
         <Navbar.Brand
           as={Link}
           href={'/'}
-          className={'d-flex align-items-center'}
+          className={'d-flex align-items-center fw-bold g-1'}
         >
+          <Image src={logo} alt={''} width={32} height={32} />
           Invoice Creator
         </Navbar.Brand>
-        <Nav variant={'underline'} className={'ms-auto'}>
-          {navLinks.map((link) => {
-            const isActive: boolean = isLinkActive(link.href);
-            const Icon: IconType = link.icon;
+        <Navbar.Toggle
+          label={'Przełącz nawigację'}
+          aria-controls={'main-navbar-nav'}
+          aria-expanded={expanded}
+        />
+        <Navbar.Collapse id='main-navbar-nav'>
+          <Nav
+            variant={'underline'}
+            className={'ms-auto align-items-lg-center'}
+          >
+            {navLinks.map((link) => {
+              const isActive: boolean = isLinkActive(link.href);
+              const Icon: IconType = link.icon;
 
-            return (
-              <Nav.Item key={link.href}>
-                <Nav.Link
-                  as={Link}
-                  href={link.href}
-                  active={isActive}
-                  aria-current={isActive ? 'page' : undefined}
-                >
-                  {isActive && <Icon aria-hidden={true} className={'me-2'} />}
-
-                  {link.label}
-                </Nav.Link>
-              </Nav.Item>
-            );
-          })}
-        </Nav>
-        {authButtons}
+              return (
+                <Nav.Item key={link.href}>
+                  <Nav.Link
+                    as={Link}
+                    href={link.href}
+                    active={isActive}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={'d-inline-flex align-items-center'}
+                  >
+                    <Icon aria-hidden={true} className={'me-2'} />
+                    {link.label}
+                  </Nav.Link>
+                </Nav.Item>
+              );
+            })}
+          </Nav>
+          <div className={'ms-lg-3 mt-3 mt-lg-0'}>{authButtons}</div>
+        </Navbar.Collapse>
       </Container>
     </Navbar>
   );

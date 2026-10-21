@@ -11,7 +11,10 @@ function ResetPasswordForm() {
   const [state, formAction, isPending] = useActionState(resetPassword, null);
 
   return (
-    <Card body className='shadow-sm'>
+    <Card
+      body
+      className='border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 p-3 p-sm-4'
+    >
       <h1 className='h4 text-center mb-4'>Ustaw nowe hasło</h1>
 
       <Form action={formAction}>
@@ -57,7 +60,7 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Container className='py-5' style={{ maxWidth: 440 }}>
+    <Container className='py-5 page-narrow'>
       <Suspense>
         <ResetPasswordForm />
       </Suspense>

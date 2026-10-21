@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"]
+    },
+    "codacy": {
+      "command": "npx",
+      "args": ["-y", "@codacy/codacy-mcp@latest"],
+      "env": {
+        "CODACY_ACCOUNT_TOKEN": "$CODACY_ACCOUNT_TOKEN"
+      }
+    },
+    "neon": {
+      "type": "http",
+      "url": "https://mcp.neon.tech/mcp"
+    }
+  }
+}

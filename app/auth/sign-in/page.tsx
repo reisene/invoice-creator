@@ -1,5 +1,6 @@
 'use client';
 
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useActionState } from 'react';
@@ -11,8 +12,11 @@ function SignInFormInner() {
   const [state, formAction, isPending] = useActionState(signInWithEmail, null);
 
   return (
-    <Container className='py-5' style={{ maxWidth: 440 }}>
-      <Card body className='shadow-sm'>
+    <Container className='py-5 page-narrow'>
+      <Card
+        body
+        className='border border-secondary-subtle bg-body-tertiary shadow-sm rounded-4 p-3 p-sm-4'
+      >
         <h1 className='h4 text-center mb-4'>Zaloguj się</h1>
 
         {searchParams.get('reset') && (
@@ -62,6 +66,7 @@ function SignInFormInner() {
         >
           Zaloguj się linkiem e-mail
         </Button>
+        <GoogleSignInButton />
 
         <p className='text-center text-body-secondary small mt-3 mb-0'>
           Nie masz konta? <Link href='/auth/sign-up'>Zarejestruj się</Link>

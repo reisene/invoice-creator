@@ -7,5 +7,22 @@
   "bracketSpacing": true,
   "arrowParens": "always",
   "endOfLine": "lf",
-  "plugins": ["prettier-plugin-organize-imports"]
+  "plugins": ["prettier-plugin-organize-imports"],
+  "printWidth": 80,
+  "overrides": [
+    {
+      "files": "**/*.mdx",
+      "options": {
+        "proseWrap": "always",
+        "singleQuote": false,
+        "jsxSingleQuote": false
+      }
+    },
+    {
+      "files": "**/*.{md,mdx}",
+      "options": {
+        "printWidth": 120
+      }
+    }
+  ]
 }

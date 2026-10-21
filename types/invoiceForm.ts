@@ -7,7 +7,10 @@ export type ClientType = 'company' | 'private';
 
 export type CostType = '20' | '50';
 
-export type TaxReductionAmount = 0 | 150 | 300;
+export type TaxReductionAmount = 0 | 100 | 150 | 300;
+
+export type PaymentMethod = 'CASH' | 'TRANSFER' | '';
+export type TransferTarget = 'SAVED_ACCOUNT' | 'DECLARATION' | '';
 
 export interface InvoiceFormData {
   // Zleceniodawca
@@ -26,6 +29,8 @@ export interface InvoiceFormData {
   // Umowa
   contractNumber?: string;
   contractDate: string; // ISO Date
+  issuePlace?: string;
+  issueDate?: string; // ISO Date
   periodStart: string;
   periodEnd: string;
   contractType: ContractType;
@@ -41,11 +46,20 @@ export interface InvoiceFormData {
   costType: CostType;
   youngRelief: boolean;
   yearToDateTaxableIncome: number;
+  yearToDateEmploymentIncome?: number;
   yearToDateYoungReliefIncome: number;
 
   // Ulga podatkowa
+  noTaxAdvanceRequest?: boolean;
   taxReduction: boolean;
   taxReductionAmount: TaxReductionAmount;
+
+  // Wypłata wynagrodzenia
+  paymentMethod: PaymentMethod;
+  transferTarget: TransferTarget;
+  bankAccountHolder?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
 
   // Dodatkowe informacje
   notes?: string;

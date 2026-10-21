@@ -9,6 +9,12 @@ export interface SavedPartyDto {
   pesel: string | null;
 }
 
+export interface UserBankAccountDto {
+  accountHolder: string;
+  bankName: string;
+  accountNumber: string;
+}
+
 export interface InvoiceNumberReservation {
   number: string;
   token: string;

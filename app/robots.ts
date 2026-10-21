@@ -1,21 +1,17 @@
-import { MetadataRoute } from 'next';
+import { siteUrl } from '@/lib/siteUrl';
+import type { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-  const isProduction: boolean = process.env.NODE_ENV === 'production';
-  if (!isProduction) {
-    return {
-      rules: {
-        userAgent: '*',
-        disallow: ['/'],
-      },
-      sitemap: 'https://invoice-creator.vercel.app/sitemap.xml',
-    };
+  if (process.env.NODE_ENV !== 'production') {
+    return { rules: { userAgent: '*', disallow: '/' } };
   }
+
   return {
     rules: {
       userAgent: '*',
       allow: '/',
+      disallow: ['/account', '/auth', '/api'],
     },
-    sitemap: 'https://invoice-creator.vercel.app/sitemap.xml',
+    sitemap: `${siteUrl}/sitemap.xml`,
   };
 }

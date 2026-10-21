@@ -1,0 +1,132 @@
+name: Daily database backup
+
+on:
+  schedule:
+    - cron: '37 2 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: database-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Encrypt database backup and upload to R2
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Validate configuration
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+          BACKUP_AGE_RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
+        run: |
+          set -euo pipefail
+          for name in DATABASE_URL R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_ENDPOINT R2_BUCKET_NAME BACKUP_AGE_RECIPIENT; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Missing Actions secret: $name"
+              exit 1
+            fi
+          done
+          python3 - <<'PY'
+          import os
+          from urllib.parse import urlsplit
+
+          database = urlsplit(os.environ["DATABASE_URL"])
+          if database.scheme not in ("postgres", "postgresql") or not database.hostname:
+              raise SystemExit("DATABASE_URL must be a PostgreSQL connection URL.")
+          if "-pooler" in database.hostname:
+              raise SystemExit("Backups require a direct connection, not a pooled DATABASE_URL.")
+          endpoint = urlsplit(os.environ["R2_ENDPOINT"])
+          if (
+              endpoint.scheme != "https"
+              or not endpoint.hostname
+              or not endpoint.hostname.endswith(".r2.cloudflarestorage.com")
+              or endpoint.path not in ("", "/")
+              or endpoint.username
+              or endpoint.password
+              or endpoint.query
+              or endpoint.fragment
+          ):
+              raise SystemExit("R2_ENDPOINT must be the HTTPS S3 endpoint without a bucket path.")
+          PY
+
+      - name: Install encryption tool
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install --yes --no-install-recommends age
+          command -v aws
+
+      - name: Back up, encrypt and upload
+        env:
+          PGDATABASE: ${{ secrets.DATABASE_URL }}
+          PGSSLMODE: require
+          PGCONNECT_TIMEOUT: '30'
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_EC2_METADATA_DISABLED: 'true'
+          AWS_PAGER: ''
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+          BACKUP_AGE_RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
+        run: |
+          set -euo pipefail
+          umask 077
+          work_dir="$(mktemp -d)"
+          trap 'rm -rf -- "$work_dir"' EXIT
+
+          age --encrypt --recipient "$BACKUP_AGE_RECIPIENT" < /dev/null > /dev/null
+
+          # Discover the server major version, then use matching dump/restore tools.
+          server_version="$(docker run --rm \
+            -e PGDATABASE -e PGSSLMODE -e PGCONNECT_TIMEOUT \
+            postgres:18 psql --no-psqlrc --tuples-only --no-align \
+            --set=ON_ERROR_STOP=1 --command='SHOW server_version_num')"
+          if [[ ! "$server_version" =~ ^[0-9]{6}$ ]]; then
+            echo "::error::Could not determine the PostgreSQL server version."
+            exit 1
+          fi
+          postgres_image="postgres:$((10#$server_version / 10000))"
+
+          docker run --rm \
+            -e PGDATABASE -e PGSSLMODE -e PGCONNECT_TIMEOUT \
+            "$postgres_image" pg_dump --format=custom --no-owner --no-acl \
+            > "$work_dir/database.dump"
+          test -s "$work_dir/database.dump"
+          docker run --rm -i "$postgres_image" pg_restore --list \
+            < "$work_dir/database.dump" > /dev/null
+
+          filename="database-$(date -u +'%Y-%m-%dT%H-%M-%SZ')-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.dump.age"
+          age --encrypt --recipient "$BACKUP_AGE_RECIPIENT" \
+            --output "$work_dir/$filename" "$work_dir/database.dump"
+          rm -- "$work_dir/database.dump"
+
+          aws --endpoint-url "$R2_ENDPOINT" s3 cp \
+            "$work_dir/$filename" "s3://$R2_BUCKET_NAME/daily/$filename" \
+            --only-show-errors --no-progress
+
+          expected_size="$(stat --format=%s "$work_dir/$filename")"
+          remote_size="$(aws --endpoint-url "$R2_ENDPOINT" s3api head-object \
+            --bucket "$R2_BUCKET_NAME" --key "daily/$filename" \
+            --query ContentLength --output text)"
+          if [[ "$remote_size" != "$expected_size" ]]; then
+            echo "::error::Uploaded backup size does not match the local encrypted file."
+            exit 1
+          fi
+
+          {
+            echo "### Database backup uploaded"
+            echo "- Object: daily/$filename"
+            echo "- Encrypted size: $expected_size bytes"
+            echo "- PostgreSQL client major: $((10#$server_version / 10000))"
+          } >> "$GITHUB_STEP_SUMMARY"

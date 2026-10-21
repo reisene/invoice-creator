@@ -2,16 +2,29 @@ import { prisma } from '@/lib/db';
 import {
   getInvoiceNumberScope,
   reserveInvoiceNumberForScope,
-} from '@/lib/invoiceNumbering';
-import { sanitizeInvoiceForm } from '@/lib/sanitizeInvoiceForm';
+} from '@/lib/invoice/invoiceNumbering';
+import { sanitizeInvoiceForm } from '@/lib/invoice/sanitizeInvoiceForm';
 import {
   decryptJson,
   decryptLegacyText,
+  decryptText,
   encryptJson,
   encryptText,
 } from '@/lib/savedDataCrypto';
-import type { SavedPartyDto } from '@/types/savedData';
+import type { SavedPartyDto, UserBankAccountDto } from '@/types/savedData';
 import 'server-only';
+
+export async function getUserBankAccount(
+  userId: string,
+): Promise<UserBankAccountDto | null> {
+  const row = await prisma.userBankAccount.findUnique({ where: { userId } });
+  if (!row) return null;
+  return {
+    accountHolder: decryptText(row.accountHolder),
+    bankName: decryptText(row.bankName),
+    accountNumber: decryptText(row.accountNumber),
+  };
+}
 
 export async function getSavedPartiesForUser(
   userId: string,

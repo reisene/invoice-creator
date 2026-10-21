@@ -1,17 +1,44 @@
-import { auth } from '@/lib/auth/server';
-import { Button, ButtonToolbar } from 'react-bootstrap';
+'use client';
+
+import { authClient } from '@/lib/auth/client';
+import { Button, ButtonToolbar, Placeholder } from 'react-bootstrap';
+import {
+  BsBoxArrowInRight,
+  BsPersonCircle,
+  BsPersonPlus,
+} from 'react-icons/bs';
 import SignOutButton from './SignOutButton';
 
-export const dynamic = 'force-dynamic';
+export default function AuthButtons() {
+  const { data: session, isPending } = authClient.useSession();
 
-export default async function AuthButtons() {
-  const { data: session } = await auth.getSession();
+  if (isPending) {
+    return (
+      <ButtonToolbar className='gap-2' aria-busy='true' aria-hidden='true'>
+        <Placeholder
+          as='div'
+          className='rounded-3 bg-secondary'
+          style={{ width: '110px', height: '38px', opacity: 0.15 }}
+        />
+        <Placeholder
+          as='div'
+          className='rounded-3 bg-secondary'
+          style={{ width: '105px', height: '38px', opacity: 0.15 }}
+        />
+      </ButtonToolbar>
+    );
+  }
 
   if (session?.user) {
     return (
-      <ButtonToolbar className='gap-2 ms-auto'>
-        <Button href={'/account'} variant={'primary'}>
-          Account
+      <ButtonToolbar className='gap-2'>
+        <Button
+          href={'/account'}
+          variant={'primary'}
+          className='d-inline-flex align-items-center gap-2'
+        >
+          <BsPersonCircle aria-hidden />
+          Konto
         </Button>
         <SignOutButton />
       </ButtonToolbar>
@@ -19,12 +46,22 @@ export default async function AuthButtons() {
   }
 
   return (
-    <ButtonToolbar className='gap-2 ms-auto'>
-      <Button href={'/auth/sign-up'} variant={'secondary'}>
-        Sign Up
+    <ButtonToolbar className='gap-2'>
+      <Button
+        href={'/auth/sign-up'}
+        variant={'outline-primary'}
+        className='d-inline-flex align-items-center gap-2'
+      >
+        <BsPersonPlus aria-hidden />
+        Rejestracja
       </Button>
-      <Button href={'/auth/sign-in'} variant={'success'}>
-        Sign In
+      <Button
+        href={'/auth/sign-in'}
+        variant={'primary'}
+        className='d-inline-flex align-items-center gap-2'
+      >
+        <BsBoxArrowInRight aria-hidden />
+        Logowanie
       </Button>
     </ButtonToolbar>
   );

@@ -4,8 +4,19 @@
   "type": "module",
   "author": {
     "name": "DraugSköll",
-    "email": "kprinny@gmail.com"
+    "email": "contact@draugskoll.dev"
   },
+  "description": "A simple invoice generator for contracts of mandate.",
+  "license": "GPL-3.0-or-later",
+  "keywords": [
+    "invoice",
+    "generator",
+    "contracts",
+    "mandate",
+    "pdf",
+    "nextjs",
+    "react"
+  ],
   "funding": [
     {
       "type": "patreon",
@@ -20,15 +31,15 @@
     "type": "git",
     "url": "git+https://github.com/reisene/invoice-creator.git"
   },
-  "homepage": "https://github.com/reisene/invoice-creator#readme",
+  "homepage": "https://invoice-creator.draugskoll.dev",
   "bugs": {
     "url": "https://github.com/reisene/invoice-creator/issues",
     "email": "reisene@youtrack.cloud"
   },
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "engines": {
-    "node": ">=24"
+    "node": "24.x"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,css,scss,md,mdx,html}": [
@@ -36,13 +47,21 @@
     ]
   },
   "scripts": {
-    "dev": "next dev",
+    "predev": "tsx scripts/generateLegalRegistry.ts",
+    "dev": "doppler run -- next dev",
+    "prebuild": "tsx scripts/generateLegalRegistry.ts",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint --max-warnings 0",
     "prepare": "husky",
+    "pretypecheck": "tsx scripts/generateLegalRegistry.ts && prisma generate && next typegen",
     "typecheck": "tsc --noEmit",
+    "pretypecheck:ts6": "npm run pretypecheck",
     "typecheck:ts6": "tsc6 --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "db:push": "prisma db push",
     "db:seed": "prisma db seed",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -52,44 +71,71 @@
   },
   "dependencies": {
     "@fontsource/noto-sans": "^5.3.0",
-    "@neondatabase/auth": "^0.5.0-beta",
-    "@prisma/adapter-neon": "^7.10.0",
-    "@prisma/client": "^7.10.0",
+    "@mdx-js/language-service": "^0.7.4",
+    "@mdx-js/loader": "^3.1.1",
+    "@mdx-js/react": "^3.1.1",
+    "@neondatabase/auth": "^0.7.0-beta",
+    "@next/mdx": "^16.4.2",
+    "@prisma/adapter-neon": "^7.10.1",
+    "@prisma/client": "^7.10.1",
     "@react-pdf/renderer": "^4.9.0",
+    "@sentry/nextjs": "^11.8.0",
+    "@types/mdx": "^2.0.14",
+    "@upstash/ratelimit": "^2.2.0",
+    "@upstash/redis": "^1.39.0",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "bootstrap": "^5.3.8",
-    "dotenv": "^18.0.7",
-    "next": "16.4.0",
-    "react": "19.3.0",
+    "botid": "^1.5.11",
+    "dotenv": "^18.0.8",
+    "gray-matter": "^4.0.3",
+    "next": "16.4.2",
+    "react": "19.3.1",
     "react-bootstrap": "^2.10.10",
-    "react-dom": "19.3.0",
+    "react-dom": "19.3.1",
     "react-icons": "^5.7.0",
-    "to-words": "^7.1.0"
+    "remark-frontmatter": "^5.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-mdx-frontmatter": "^6.0.0",
+    "resend": "^6.34.1",
+    "to-words": "^7.4.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^21.2.3",
-    "@commitlint/config-conventional": "^21.2.3",
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
     "@eslint/js": "^10.0.1",
-    "@next/eslint-plugin-next": "^16.4.0",
+    "@next/eslint-plugin-next": "^16.4.2",
     "@release-it/conventional-changelog": "^12.0.2",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
     "@types/node": "26.6.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@typescript/native": "npm:typescript@^7.0.2",
-    "@vercel/config": "^0.12.0",
-    "eslint": "^10.12.0",
-    "eslint-config-next": "16.4.0",
+    "@vercel/config": "^0.13.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "@vitest/coverage-v8": "^5.0.5",
+    "eslint": "^10.13.0",
+    "eslint-config-next": "16.4.2",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
+    "jsdom": "^30.1.3",
     "lint-staged": "17.6.0",
     "prettier": "^3.9.10",
     "prettier-plugin-organize-imports": "^4.3.0",
-    "prisma": "^7.10.0",
+    "prisma": "^7.10.1",
     "release-it": "^21.1.1",
     "tsx": "^4.23.15",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "typescript-eslint": "^8.71.1"
+    "typescript-eslint": "^8.72.0",
+    "vitest": "^5.0.5"
   },
   "overrides": {
     "path-to-regexp": "6.3.0"
+  },
+  "allowScripts": {
+    "@prisma/engines@7.10.1": true,
+    "prisma@7.10.1": true,
+    "esbuild@0.28.2": true
   }
 }

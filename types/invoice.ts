@@ -1,4 +1,7 @@
 export interface InvoiceData {
+  issuePlace?: string;
+  issueDate?: string;
+
   // Dane stron i umowy
   client: {
     type: 'company' | 'private';
@@ -23,6 +26,14 @@ export interface InvoiceData {
     type: 'monthly' | 'hourly';
   };
 
+  payment: {
+    method: 'CASH' | 'TRANSFER' | '';
+    transferTarget: 'SAVED_ACCOUNT' | 'DECLARATION' | '';
+    accountHolder?: string;
+    bankName?: string;
+    accountNumber?: string;
+  };
+
   // Wynagrodzenie
   remuneration: {
     gross: number;
@@ -35,8 +46,9 @@ export interface InvoiceData {
   voluntarySickness: boolean;
   costType: '20' | '50';
   youngRelief: boolean;
+  noTaxAdvanceRequest: boolean;
   taxReduction: boolean;
-  taxReductionAmount: 0 | 150 | 300;
+  taxReductionAmount: 0 | 100 | 150 | 300;
 
   // Wyliczenia
   calculations: {
@@ -64,6 +76,7 @@ export interface InvoiceData {
     taxableBase: number; // po zaokrągleniu
 
     // Zaliczka na PIT
+    taxableIncomeAboveTaxFreeAmount: number;
     taxBeforeReduction: number;
     taxReductionAmountApplied: number;
     tax: number; // po uldze

@@ -1127,12 +1127,12 @@ export default function InvoiceForm({
                           type='button'
                           className='btn btn-link p-0 text-decoration-none small'
                           style={{ fontSize: '0.8rem' }}
-                          onClick={() =>
+                          onClick={() => {
                             updateField(
                               'bankAccountHolder',
                               data.contractorName,
-                            )
-                          }
+                            );
+                          }}
                         >
                           Użyj zleceniobiorcy
                         </button>
@@ -1195,7 +1195,9 @@ export default function InvoiceForm({
                     variant={saveAccountFeedback.ok ? 'success' : 'danger'}
                     className='mt-2 mb-0 py-2 px-3 small'
                     dismissible
-                    onClose={() => setSaveAccountFeedback(null)}
+                    onClose={() => {
+                      setSaveAccountFeedback(null);
+                    }}
                   >
                     {saveAccountFeedback.text}
                   </Alert>

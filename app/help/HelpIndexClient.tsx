@@ -82,13 +82,17 @@ function HelpIndexInner({ articles }: HelpIndexClientProps) {
                 type='search'
                 placeholder='Szukaj (np. student, PIT-2, KUP, minimalna)...'
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                }}
                 className='border-start-0'
               />
               {searchQuery && (
                 <Button
                   variant='outline-secondary'
-                  onClick={() => setSearchQuery('')}
+                  onClick={() => {
+                    setSearchQuery('');
+                  }}
                   aria-label='Wyczyść wyszukiwanie'
                 >
                   <BsXCircle />
@@ -109,7 +113,9 @@ function HelpIndexInner({ articles }: HelpIndexClientProps) {
             variant={
               selectedCategory === 'all' ? 'primary' : 'outline-secondary'
             }
-            onClick={() => setSelectedCategory('all')}
+            onClick={() => {
+              setSelectedCategory('all');
+            }}
             size='sm'
             className='rounded-pill px-3'
           >
@@ -124,7 +130,9 @@ function HelpIndexInner({ articles }: HelpIndexClientProps) {
             <Nav.Item key={cat.id}>
               <Button
                 variant={isActive ? 'primary' : 'outline-secondary'}
-                onClick={() => setSelectedCategory(cat.id)}
+                onClick={() => {
+                  setSelectedCategory(cat.id);
+                }}
                 size='sm'
                 className='rounded-pill px-3 d-inline-flex align-items-center gap-2'
               >

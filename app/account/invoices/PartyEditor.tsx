@@ -54,7 +54,12 @@ export default function PartyEditor({ party }: { party?: SavedPartyDto }) {
         {party ? 'Edytuj' : 'Dodaj'}
       </Button>
 
-      <Modal show={show} onHide={() => setShow(false)}>
+      <Modal
+        show={show}
+        onHide={() => {
+          setShow(false);
+        }}
+      >
         <Form onSubmit={handleSubmit}>
           <Modal.Header closeButton>
             <Modal.Title className='h5'>

@@ -144,7 +144,9 @@ export default function HeroSimulator() {
             className={`btn btn-sm rounded-pill flex-grow-1 ${
               status === 'standard' ? 'btn-primary' : 'btn-outline-secondary'
             }`}
-            onClick={() => setStatus('standard')}
+            onClick={() => {
+              setStatus('standard');
+            }}
           >
             Standard
           </button>
@@ -155,7 +157,9 @@ export default function HeroSimulator() {
                 ? 'btn-primary'
                 : 'btn-outline-secondary'
             }`}
-            onClick={() => setStatus('student_under_26')}
+            onClick={() => {
+              setStatus('student_under_26');
+            }}
           >
             Student &lt; 26 lat
           </button>

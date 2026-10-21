@@ -29,7 +29,9 @@ export default function GlobalError({
           <button
             type='button'
             className='btn btn-primary mb-4'
-            onClick={() => retry()}
+            onClick={() => {
+              retry();
+            }}
           >
             Spróbuj ponownie
           </button>

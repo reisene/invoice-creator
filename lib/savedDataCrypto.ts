@@ -27,7 +27,9 @@ export function isEncrypted(value: string): boolean {
 
 export function encryptText(value: string): string {
   const iv = randomBytes(IV_LENGTH);
-  const cipher = createCipheriv('aes-256-gcm', getEncryptionKey(), iv);
+  const cipher = createCipheriv('aes-256-gcm', getEncryptionKey(), iv, {
+    authTagLength: TAG_LENGTH,
+  });
   const ciphertext = Buffer.concat([
     cipher.update(value, 'utf8'),
     cipher.final(),
@@ -49,7 +51,9 @@ export function decryptText(value: string): string {
     throw new Error('Encrypted data has invalid cryptographic parameters.');
   }
 
-  const decipher = createDecipheriv('aes-256-gcm', getEncryptionKey(), iv);
+  const decipher = createDecipheriv('aes-256-gcm', getEncryptionKey(), iv, {
+    authTagLength: TAG_LENGTH,
+  });
   decipher.setAuthTag(tag);
   return Buffer.concat([
     decipher.update(Buffer.from(ciphertextValue, 'base64url')),

@@ -107,9 +107,9 @@ export function ImportDataCard() {
           type='file'
           accept='application/json,.json'
           disabled={pending}
-          onChange={(e) =>
-            handleFile((e.target as HTMLInputElement).files?.[0])
-          }
+          onChange={(e) => {
+            handleFile((e.target as HTMLInputElement).files?.[0]);
+          }}
         />
       </Form.Group>
 

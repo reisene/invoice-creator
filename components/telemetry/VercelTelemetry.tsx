@@ -13,8 +13,9 @@ export default function VercelTelemetry() {
       allowed.current = false;
     };
     window.addEventListener(COOKIE_CONSENT_CHANGED_EVENT, stopCollection);
-    return () =>
+    return () => {
       window.removeEventListener(COOKIE_CONSENT_CHANGED_EVENT, stopCollection);
+    };
   }, []);
 
   function beforeSend<T extends { url: string }>(event: T): T | null {

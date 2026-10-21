@@ -278,7 +278,9 @@ export function DeleteAccountForm() {
         <Form.Select
           value={method}
           disabled={isPending || sendingCode}
-          onChange={(event) => setMethod(event.target.value)}
+          onChange={(event) => {
+            setMethod(event.target.value);
+          }}
         >
           <option value='password'>Hasło</option>
           <option value='email-code'>
@@ -386,7 +388,9 @@ export function EmailChangeForm() {
                 disabled={requesting || confirming}
                 autoComplete='email'
                 value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
+                onChange={(e) => {
+                  setNewEmail(e.target.value);
+                }}
               />
             </Form.Group>
             <Button

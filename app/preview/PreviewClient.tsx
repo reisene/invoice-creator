@@ -102,7 +102,9 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
       document.body.append(downloadLink);
       downloadLink.click();
       downloadLink.remove();
-      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      window.setTimeout(() => {
+        URL.revokeObjectURL(objectUrl);
+      }, 1000);
     } catch (error) {
       Sentry.withScope((scope) => {
         scope.setTag('error.area', 'preview.pdf.generate');
@@ -133,7 +135,9 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
               <Card
                 role='button'
                 tabIndex={0}
-                onClick={() => handleSelectPreset(preset)}
+                onClick={() => {
+                  handleSelectPreset(preset);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -206,14 +210,14 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                     step='0.01'
                     min={0}
                     value={formData.grossAmount ?? ''}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setFormData((prev) => ({
                         ...prev,
                         grossAmount: e.target.value
                           ? Number(e.target.value)
                           : undefined,
-                      }))
-                    }
+                      }));
+                    }}
                   />
                 </Form.Group>
               ) : (
@@ -228,14 +232,14 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                         step='0.01'
                         min={0}
                         value={formData.hourlyRate ?? ''}
-                        onChange={(e) =>
+                        onChange={(e) => {
                           setFormData((prev) => ({
                             ...prev,
                             hourlyRate: e.target.value
                               ? Number(e.target.value)
                               : undefined,
-                          }))
-                        }
+                          }));
+                        }}
                       />
                     </Form.Group>
                   </Col>
@@ -249,14 +253,14 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                         step='any'
                         min={0}
                         value={formData.hoursWorked ?? ''}
-                        onChange={(e) =>
+                        onChange={(e) => {
                           setFormData((prev) => ({
                             ...prev,
                             hoursWorked: e.target.value
                               ? Number(e.target.value)
                               : undefined,
-                          }))
-                        }
+                          }));
+                        }}
                       />
                     </Form.Group>
                   </Col>
@@ -272,12 +276,12 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                     <Form.Select
                       size='sm'
                       value={formData.costType}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setFormData((prev) => ({
                           ...prev,
                           costType: e.target.value as '20' | '50',
-                        }))
-                      }
+                        }));
+                      }}
                     >
                       <option value='20'>20% (standardowe)</option>
                       <option value='50'>50% (autorskie)</option>
@@ -319,15 +323,15 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                       id='preview-no-tax-advance-request'
                       label='Nie pobieraj zaliczek do 30 000 zł'
                       checked={formData.noTaxAdvanceRequest ?? false}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setFormData((prev) => ({
                           ...prev,
                           noTaxAdvanceRequest: e.target.checked,
                           taxReduction: e.target.checked
                             ? false
                             : prev.taxReduction,
-                        }))
-                      }
+                        }));
+                      }}
                     />
                     <Form.Text muted>
                       Podatek po przekroczeniu limitu jest liczony od nadwyżki.
@@ -344,12 +348,12 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                     label='Dobrowolna składka chorobowa (2,45%)'
                     className='small'
                     checked={formData.voluntarySickness}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setFormData((prev) => ({
                         ...prev,
                         voluntarySickness: e.target.checked,
-                      }))
-                    }
+                      }));
+                    }}
                   />
                 )}
                 <Form.Check
@@ -358,12 +362,12 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                   label='Ulga dla młodych (zwolnienie do 26 lat)'
                   className='small'
                   checked={formData.youngRelief}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setFormData((prev) => ({
                       ...prev,
                       youngRelief: e.target.checked,
-                    }))
-                  }
+                    }));
+                  }}
                 />
               </div>
             </Card.Body>

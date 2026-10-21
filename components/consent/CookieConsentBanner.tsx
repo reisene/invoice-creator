@@ -29,8 +29,9 @@ export default function CookieConsentBanner({
     };
 
     window.addEventListener(COOKIE_SETTINGS_EVENT, openSettings);
-    return () =>
+    return () => {
       window.removeEventListener(COOKIE_SETTINGS_EVENT, openSettings);
+    };
   }, []);
 
   function choose(choice: CookieConsentChoice) {
@@ -162,7 +163,9 @@ export default function CookieConsentBanner({
               <Button
                 className='cookie-consent-choice'
                 disabled={isPending}
-                onClick={() => choose('REJECT_OPTIONAL')}
+                onClick={() => {
+                  choose('REJECT_OPTIONAL');
+                }}
                 variant='outline-secondary'
               >
                 Tylko niezbędne

@@ -36,7 +36,9 @@ export default function Error({
         <Button
           variant='primary'
           className='d-inline-flex align-items-center gap-2'
-          onClick={() => retry()}
+          onClick={() => {
+            retry();
+          }}
         >
           <BsArrowClockwise aria-hidden />
           Spróbuj ponownie

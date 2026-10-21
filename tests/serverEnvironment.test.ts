@@ -13,14 +13,18 @@ const validEnvironment = {
 
 describe('validateServerEnvironment', () => {
   it('accepts valid required server settings', () => {
-    assert.doesNotThrow(() => validateServerEnvironment(validEnvironment));
+    assert.doesNotThrow(() => {
+      validateServerEnvironment(validEnvironment);
+    });
   });
 
   it('reports every missing required setting without exposing values', () => {
     let message = '';
 
     assert.throws(
-      () => validateServerEnvironment({}),
+      () => {
+        validateServerEnvironment({});
+      },
       (error: unknown) => {
         assert.ok(error instanceof Error);
         message = error.message;
@@ -37,7 +41,7 @@ describe('validateServerEnvironment', () => {
     let message = '';
 
     assert.throws(
-      () =>
+      () => {
         validateServerEnvironment({
           ...validEnvironment,
           DATABASE_URL_POOLED: 'not-a-database-url',
@@ -46,7 +50,8 @@ describe('validateServerEnvironment', () => {
           INVOICE_DATA_ENCRYPTION_KEY: 'not-a-hex-key',
           CRON_SECRET: 'short',
           HEALTH_CHECK_SECRET: 'short',
-        }),
+        });
+      },
       (error: unknown) => {
         assert.ok(error instanceof Error);
         message = error.message;

@@ -4,6 +4,7 @@
 
 import * as Sentry from '@sentry/nextjs';
 import { initBotId } from 'botid/client/core';
+import { getSentryTracesSampleRate } from './lib/sentrySampling';
 
 initBotId({
   protect: [{ path: '/contact', method: 'POST' }],
@@ -13,8 +14,9 @@ Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
   // Add optional integrations for additional features
-  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1,
+  tracesSampleRate: getSentryTracesSampleRate(
+    process.env.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE,
+  ),
 
   // Define how likely Replay events are sampled.
   // This sets the sample rate to be 10%. You may want this to be 100% while

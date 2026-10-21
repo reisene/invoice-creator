@@ -81,6 +81,7 @@ Dodatkowo `DATABASE_URL` (bezpośrednie połączenie, bez poolingu) jest wymagan
 - `RESEND_API_KEY` — wysyłanie e-maili i sonda Resend w health checku; bez klucza wysyłka jest pomijana.
 - `CONTACT_FROM_EMAIL`, `CONTACT_NOTIFY_EMAIL`, `CONTACT_REPLY_TO` — adresy poczty kontaktowej; mają wartości domyślne.
 - `SENTRY_DSN` i `NEXT_PUBLIC_SENTRY_DSN` — raportowanie błędów na serwerze/Edge i w przeglądarce. `SENTRY_AUTH_TOKEN` jest potrzebny tylko w buildzie do wysyłki source map.
+- `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE` — wspólny dla serwera, Edge i przeglądarki odsetek śladów Sentry, od `0` do `1`; domyślnie `0.1`. Zalecane: `1` w Doppler `dev` i `stg`, `0.1` w `prd`. To ustawienie nie jest sekretem. Jako zmienna `NEXT_PUBLIC_` jest osadzana w kodzie przeglądarki podczas builda, więc zmianę trzeba wdrożyć nowym buildem.
 - `RETENTION_HEARTBEAT_URL` — adres monitoringu wywoływany po udanym zadaniu retencji.
 
 ### Zarezerwowane i zapasowe

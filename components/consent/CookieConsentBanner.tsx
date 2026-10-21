@@ -151,7 +151,9 @@ export default function CookieConsentBanner({
               aria-controls='cookie-consent-details'
               aria-expanded={showDetails}
               className='cookie-consent-details-button'
-              onClick={() => setShowDetails((current) => !current)}
+              onClick={() => {
+                setShowDetails((current) => !current);
+              }}
               variant='link'
             >
               {showDetails ? 'Ukryj szczegóły' : 'Ustawienia i szczegóły'}
@@ -168,7 +170,9 @@ export default function CookieConsentBanner({
               <Button
                 className='cookie-consent-choice'
                 disabled={isPending}
-                onClick={() => choose('ACCEPT_OPTIONAL')}
+                onClick={() => {
+                  choose('ACCEPT_OPTIONAL');
+                }}
                 variant='outline-secondary'
               >
                 Akceptuj wszystkie

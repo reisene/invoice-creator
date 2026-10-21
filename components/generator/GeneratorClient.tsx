@@ -303,7 +303,9 @@ export default function GeneratorClient({
       document.body.append(downloadLink);
       downloadLink.click();
       downloadLink.remove();
-      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      window.setTimeout(() => {
+        URL.revokeObjectURL(objectUrl);
+      }, 1000);
     } catch (error) {
       Sentry.withScope((scope) => {
         scope.setTag('error.area', 'generator.invoice.pdf');
@@ -326,7 +328,9 @@ export default function GeneratorClient({
               parties={parties}
               data={formData}
               onChange={setFormData}
-              onSaved={(party) => setParties((prev) => [...prev, party])}
+              onSaved={(party) => {
+                setParties((prev) => [...prev, party]);
+              }}
             />
           ) : null}
           <InvoiceForm

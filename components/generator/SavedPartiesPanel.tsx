@@ -96,7 +96,9 @@ export default function SavedPartiesPanel({
         <Form.Label>{title}</Form.Label>
         <Form.Select
           value=''
-          onChange={(e) => applyParty(e.target.value)}
+          onChange={(e) => {
+            applyParty(e.target.value);
+          }}
           disabled={list.length === 0}
         >
           <option value=''>

@@ -123,7 +123,9 @@ export default function HeroSimulator() {
             <button
               key={amt}
               type='button'
-              onClick={() => setGross(amt)}
+              onClick={() => {
+                setGross(amt);
+              }}
               className={`btn btn-sm rounded-pill px-2 py-0 ${gross === amt ? 'btn-primary' : 'btn-outline-secondary'}`}
             >
               {amt.toLocaleString('pl-PL')} zł
@@ -164,7 +166,9 @@ export default function HeroSimulator() {
                 ? 'btn-primary'
                 : 'btn-outline-secondary'
             }`}
-            onClick={() => setStatus('with_employment')}
+            onClick={() => {
+              setStatus('with_employment');
+            }}
           >
             Etat (zbieg)
           </button>

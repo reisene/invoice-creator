@@ -54,7 +54,9 @@ export default function ContactForm({
         </p>
         <Button
           variant='outline-primary'
-          onClick={() => setResetKey((k) => k + 1)}
+          onClick={() => {
+            setResetKey((k) => k + 1);
+          }}
           className='rounded-pill px-4'
         >
           Napisz kolejną wiadomość

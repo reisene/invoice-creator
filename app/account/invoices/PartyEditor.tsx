@@ -66,9 +66,9 @@ export default function PartyEditor({ party }: { party?: SavedPartyDto }) {
               <Form.Label>Rola</Form.Label>
               <Form.Select
                 value={kind}
-                onChange={(e) =>
-                  setKind(e.target.value as 'CLIENT' | 'CONTRACTOR')
-                }
+                onChange={(e) => {
+                  setKind(e.target.value as 'CLIENT' | 'CONTRACTOR');
+                }}
               >
                 <option value='CONTRACTOR'>Zleceniobiorca</option>
                 <option value='CLIENT'>Zleceniodawca</option>
@@ -123,7 +123,12 @@ export default function PartyEditor({ party }: { party?: SavedPartyDto }) {
             {error && <Alert variant='danger'>{error}</Alert>}
           </Modal.Body>
           <Modal.Footer>
-            <Button variant='secondary' onClick={() => setShow(false)}>
+            <Button
+              variant='secondary'
+              onClick={() => {
+                setShow(false);
+              }}
+            >
               Anuluj
             </Button>
             <Button type='submit' disabled={isPending}>

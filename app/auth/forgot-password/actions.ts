@@ -8,7 +8,8 @@ export async function requestPasswordReset(
   _prevState: { error?: string; success?: boolean } | null,
   formData: FormData,
 ) {
-  const email = (formData.get('email') as string)?.trim();
+  const emailField = formData.get('email');
+  const email = typeof emailField === 'string' ? emailField.trim() : '';
 
   if (!email) {
     return { error: 'Podaj adres e-mail.' };

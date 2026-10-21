@@ -49,7 +49,7 @@ export function SessionActionButton({
               ? await revokeOtherSessions()
               : await revokeAllSessions();
         // Pomyślne wylogowanie ze wszystkich sesji przekierowuje na logowanie.
-        if (result) setFeedback(result);
+        setFeedback(result);
       } catch (error) {
         Sentry.withScope((scope) => {
           scope.setTag('error.area', 'account.sessions.revoke');

@@ -68,7 +68,7 @@ jobs:
 
       - name: Back up, encrypt and upload
         env:
-          PGDATABASE: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           PGSSLMODE: require
           PGCONNECT_TIMEOUT: '30'
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
@@ -89,9 +89,9 @@ jobs:
 
           # Discover the server major version, then use matching dump/restore tools.
           server_version="$(docker run --rm \
-            -e PGDATABASE -e PGSSLMODE -e PGCONNECT_TIMEOUT \
+            -e DATABASE_URL -e PGSSLMODE -e PGCONNECT_TIMEOUT \
             postgres:18 psql --no-psqlrc --tuples-only --no-align \
-            --set=ON_ERROR_STOP=1 --command='SHOW server_version_num')"
+            --set=ON_ERROR_STOP=1 --command='SHOW server_version_num' "$DATABASE_URL")"
           if [[ ! "$server_version" =~ ^[0-9]{6}$ ]]; then
             echo "::error::Could not determine the PostgreSQL server version."
             exit 1
@@ -99,8 +99,9 @@ jobs:
           postgres_image="postgres:$((10#$server_version / 10000))"
 
           docker run --rm \
-            -e PGDATABASE -e PGSSLMODE -e PGCONNECT_TIMEOUT \
+            -e DATABASE_URL -e PGSSLMODE -e PGCONNECT_TIMEOUT \
             "$postgres_image" pg_dump --format=custom --no-owner --no-acl \
+            "$DATABASE_URL" \
             > "$work_dir/database.dump"
           test -s "$work_dir/database.dump"
           docker run --rm -i "$postgres_image" pg_restore --list \

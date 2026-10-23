@@ -389,6 +389,53 @@ describe('contact form', () => {
       screen.queryByRole('button', { name: 'Wyślij wiadomość' }),
     ).toBeNull();
   });
+  it('resets the completed form and allows another message without resubmitting the previous one', async () => {
+    mocks.contact.mockResolvedValue({ ok: true, message: 'Message stored' });
+    render(<ContactForm defaultName='Jan' defaultEmail='jan@example.com' />);
+    field('Twoje imię i nazwisko *', 'Anna');
+    field('Adres e-mail *', 'anna@example.com');
+    field('Temat wiadomości (opcjonalnie)', 'First subject');
+    field('Treść wiadomości *', 'First message content');
+    fireEvent.change(screen.getByRole('combobox'), {
+      target: { value: 'Sugestia funkcji' },
+    });
+    submit('Wyślij wiadomość');
+    const composeAgain = await screen.findByRole('button', {
+      name: 'Napisz kolejną wiadomość',
+    });
+
+    fireEvent.click(composeAgain);
+
+    expect(mocks.contact).toHaveBeenCalledOnce();
+    expect(screen.queryByText('Message stored')).toBeNull();
+    expect(screen.getByLabelText<HTMLInputElement>(/Twoje imię/).value).toBe(
+      'Jan',
+    );
+    expect(screen.getByLabelText<HTMLInputElement>(/Adres e-mail/).value).toBe(
+      'jan@example.com',
+    );
+    expect(
+      screen.getByLabelText<HTMLInputElement>(/Temat wiadomości/).value,
+    ).toBe('');
+    expect(
+      screen.getByLabelText<HTMLTextAreaElement>(/Treść wiadomości/).value,
+    ).toBe('');
+    expect(screen.getByRole<HTMLSelectElement>('combobox').value).toBe(
+      'Pytanie ogólne',
+    );
+
+    field('Treść wiadomości *', 'Second message content');
+    submit('Wyślij wiadomość');
+    await screen.findByRole('heading', { name: 'Wiadomość wysłana!' });
+    expect(mocks.contact).toHaveBeenCalledTimes(2);
+    const [previousState, data] = mocks.contact.mock.calls[1];
+    expect(previousState).toBeNull();
+    expect(data.get('name')).toBe('Jan');
+    expect(data.get('email')).toBe('jan@example.com');
+    expect(data.get('category')).toBe('Pytanie ogólne');
+    expect(data.get('subject')).toBe('');
+    expect(data.get('message')).toBe('Second message content');
+  });
   it('disables duplicate submissions while pending', async () => {
     await pending(
       <ContactForm />,

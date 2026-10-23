@@ -223,6 +223,12 @@ describe('session and saved data controls', () => {
       });
       fireEvent.click(screen.getByRole('button', { name: 'Run' }));
       expect((await screen.findByRole('alert')).textContent).toBe('Failed');
+      await waitFor(() =>
+        expect(
+          screen.getByRole<HTMLButtonElement>('button', { name: 'Run' })
+            .disabled,
+        ).toBe(false),
+      );
       expect(mocks.refresh).not.toHaveBeenCalled();
       let reject!: (error: Error) => void;
       action.mockReturnValue(

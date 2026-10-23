@@ -24,10 +24,25 @@ const CATEGORY_OPTIONS = [
   { value: 'Współpraca / inne', label: 'Współpraca lub inne zapytanie' },
 ];
 
-export default function ContactForm({
+export default function ContactForm(props: ContactFormProps) {
+  const [resetKey, setResetKey] = useState(0);
+
+  return (
+    <ContactFormContent
+      key={resetKey}
+      {...props}
+      onReset={() => {
+        setResetKey((key) => key + 1);
+      }}
+    />
+  );
+}
+
+function ContactFormContent({
   defaultName = '',
   defaultEmail = '',
-}: ContactFormProps) {
+  onReset,
+}: ContactFormProps & { onReset: () => void }) {
   const [state, formAction, isPending] = useActionState(
     submitContactForm,
     null,
@@ -35,7 +50,6 @@ export default function ContactForm({
   const [selectedCategory, setSelectedCategory] = useState(
     CATEGORY_OPTIONS[0].value,
   );
-  const [resetKey, setResetKey] = useState(0);
 
   if (state?.ok) {
     return (
@@ -54,9 +68,7 @@ export default function ContactForm({
         </p>
         <Button
           variant='outline-primary'
-          onClick={() => {
-            setResetKey((k) => k + 1);
-          }}
+          onClick={onReset}
           className='rounded-pill px-4'
         >
           Napisz kolejną wiadomość
@@ -66,7 +78,7 @@ export default function ContactForm({
   }
 
   return (
-    <Form action={formAction} key={resetKey} noValidate={false}>
+    <Form action={formAction} noValidate={false}>
       <p className='small text-body-secondary'>
         Formularz jest chroniony przez Vercel BotID przed automatycznym spamem.
         Weryfikacja wymaga JavaScript i działa niezależnie od zgody na

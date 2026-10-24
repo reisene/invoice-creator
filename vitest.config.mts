@@ -56,7 +56,7 @@ export default defineConfig({
         '**/*.log',
       ],
       thresholds: {
-        'app/**/*.{ts,tsx}': {
+        '**/*.{ts,tsx}': {
           statements: 95,
           lines: 95,
           functions: 95,

@@ -117,16 +117,35 @@ npm test -- tests/app
 npm run test:coverage -- tests/app --coverage.include="app/**/*.ts" --coverage.include="app/**/*.tsx"
 ```
 
-Progi dla całego `app/` wynoszą 95% instrukcji, linii i funkcji oraz 90%
-gałęzi. Pomiar uwzględnia również niewczytane pliki tego katalogu. Standardowe
-`npm run test:coverage` nadal raportuje pozostałe katalogi, ale na tym etapie
-progi są egzekwowane tylko dla `app/`.
+Progi wynoszą 95% instrukcji, linii i funkcji oraz 90% gałęzi.
+Pomiar uwzględnia również niewczytane pliki wybranego katalogu. Standardowe
+`npm run test:coverage` raportuje i egzekwuje progi dla wszystkich katalogów
+źródłowych wskazanych w konfiguracji, także tych jeszcze nieobjętych etapem testów.
 
 Testy komponentów klienckich korzystają z jsdom inicjalizowanego przez
 `tests/app/dom.ts` po uruchomieniu workera, aby uniknąć limitu czasu jego
 startu. Testy stron asynchronicznych sprawdzają funkcje stron, przekierowania
 i zwracane elementy; nie zastępują testów E2E renderowania React Server
 Components w działającym Next.js.
+
+### Testy katalogu `lib/`
+
+Testy w `tests/lib/` obejmują cały `lib/`, w tym podkatalogi `auth/`,
+`invoice/` i `legal/`. Korzystają z tej samej konfiguracji Vitest oraz
+środowiska Node.js. Sprawdzają walidację, wyliczenia i limity podatkowe,
+szyfrowanie, migrację danych, numerację rachunków, zgody, retencję,
+limity żądań, treści pomocy i obsługę błędów usług zewnętrznych.
+Połączenia z bazą, Neon Auth, Upstash i Resend są mockowane.
+Testy szyfrowania korzystają z prawdziwego AES-GCM i HMAC na kluczu testowym.
+
+```bash
+npm test -- tests/lib
+npm run test:coverage -- tests/lib --coverage.include="lib/**/*.ts" --coverage.include="lib/**/*.tsx"
+```
+
+Pomiar tylko `lib/` sprawdza te same progi 95%/95%/95%/90% dla całego tego
+katalogu, również plików niewczytanych przez testy. Pełny raport może nie
+spełniać progów, dopóki testami nie zostaną objęte pozostałe katalogi.
 
 Workflow `Code quality` sprawdza lintowanie i formatowanie dla pull requestów oraz zmian w `main` i `develop`. Nie uruchamia testów. Build sprawdza Vercel przy każdym wdrożeniu (także preview). Pozostałe workflow: CodeQL, gałąź Neon dla pull requestów (wygasa po 14 dniach; wymaga sekretu `NEON_API_KEY` i zmiennej `NEON_PROJECT_ID`), labeler oraz codzienny backup bazy. Zależności aktualizuje cotygodniowo Dependabot. Aby blokował scalanie przy błędach, dodaj kontrolę `Lint and formatting` do wymaganych kontroli w regułach ochrony gałęzi GitHub. Instalacja na Vercelu i w tym workflow korzysta z `npm ci`, bez aktualizowania lockfile.
 

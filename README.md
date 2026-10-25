@@ -2,6 +2,7 @@
 
 [![Better Stack Badge](https://incidents.betterstack.com/status-badges/v1/monitor/30soy.svg)](https://incidents.betterstack.com/?utm_source=status_badge)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/47f0903270ca44c29b6de5f570582732)](https://app.codacy.com/gh/reisene/invoice-creator/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![codecov](https://codecov.io/gh/reisene/invoice-creator/graph/badge.svg?token=33QPZ73K28)](https://codecov.io/gh/reisene/invoice-creator)
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Freisene%2Finvoice-creator)
 [![Visual Studio Code](https://img.shields.io/badge/Editor-Visual%20Studio%20Code-007ACC?logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/)
 [![WebStorm](https://img.shields.io/badge/Editor-WebStorm-000000?logo=webstorm&logoColor=white)](https://www.jetbrains.com/webstorm/)
@@ -10,19 +11,37 @@ Polskojęzyczny generator rachunków do umowy zlecenia. Oblicza składki i zalic
 
 ## Spis treści
 
-- [Funkcje](#funkcje)
-- [Technologie](#technologie)
-- [Uruchomienie lokalne](#uruchomienie-lokalne)
-- [Zmienne środowiskowe](#zmienne-środowiskowe)
-- [Przydatne polecenia](#przydatne-polecenia)
-- [Testy i pokrycie](#testy-i-pokrycie)
-- [CI i kontrola jakości](#ci-i-kontrola-jakości)
-- [Prywatność i bezpieczeństwo](#prywatność-i-bezpieczeństwo)
-- [Diagnostyka i zadania cykliczne](#diagnostyka-i-zadania-cykliczne)
-- [Wdrożenie](#wdrożenie)
-- [Backup bazy danych](#backup-bazy-danych)
-- [Rozwój i wkład](#rozwój-i-wkład)
-- [Licencja](#licencja)
+- [Invoice Creator](#invoice-creator)
+  - [Spis treści](#spis-treści)
+  - [Funkcje](#funkcje)
+  - [Technologie](#technologie)
+  - [Uruchomienie lokalne](#uruchomienie-lokalne)
+    - [Wymagania](#wymagania)
+    - [Instalacja i konfiguracja](#instalacja-i-konfiguracja)
+    - [Migracje i dane początkowe](#migracje-i-dane-początkowe)
+  - [Zmienne środowiskowe](#zmienne-środowiskowe)
+    - [Wymagane w runtime](#wymagane-w-runtime)
+    - [Opcjonalne](#opcjonalne)
+    - [Zarezerwowane i zapasowe](#zarezerwowane-i-zapasowe)
+  - [Przydatne polecenia](#przydatne-polecenia)
+  - [Testy i pokrycie](#testy-i-pokrycie)
+    - [Zakres testów](#zakres-testów)
+    - [Uruchamianie](#uruchamianie)
+    - [Progi i ograniczenia](#progi-i-ograniczenia)
+  - [CI i kontrola jakości](#ci-i-kontrola-jakości)
+  - [Prywatność i bezpieczeństwo](#prywatność-i-bezpieczeństwo)
+    - [Ochrona formularza kontaktowego](#ochrona-formularza-kontaktowego)
+  - [Diagnostyka i zadania cykliczne](#diagnostyka-i-zadania-cykliczne)
+    - [Endpoint diagnostyczny](#endpoint-diagnostyczny)
+    - [Zadanie retencji](#zadanie-retencji)
+  - [Wdrożenie](#wdrożenie)
+  - [Backup bazy danych](#backup-bazy-danych)
+    - [Konfiguracja](#konfiguracja)
+    - [Klucze szyfrujące](#klucze-szyfrujące)
+    - [Przebieg i retencja kopii](#przebieg-i-retencja-kopii)
+    - [Odtwarzanie](#odtwarzanie)
+  - [Rozwój i wkład](#rozwój-i-wkład)
+  - [Licencja](#licencja)
 
 ## Funkcje
 
@@ -211,7 +230,8 @@ npm run test:coverage -- tests/components --coverage.include="components/**/*.ts
 
 | Mechanizm                                                             | Zakres                                                                                           |
 | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| [`Code quality`](./.github/workflows/code-quality.yml)                | ESLint i Prettier dla pull requestów oraz zmian w `main` i `develop`; bez uruchamiania testów    |
+| [`Code quality`](./.github/workflows/code-quality.yml)                | ESLint i Prettier dla pull requestów oraz zmian w `main` i `develop`                             |
+| [`Tests and coverage`](./.github/workflows/tests.yml)                 | Pełny zestaw testów; wysyła raport LCOV do Codecov i Codacy, jeśli skonfigurowano sekrety        |
 | Vercel                                                                | Build przy każdym wdrożeniu, także Preview                                                       |
 | [`CodeQL`](./.github/workflows/codeql.yml)                            | Analiza kodu                                                                                     |
 | [Gałąź Neon dla pull requestu](./.github/workflows/neon-workflow.yml) | Baza wygasająca po 14 dniach; wymaga sekretu `NEON_API_KEY` i zmiennej `NEON_PROJECT_ID`         |
@@ -221,8 +241,11 @@ npm run test:coverage -- tests/components --coverage.include="components/**/*.ts
 
 Aby błędy lintowania lub formatowania blokowały scalanie, dodaj kontrolę
 `Lint and formatting` do wymaganych kontroli w regułach ochrony gałęzi GitHub.
-Instalacja na Vercelu i w workflow `Code quality` korzysta z `npm ci`,
-bez aktualizowania lockfile.
+Testy wymagają kontroli `Tests and coverage`. W ustawieniach repozytorium GitHub
+dodaj sekrety `CODECOV_TOKEN` i `CODACY_PROJECT_TOKEN`; workflow pomija wysyłkę,
+jeśli sekretu brakuje, i zgłasza ostrzeżenie. Upload jest pomijany w pull
+requestach z forków, ponieważ GitHub nie udostępnia im sekretów repozytorium.
+Instalacja na Vercelu i w workflow korzysta z `npm ci`, bez aktualizowania lockfile.
 
 ## Prywatność i bezpieczeństwo
 

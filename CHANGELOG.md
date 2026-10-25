@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.0](https://github.com-reisene/reisene/invoice-creator/compare/0.2.0...0.3.0) (2026-10-25)
+
+### Features
+
+- add new skills for next-intl language addition and security review ([9b26fc8](https://github.com-reisene/reisene/invoice-creator/commit/9b26fc80f177596878ac763f9895e6bb401cb044))
+- **contact:** implement form reset functionality to allow multiple submissions ([1803034](https://github.com-reisene/reisene/invoice-creator/commit/180303404f677cc8131109636c5d723790af613a))
+- **tests:** add GitHub Actions workflow for tests and coverage reporting ([984fa02](https://github.com-reisene/reisene/invoice-creator/commit/984fa020b08227087fdba8b3c6fd31c02ee685fa))
+- update Codacy configuration files with new timestamps and expanded exclude patterns ([cbe0e69](https://github.com-reisene/reisene/invoice-creator/commit/cbe0e6995271e697a3406a7df409deaff1244bcf))
+
+### Bug Fixes
+
+- **codacy:** update createdAt and updatedAt timestamps in configuration files ([9a641fd](https://github.com-reisene/reisene/invoice-creator/commit/9a641fdf137f7cf961621be7a639d20322f66aa5))
+- update branch-names action to version 9 in neon workflow ([01de6f0](https://github.com-reisene/reisene/invoice-creator/commit/01de6f0e55f6f07d568c561061dbfdeb72cb58a2))
+
 ## 0.2.0 (2026-10-21)
 
 ### Features

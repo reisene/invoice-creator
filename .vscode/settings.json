@@ -1,3 +1,14 @@
 {
-  "commitlint.config.file": "commitlint.config.mjs"
+  "commitlint.config.file": "commitlint.config.mjs",
+  "simpleCodingInsights.inactivityTimeout": 2.5,
+  "simpleCodingInsights.focusTimeout": 3,
+  "simpleCodingInsights.statusBar.showSeconds": true,
+  "simpleCodingInsights.statusBar.icon": "$(code)",
+  "simpleCodingInsights.statusBar.backgroundStyle": "default",
+  "simpleCodingInsights.statusBar.color": "",
+  "simpleCodingInsights.health.enableNotifications": true,
+  "simpleCodingInsights.health.modalNotifications": true,
+  "simpleCodingInsights.health.eyeRestInterval": 20,
+  "simpleCodingInsights.health.stretchInterval": 30,
+  "simpleCodingInsights.health.breakThreshold": 90
 }

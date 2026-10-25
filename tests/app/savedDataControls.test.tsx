@@ -346,6 +346,16 @@ describe('party editor', () => {
 });
 
 describe('import preview and confirmation', () => {
+  async function confirmImport() {
+    await waitFor(() =>
+      expect(
+        screen.getByRole<HTMLButtonElement>('button', { name: 'Zaimportuj' })
+          .disabled,
+      ).toBe(false),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Zaimportuj' }));
+  }
+
   function chooseFile(text = '{"version":1}') {
     const file = new File([text], 'export.json', { type: 'application/json' });
     Object.defineProperty(file, 'text', { value: async () => text });
@@ -374,7 +384,7 @@ describe('import preview and confirmation', () => {
     expect(await screen.findByText('Podgląd importu')).toBeDefined();
     expect(screen.getByText('Invalid record')).toBeDefined();
     expect(mocks.import).toHaveBeenCalledWith('{"version":1}', false);
-    fireEvent.click(screen.getByRole('button', { name: 'Zaimportuj' }));
+    await confirmImport();
     expect((await screen.findByRole('status')).textContent).toContain(
       'rachunek bankowy',
     );
@@ -398,6 +408,12 @@ describe('import preview and confirmation', () => {
       render(<ImportDataCard />);
       chooseFile();
       expect(await screen.findByText('Podgląd importu')).toBeDefined();
+      await waitFor(() =>
+        expect(
+          screen.getByRole<HTMLButtonElement>('button', { name: 'Anuluj' })
+            .disabled,
+        ).toBe(false),
+      );
       expect(
         screen.getByRole<HTMLButtonElement>('button', { name: 'Zaimportuj' })
           .disabled,
@@ -425,10 +441,7 @@ describe('import preview and confirmation', () => {
           .mockRejectedValueOnce(error);
       render(<ImportDataCard />);
       chooseFile();
-      if (stage === 'commit')
-        fireEvent.click(
-          await screen.findByRole('button', { name: 'Zaimportuj' }),
-        );
+      if (stage === 'commit') await confirmImport();
       await waitFor(() => expect(mocks.capture).toHaveBeenCalledWith(error));
       expect(mocks.tag).toHaveBeenCalledWith(
         'error.area',
@@ -446,7 +459,7 @@ describe('import preview and confirmation', () => {
       .mockResolvedValueOnce({ ok: false, error: 'Conflict' });
     render(<ImportDataCard />);
     chooseFile();
-    fireEvent.click(await screen.findByRole('button', { name: 'Zaimportuj' }));
+    await confirmImport();
     expect(await screen.findByText('Conflict')).toBeDefined();
     expect(screen.getByText('Podgląd importu')).toBeDefined();
     expect(mocks.refresh).not.toHaveBeenCalled();

@@ -8,6 +8,22 @@
 
 Polskojęzyczny generator rachunków do umowy zlecenia. Oblicza składki i zaliczkę na podatek na podstawie danych formularza, pokazuje podgląd dokumentu i pozwala pobrać rachunek jako PDF. Konto jest opcjonalne do przygotowania rachunku; po zalogowaniu można zapisywać i ponownie otwierać dane.
 
+## Spis treści
+
+- [Funkcje](#funkcje)
+- [Technologie](#technologie)
+- [Uruchomienie lokalne](#uruchomienie-lokalne)
+- [Zmienne środowiskowe](#zmienne-środowiskowe)
+- [Przydatne polecenia](#przydatne-polecenia)
+- [Testy i pokrycie](#testy-i-pokrycie)
+- [CI i kontrola jakości](#ci-i-kontrola-jakości)
+- [Prywatność i bezpieczeństwo](#prywatność-i-bezpieczeństwo)
+- [Diagnostyka i zadania cykliczne](#diagnostyka-i-zadania-cykliczne)
+- [Wdrożenie](#wdrożenie)
+- [Backup bazy danych](#backup-bazy-danych)
+- [Rozwój i wkład](#rozwój-i-wkład)
+- [Licencja](#licencja)
+
 ## Funkcje
 
 - Rozliczenia miesięczne i godzinowe.
@@ -28,24 +44,41 @@ Obliczenia mają charakter pomocniczy. Przed wykorzystaniem rachunku sprawdź da
 - Sentry do raportowania błędów; Session Replay jest uruchamiany dopiero po zgodzie na opcjonalne pomiary.
 - Vercel Web Analytics i Speed Insights — wyłącznie po zgodzie na opcjonalne pomiary.
 
-## Wymagania
+## Uruchomienie lokalne
+
+### Wymagania
 
 - Node.js 24.x (zgodnie z `.nvmrc` i `engines` w `package.json`). W ustawieniach projektu Vercel wybierz tę samą linię Node.js.
 - npm oraz dostęp do PostgreSQL skonfigurowanego dla aplikacji.
 - Dla zalogowanych funkcji: skonfigurowany projekt Neon Auth.
 - Doppler CLI dla zalecanego polecenia `npm run dev`.
 
-## Uruchomienie lokalne
+### Instalacja i konfiguracja
 
 1. Sklonuj repozytorium i zainstaluj zależności poleceniem `npm ci`.
 
 2. Skopiuj `.env.example` do `.env` i uzupełnij ustawienia środowiska. Nie commituj sekretów. Do działania bazy potrzebne są połączenia `DATABASE_URL` (Prisma CLI/migracje) oraz `DATABASE_URL_POOLED` (runtime aplikacji). Funkcje konta wymagają konfiguracji Neon Auth. `INVOICE_DATA_ENCRYPTION_KEY` powinien być losowym kluczem 32-bajtowym zapisanym jako 64 znaki szesnastkowe; utrata lub zmiana klucza uniemożliwi odszyfrowanie wcześniej zapisanych wartości.
 
-3. W zalecanym trybie skonfiguruj Doppler dla projektu i środowiska, a następnie uruchom serwer poleceniem `npm run dev`. Skrypt uruchamia Next.js przez `doppler run`. Jeżeli nie korzystasz z Dopplera, możesz użyć lokalnego `.env`, uruchomić `npm run predev`, a następnie `npx next dev`.
+3. Przygotuj bazę zgodnie z sekcją [Migracje i dane początkowe](#migracje-i-dane-początkowe).
 
-4. Otwórz [http://localhost:3000](http://localhost:3000).
+4. Uruchom serwer jednym z poniższych sposobów i otwórz [http://localhost:3000](http://localhost:3000).
 
-Przed włączeniem zapisu danych skonfiguruj bazę i zastosuj migracje:
+**Z Dopplerem (zalecane):** skonfiguruj projekt i środowisko `dev`, następnie:
+
+```bash
+npm run dev
+```
+
+**Bez Dopplera:** uzupełnij lokalny `.env`, następnie:
+
+```bash
+npm run predev
+npx next dev
+```
+
+### Migracje i dane początkowe
+
+Na lokalnej bazie zastosuj migracje i wczytaj parametry podatkowe:
 
 ```bash
 npx prisma migrate dev
@@ -56,7 +89,17 @@ Seed wstawia przykładowe parametry podatkowe. Nie uruchamiaj go na produkcyjnej
 
 ## Zmienne środowiskowe
 
-`.env.example` zawiera szablon nazw i formatów. Źródłem sekretów jest Doppler: konfiguracja `dev` służy do lokalnego `npm run dev` i jest synchronizowana do sekretów GitHub Actions, a konfiguracje `stg` i `prd` są synchronizowane ze środowiskami Vercel (odpowiednio Preview i Production). Zmiany zmiennych wprowadzaj w Dopplerze, nie bezpośrednio w panelu Vercel ani GitHub, bo synchronizacja je nadpisze. Lokalny plik `.env.dev` odzwierciedla wartości używane przez GitHub Actions. Żadnego pliku `.env*` poza `.env.example` nie commituj.
+[`.env.example`](./.env.example) zawiera szablon nazw i formatów. Źródłem sekretów jest Doppler:
+
+| Konfiguracja | Zastosowanie i synchronizacja                  |
+| ------------ | ---------------------------------------------- |
+| `dev`        | Lokalne `npm run dev` i sekrety GitHub Actions |
+| `stg`        | Vercel Preview                                 |
+| `prd`        | Vercel Production                              |
+
+Zmiany wprowadzaj w Dopplerze, nie bezpośrednio w panelu Vercel ani GitHub,
+bo synchronizacja je nadpisze. Lokalny plik `.env.dev` odzwierciedla wartości
+używane przez GitHub Actions. Żadnego pliku `.env*` poza `.env.example` nie commituj.
 
 ### Wymagane w runtime
 
@@ -99,55 +142,87 @@ Zmienne GitHub Actions dla backupu opisuje sekcja [Backup bazy danych](#backup-b
 - `npm start` — uruchamia zbudowaną aplikację.
 - `npm run lint` — uruchamia ESLint.
 - `npm run typecheck` — generuje rejestr dokumentów, klienta Prisma i typy tras Next.js, a następnie sprawdza typy TypeScript. Wymaga ustawionej zmiennej `DATABASE_URL` do wczytania konfiguracji Prisma; nie wykonuje migracji ani zapytań do bazy.
-- `npm test` — jednokrotnie uruchamia testy jednostkowe przez Vitest w środowisku jsdom.
+- `npm test` — jednokrotnie uruchamia testy Vitest w środowisku jsdom lub Node.js, zgodnie z ustawieniami plików testowych.
 - `npm run test:watch` — uruchamia Vitest w trybie obserwowania zmian.
 - `npm run test:coverage` — uruchamia testy i generuje raporty pokrycia w katalogu `coverage/`.
 - `npm run db:seed` — wypełnia bazę przykładowymi parametrami podatkowymi.
 - `npm run format:check` — sprawdza formatowanie Prettierem.
 
-### Testy katalogu `app/`
+## Testy i pokrycie
 
-Testy w `tests/app/` korzystają z istniejącego `vitest.config.mts`.
-Obejmują akcje serwerowe, endpointy API, metadane, strony i interakcje
-formularzy. Usługi zewnętrzne, uwierzytelnianie i baza są mockowane; testy
-nie wymagają połączenia z produkcyjnymi usługami.
+Wszystkie testy korzystają z jednej konfiguracji — [`vitest.config.mts`](./vitest.config.mts).
+Baza, uwierzytelnianie i usługi zewnętrzne są mockowane; testy nie wymagają
+połączenia z produkcyjnymi usługami.
+
+### Zakres testów
+
+| Katalog                                    | Sprawdzane zachowania                                                                                                                          |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`tests/app/`](./tests/app/)               | Akcje serwerowe, endpointy API, metadane, strony, przekierowania i interakcje formularzy                                                       |
+| [`tests/lib/`](./tests/lib/)               | Walidacja, wyliczenia i limity podatkowe, szyfrowanie, migracja danych, numeracja rachunków, zgody, retencja, limity żądań i treści pomocy     |
+| [`tests/components/`](./tests/components/) | Formularz i stan generatora, zapis stron i rachunku bankowego, podgląd i pobieranie PDF, symulator, nawigacja, logowanie, cookies i telemetria |
+
+Testy sprawdzają również stany oczekiwania, błędy, ponowienia i blokowanie
+operacji przy nieprawidłowych danych. Testy formularza wykonują rzeczywiste
+aktualizacje stanu React, wyliczenia korzystają z właściwego kalkulatora,
+a testy szyfrowania — z prawdziwego AES-GCM i HMAC na kluczu testowym.
+
+### Uruchamianie
+
+Cały zestaw:
+
+```bash
+npm test
+npm run test:coverage
+```
+
+Wybrany katalog:
 
 ```bash
 npm test -- tests/app
-npm run test:coverage -- tests/app --coverage.include="app/**/*.ts" --coverage.include="app/**/*.tsx"
+npm test -- tests/lib
+npm test -- tests/components
 ```
 
-Progi wynoszą 95% instrukcji, linii i funkcji oraz 90% gałęzi.
-Pomiar uwzględnia również niewczytane pliki wybranego katalogu. Standardowe
-`npm run test:coverage` raportuje i egzekwuje progi dla wszystkich katalogów
-źródłowych wskazanych w konfiguracji, także tych jeszcze nieobjętych etapem testów.
-
-Testy komponentów klienckich korzystają z jsdom inicjalizowanego przez
-`tests/app/dom.ts` po uruchomieniu workera, aby uniknąć limitu czasu jego
-startu. Testy stron asynchronicznych sprawdzają funkcje stron, przekierowania
-i zwracane elementy; nie zastępują testów E2E renderowania React Server
-Components w działającym Next.js.
-
-### Testy katalogu `lib/`
-
-Testy w `tests/lib/` obejmują cały `lib/`, w tym podkatalogi `auth/`,
-`invoice/` i `legal/`. Korzystają z tej samej konfiguracji Vitest oraz
-środowiska Node.js. Sprawdzają walidację, wyliczenia i limity podatkowe,
-szyfrowanie, migrację danych, numerację rachunków, zgody, retencję,
-limity żądań, treści pomocy i obsługę błędów usług zewnętrznych.
-Połączenia z bazą, Neon Auth, Upstash i Resend są mockowane.
-Testy szyfrowania korzystają z prawdziwego AES-GCM i HMAC na kluczu testowym.
+Pokrycie ograniczone do całego wybranego katalogu źródłowego:
 
 ```bash
-npm test -- tests/lib
+npm run test:coverage -- tests/app --coverage.include="app/**/*.ts" --coverage.include="app/**/*.tsx"
 npm run test:coverage -- tests/lib --coverage.include="lib/**/*.ts" --coverage.include="lib/**/*.tsx"
+npm run test:coverage -- tests/components --coverage.include="components/**/*.ts" --coverage.include="components/**/*.tsx"
 ```
 
-Pomiar tylko `lib/` sprawdza te same progi 95%/95%/95%/90% dla całego tego
-katalogu, również plików niewczytanych przez testy. Pełny raport może nie
-spełniać progów, dopóki testami nie zostaną objęte pozostałe katalogi.
+### Progi i ograniczenia
 
-Workflow `Code quality` sprawdza lintowanie i formatowanie dla pull requestów oraz zmian w `main` i `develop`. Nie uruchamia testów. Build sprawdza Vercel przy każdym wdrożeniu (także preview). Pozostałe workflow: CodeQL, gałąź Neon dla pull requestów (wygasa po 14 dniach; wymaga sekretu `NEON_API_KEY` i zmiennej `NEON_PROJECT_ID`), labeler oraz codzienny backup bazy. Zależności aktualizuje cotygodniowo Dependabot. Aby blokował scalanie przy błędach, dodaj kontrolę `Lint and formatting` do wymaganych kontroli w regułach ochrony gałęzi GitHub. Instalacja na Vercelu i w tym workflow korzysta z `npm ci`, bez aktualizowania lockfile.
+- **95%** instrukcji, linii i funkcji oraz **90%** gałęzi.
+- Pomiar obejmuje również niewczytane pliki wybranego zakresu.
+- Standardowe `npm run test:coverage` egzekwuje progi dla całego zakresu
+  źródeł wskazanego w konfiguracji: `app/`, `components/`, `lib/`, `utils/` i `types/`.
+- Testy DOM korzystają ze wspólnego [`tests/app/dom.ts`](./tests/app/dom.ts),
+  który inicjalizuje jsdom po uruchomieniu workera, aby uniknąć limitu czasu jego startu.
+  Testy biblioteczne działają w środowisku Node.js.
+- Asynchroniczne komponenty serwerowe są sprawdzane jako funkcje zwracające
+  elementy; nie zastępuje to testów E2E React Server Components w działającym Next.js.
+- Testy PDF sprawdzają treść i strukturę dokumentu, fonty, rezerwację numeru
+  oraz pobieranie. Renderer jest mockowany — układ binarnego pliku i wygląd
+  wydruku nie są weryfikowane.
+
+## CI i kontrola jakości
+
+| Mechanizm                                                             | Zakres                                                                                           |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| [`Code quality`](./.github/workflows/code-quality.yml)                | ESLint i Prettier dla pull requestów oraz zmian w `main` i `develop`; bez uruchamiania testów    |
+| Vercel                                                                | Build przy każdym wdrożeniu, także Preview                                                       |
+| [`CodeQL`](./.github/workflows/codeql.yml)                            | Analiza kodu                                                                                     |
+| [Gałąź Neon dla pull requestu](./.github/workflows/neon-workflow.yml) | Baza wygasająca po 14 dniach; wymaga sekretu `NEON_API_KEY` i zmiennej `NEON_PROJECT_ID`         |
+| [`Labeler`](./.github/workflows/labeler.yml)                          | Automatyczne etykiety pull requestów                                                             |
+| [Backup bazy](./.github/workflows/database-backup.yml)                | Codzienna zaszyfrowana kopia do R2; szczegóły w sekcji [Backup bazy danych](#backup-bazy-danych) |
+| Dependabot                                                            | Cotygodniowe aktualizacje zależności                                                             |
+
+Aby błędy lintowania lub formatowania blokowały scalanie, dodaj kontrolę
+`Lint and formatting` do wymaganych kontroli w regułach ochrony gałęzi GitHub.
+Instalacja na Vercelu i w workflow `Code quality` korzysta z `npm ci`,
+bez aktualizowania lockfile.
 
 ## Prywatność i bezpieczeństwo
 
@@ -155,7 +230,13 @@ Workflow `Code quality` sprawdza lintowanie i formatowanie dla pull requestów o
 - Identyfikatory używane przez Upstash do limitowania są pseudonimizowane przez HMAC-SHA-256; surowy identyfikator nie jest używany jako klucz limitu.
 - Vercel Web Analytics i Speed Insights oraz Sentry Session Replay są uruchamiane po akceptacji opcjonalnych pomiarów. Session Replay ma domyślne maskowanie tekstu i wartości pól oraz blokowanie mediów. Zgłoszenia błędów Sentry są odrębnym mechanizmem diagnostycznym.
 - Wydruk rachunku i jego obliczenia wykonywane są w przeglądarce; zapis na koncie i usługi serwerowe wymagają przesłania danych do aplikacji.
-- Więcej informacji o danych, retencji i prawach użytkownika znajduje się w [Polityce prywatności](/privacy). Zasady korzystania z usługi określa [Regulamin](/terms).
+- Więcej informacji o danych, retencji i prawach użytkownika znajduje się w [Polityce prywatności](https://invoice-creator.draugskoll.dev/privacy). Zasady korzystania z usługi określa [Regulamin](https://invoice-creator.draugskoll.dev/terms).
+
+### Ochrona formularza kontaktowego
+
+Formularz kontaktowy korzysta z Vercel BotID Basic, honeypota i opcjonalnego limitu Upstash. Weryfikacja BotID poprzedza zapis zgłoszenia i wysyłkę wiadomości. BotID nie chroni endpointu health check ani zadania cron. Lokalna klasyfikacja BotID może różnić się od działania w środowisku Vercel.
+
+## Diagnostyka i zadania cykliczne
 
 ### Endpoint diagnostyczny
 
@@ -164,10 +245,6 @@ Workflow `Code quality` sprawdza lintowanie i formatowanie dla pull requestów o
 ### Zadanie retencji
 
 Vercel Cron uruchamia `GET /api/cron/contact-retention` codziennie o 03:00 UTC (`0 3 * * *`). Endpoint wymaga `Authorization: Bearer <CRON_SECRET>`. Po zakończeniu wszystkich operacji retencji może wysłać heartbeat do `RETENTION_HEARTBEAT_URL`; heartbeat nie zastępuje health checka. Nie umieszczaj jego prywatnego URL w kodzie ani publicznym logu.
-
-### Ochrona formularza kontaktowego
-
-Formularz kontaktowy korzysta z Vercel BotID Basic, honeypota i opcjonalnego limitu Upstash. Weryfikacja BotID poprzedza zapis zgłoszenia i wysyłkę wiadomości. BotID nie chroni endpointu health check ani zadania cron. Lokalna klasyfikacja BotID może różnić się od działania w środowisku Vercel.
 
 ## Wdrożenie
 
@@ -188,6 +265,8 @@ Workflow `.github/workflows/database-backup.yml` wykonuje codzienny backup o **0
 **Actions → Daily database backup → Run workflow**. Harmonogram działa po umieszczeniu
 workflow na domyślnej gałęzi repozytorium; GitHub może opóźnić wykonanie.
 
+### Konfiguracja
+
 Wymagane sekrety GitHub Actions, również synchronizowane z Dopplera:
 
 | Sekret                 | Zawartość                                                                |
@@ -203,6 +282,8 @@ Konfiguracja Dopplera musi wskazywać właściwą bazę: nazwa konfiguracji `dev
 gwarantuje, że `DATABASE_URL` dotyczy produkcji. Workflow nie potrzebuje tokena
 Cloudflare REST API, tokena Dopplera ani `DATABASE_URL_POOLED`.
 
+### Klucze szyfrujące
+
 Przed pierwszym uruchomieniem zainstaluj lokalnie [age](https://github.com/FiloSottile/age)
 i wygeneruj klucz **poza repozytorium**:
 
@@ -216,6 +297,8 @@ Wynik drugiego polecenia to publiczny klucz do `BACKUP_AGE_RECIPIENT`. Prywatny 
 Bez niego nie odszyfrujesz backupów. Zachowaj też niezależnie
 `INVOICE_DATA_ENCRYPTION_KEY`, w tym poprzednie wersje klucza odpowiadające kopiom:
 sam dump nie zawiera klucza szyfrującego dane aplikacji.
+
+### Przebieg i retencja kopii
 
 Workflow dobiera wersję `pg_dump` do głównej wersji serwera, tworzy archiwum custom,
 sprawdza jego spis zawartości, szyfruje przez age i wysyła wyłącznie zaszyfrowany plik
@@ -263,9 +346,11 @@ Przed zgłoszeniem zmian uruchom odpowiednie kontrole, na przykład:
 npm run lint
 npm run typecheck
 npm test
+npm run test:coverage
+npm run format:check
 ```
 
-Aktualny zestaw testów zawiera testy jednostkowe kalkulacji rachunku i walidacji zmiennych środowiskowych; projekt nie deklaruje w tym README pokrycia testami E2E ani integracyjnymi.
+Zakres i ograniczenia testów opisuje sekcja [Testy i pokrycie](#testy-i-pokrycie).
 
 ## Licencja
 

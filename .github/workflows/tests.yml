@@ -32,9 +32,11 @@ jobs:
         run: npm ci
 
       - name: Generate test artifacts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           npm run prebuild
-          DATABASE_URL='postgresql://127.0.0.1:5432/invoice_creator_test?schema=public' npx prisma generate
+          npx prisma generate
 
       - name: Run tests and generate coverage
         run: npm run test:coverage

@@ -67,7 +67,7 @@ export function birthDateFromPesel(value: string): string | null {
   const centuryOffset = Math.floor(mmRaw / 20);
   let century: number;
   switch (centuryOffset) {
-    case 8:
+    case 4:
       century = 1800;
       break;
     case 0:

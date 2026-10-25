@@ -263,6 +263,16 @@ describe('account export', () => {
         consentVersion: '3',
         createdAt: '2026-10-01',
       },
+      ...[
+        'ACCEPT_OPTIONAL',
+        'REJECT_OPTIONAL',
+        'ACCEPT_ANALYTICS',
+        'ACCEPT_REPLAY',
+      ].map((choice) => ({
+        choice,
+        consentVersion: '4',
+        createdAt: '2026-10-25',
+      })),
     ];
     mocks.parties.mockResolvedValue([party]);
     mocks.bank.mockResolvedValue(bank);

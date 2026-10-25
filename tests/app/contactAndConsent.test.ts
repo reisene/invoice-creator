@@ -236,35 +236,37 @@ describe('cookie preferences', () => {
     },
   );
 
-  it.each(['ACCEPT_OPTIONAL', 'REJECT_OPTIONAL'])(
-    'persists %s with version and secure cookie flags',
-    async (choice) => {
-      vi.stubEnv('NODE_ENV', 'production');
-      expect(await saveCookieConsent(choice)).toEqual({ ok: true });
-      expect(mocks.rateLimit).toHaveBeenCalledWith('cookieConsent', 'user-1');
-      expect(mocks.consentCreate).toHaveBeenCalledWith({
-        data: {
-          userId: 'user-1',
-          consentVersion: COOKIE_CONSENT_VERSION,
-          choice,
-        },
-      });
-      expect(mocks.set).toHaveBeenCalledWith(
-        COOKIE_CONSENT_COOKIE,
-        `${COOKIE_CONSENT_VERSION}:${choice}`,
-        {
-          httpOnly: true,
-          secure: true,
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 31536000,
-        },
-      );
-      expect(mocks.consentCreate.mock.invocationCallOrder[0]).toBeLessThan(
-        mocks.set.mock.invocationCallOrder[0],
-      );
-    },
-  );
+  it.each([
+    'ACCEPT_OPTIONAL',
+    'REJECT_OPTIONAL',
+    'ACCEPT_ANALYTICS',
+    'ACCEPT_REPLAY',
+  ])('persists %s with version and secure cookie flags', async (choice) => {
+    vi.stubEnv('NODE_ENV', 'production');
+    expect(await saveCookieConsent(choice)).toEqual({ ok: true });
+    expect(mocks.rateLimit).toHaveBeenCalledWith('cookieConsent', 'user-1');
+    expect(mocks.consentCreate).toHaveBeenCalledWith({
+      data: {
+        userId: 'user-1',
+        consentVersion: COOKIE_CONSENT_VERSION,
+        choice,
+      },
+    });
+    expect(mocks.set).toHaveBeenCalledWith(
+      COOKIE_CONSENT_COOKIE,
+      `${COOKIE_CONSENT_VERSION}:${choice}`,
+      {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 31536000,
+      },
+    );
+    expect(mocks.consentCreate.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.set.mock.invocationCallOrder[0],
+    );
+  });
 
   it('supports anonymous local preferences without a secure-only cookie', async () => {
     vi.stubEnv('NODE_ENV', 'development');

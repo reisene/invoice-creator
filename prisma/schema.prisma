@@ -44,6 +44,8 @@ enum TermsAcceptanceMethod {
 enum CookieConsentChoice {
   ACCEPT_OPTIONAL
   REJECT_OPTIONAL
+  ACCEPT_ANALYTICS
+  ACCEPT_REPLAY
 }
 
 model Invoice {

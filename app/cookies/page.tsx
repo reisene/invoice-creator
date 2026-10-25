@@ -2,7 +2,9 @@ import ClearCookieConsentButton from '@/components/consent/ClearCookieConsentBut
 import { auth } from '@/lib/auth/server';
 import {
   COOKIE_CONSENT_COOKIE,
-  type CookieConsentChoice,
+  allowsAnalytics,
+  allowsReplay,
+  getCookieConsentLabel,
   getCookieConsentLogCutoff,
   parseCookieConsentCookie,
 } from '@/lib/cookieConsent';
@@ -14,12 +16,6 @@ import { Badge, Card, CardBody, Container, Table } from 'react-bootstrap';
 
 export const metadata: Metadata = { title: 'Ustawienia cookies' };
 export const dynamic = 'force-dynamic';
-
-function getChoiceLabel(choice: CookieConsentChoice): string {
-  return choice === 'ACCEPT_OPTIONAL'
-    ? 'Akceptacja cookies opcjonalnych'
-    : 'Tylko cookies niezbędne';
-}
 
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat('pl-PL', {
@@ -67,12 +63,14 @@ export default async function CookieSettingsPage() {
           <h2 className='h5'>Bieżący wybór na tym urządzeniu</h2>
           {currentChoice ? (
             <p className='mb-0'>
-              <Badge bg='secondary'>{getChoiceLabel(currentChoice)}</Badge>
+              <Badge bg='secondary'>
+                {getCookieConsentLabel(currentChoice)}
+              </Badge>
             </p>
           ) : (
             <p className='mb-0 text-body-secondary'>
-              Nie zapisano jeszcze wyboru na tym urządzeniu. Cookies opcjonalne
-              nie są uruchamiane.
+              Brak aktualnego wyboru na tym urządzeniu. Opcjonalna analityka,
+              pomiary wydajności i odtwarzanie sesji są wyłączone.
             </p>
           )}
           <ClearCookieConsentButton hasChoice={currentChoice !== null} />
@@ -115,9 +113,36 @@ export default async function CookieSettingsPage() {
                 <td>Niezbędne</td>
               </tr>
               <tr>
-                <th scope='row'>Cookies analityczne i reklamowe</th>
-                <td>Nie są obecnie używane przez Serwis.</td>
-                <td>Nieaktywne</td>
+                <th scope='row'>Vercel Web Analytics i Speed Insights</th>
+                <td>
+                  Opcjonalne statystyki odwiedzin i pomiary wydajności, bez
+                  cookies tych narzędzi. Aplikacja pomija prywatne ścieżki oraz
+                  usuwa parametry zapytania i fragmenty adresów.
+                </td>
+                <td>
+                  {allowsAnalytics(currentChoice) ? 'Włączone' : 'Wyłączone'}
+                </td>
+              </tr>
+              <tr>
+                <th scope='row'>Sentry Replay</th>
+                <td>
+                  Opcjonalne odtwarzanie interakcji z maskowaniem tekstu i pól
+                  oraz blokowaniem multimediów. Korzysta z pamięci sesyjnej
+                  przeglądarki do obsługi nagrania; wycofanie zgody zatrzymuje
+                  dalsze nagrywanie.
+                </td>
+                <td>
+                  {allowsReplay(currentChoice) ? 'Włączone' : 'Wyłączone'}
+                </td>
+              </tr>
+              <tr>
+                <th scope='row'>Diagnostyka Sentry i ochrona BotID</th>
+                <td>
+                  Raporty błędów i diagnostyka techniczna Sentry oraz
+                  weryfikacja antyspamowa formularza kontaktowego. Działają
+                  niezależnie od opcjonalnych pomiarów; nie są zgodą na Replay.
+                </td>
+                <td>Diagnostyka i bezpieczeństwo</td>
               </tr>
               <tr>
                 <th scope='row'>Pamięć sesyjna przeglądarki</th>
@@ -130,8 +155,10 @@ export default async function CookieSettingsPage() {
             </tbody>
           </Table>
           <p className='small text-body-secondary mt-3 mb-0'>
-            Zmiana ustawień nie ogranicza dostępu do Serwisu. Przyciski zgody
-            dotyczą cookies opcjonalnych, których Serwis obecnie nie używa.
+            Obie opcjonalne kategorie można włączać i wyłączać niezależnie.
+            Odmowa nie ogranicza dostępu do Serwisu. Nie używamy narzędzi
+            reklamowych. Usunięcie wyboru wyłącza opcjonalne narzędzia po
+            przeładowaniu strony, ale nie usuwa wcześniej przesłanych danych.
           </p>
         </CardBody>
       </Card>
@@ -146,8 +173,9 @@ export default async function CookieSettingsPage() {
           {!userId ? (
             <p className='mb-0'>
               Zaloguj się, aby wyświetlić decyzje zapisane dla Konta. Decyzje
-              podjęte anonimowo są przechowywane wyłącznie w cookie tej
-              przeglądarki i nie są przypisywane do konta.
+              podjęte bez logowania są zapisywane w cookie tej przeglądarki oraz
+              w rejestrze bez identyfikatora Konta. Nie są później automatycznie
+              przypisywane do Konta.
             </p>
           ) : history.length === 0 ? (
             <p className='mb-0 text-body-secondary'>
@@ -171,7 +199,7 @@ export default async function CookieSettingsPage() {
                           {formatDate(item.createdAt)}
                         </time>
                       </td>
-                      <td>{getChoiceLabel(item.choice)}</td>
+                      <td>{getCookieConsentLabel(item.choice)}</td>
                       <td>{item.consentVersion}</td>
                     </tr>
                   ))}

@@ -252,9 +252,27 @@ Instalacja na Vercelu i w workflow korzysta z `npm ci`, bez aktualizowania lockf
 
 - Zapisane dane rachunków, stron i rachunków bankowych są szyfrowane w aplikacji przy użyciu AES-256-GCM. Klucz szyfrujący nie jest przechowywany w bazie.
 - Identyfikatory używane przez Upstash do limitowania są pseudonimizowane przez HMAC-SHA-256; surowy identyfikator nie jest używany jako klucz limitu.
-- Vercel Web Analytics i Speed Insights oraz Sentry Session Replay są uruchamiane po akceptacji opcjonalnych pomiarów. Session Replay ma domyślne maskowanie tekstu i wartości pól oraz blokowanie mediów. Zgłoszenia błędów Sentry są odrębnym mechanizmem diagnostycznym.
+- Analityka i wydajność (Vercel Web Analytics i Speed Insights) oraz odtwarzanie sesji (Sentry Replay) wymagają dwóch niezależnych zgód. Domyślnie obie kategorie są wyłączone. Replay maskuje tekst i wartości pól oraz blokuje multimedia; nie jest to gwarancja anonimowości. Raporty błędów i tracing Sentry są odrębną diagnostyką, niezależną od tych zgód.
 - Wydruk rachunku i jego obliczenia wykonywane są w przeglądarce; zapis na koncie i usługi serwerowe wymagają przesłania danych do aplikacji.
 - Więcej informacji o danych, retencji i prawach użytkownika znajduje się w [Polityce prywatności](https://invoice-creator.draugskoll.dev/privacy). Zasady korzystania z usługi określa [Regulamin](https://invoice-creator.draugskoll.dev/terms).
+
+### Wdrożenie rozdzielonych zgód i dokumentów
+
+- Przed uruchomieniem kodu wykonaj migrację `20261025230000_split_cookie_consent` przez `npx prisma migrate deploy`.
+  Dodaje dwa warianty enum, nie usuwa wcześniejszych wpisów. Nie wykonuj `db push` zamiast migracji produkcyjnej.
+- Komunikat zgody ma wersję `4`. Wybory z poprzednich wersji nie włączają pomiarów; baner poprosi o nowy wybór.
+  Cookie jest ważne 365 dni, a rejestr decyzji 30 dni. Zapis bez logowania również trafia do bazy, bez identyfikatora Konta.
+- [Polityka 2-beta](./content/legal/privacy/2-beta.mdx) opisuje nowe kategorie, diagnostykę Sentry i kopie zapasowe.
+  Historyczne dokumenty `1-beta` pozostają bez zmian.
+- [Regulamin 2-beta](./content/legal/terms/2-beta.mdx) zastępuje wersję `1-beta` od 2026-11-10
+  według daty w strefie Europe/Warsaw. Przed publikacją wymaga weryfikacji prawnej i zawiadomienia Użytkowników
+  co najmniej 14 dni przed wejściem zmiany w życie. W przypadku późniejszej publikacji przesuń datę.
+  Rejestracja dokumentu nie wysyła zawiadomień; do daty wejścia w życie nadal obowiązuje `1-beta`.
+- [Projekt umowy powierzenia](./content/legal/drafts/data-processing-agreement.md) jest nieaktywny i nie stanowi zawartej DPA.
+  Wymaga uzupełnienia danych stron, terminów, środków bezpieczeństwa, listy podprocesorów i mechanizmu akceptacji.
+- Przed publikacją zweryfikuj w panelach dostawców DPA, regiony, mechanizmy transferów, retencję błędów/tracingu/Replay,
+  pomiarów Vercel i kopii R2/Neon oraz usuń rozbieżności z polityką. Kod nie ustawia tych parametrów u dostawców.
+  Retencja rejestru zgód nie jest retencją nagrań. Zmiana zgody nie usuwa wcześniej przekazanych danych.
 
 ### Ochrona formularza kontaktowego
 

@@ -2,7 +2,12 @@
 import { authErrorMessage } from '@/lib/authErrors';
 import { getContactMessageRetentionCutoff } from '@/lib/contactMessageRetention';
 import {
+  COOKIE_CONSENT_CHOICES,
+  allowsAnalytics,
+  allowsReplay,
+  getCookieConsentChoice,
   getCookieConsentCookieValue,
+  getCookieConsentLabel,
   getCookieConsentLogCutoff,
   isCookieConsentChoice,
   parseCookieConsentCookie,
@@ -25,7 +30,7 @@ afterEach(() => {
 });
 
 describe('cookies and retention', () => {
-  it.each(['ACCEPT_OPTIONAL', 'REJECT_OPTIONAL'] as const)(
+  it.each(COOKIE_CONSENT_CHOICES)(
     'round trips the current consent %s',
     (choice) => {
       expect(isCookieConsentChoice(choice)).toBe(true);
@@ -34,14 +39,44 @@ describe('cookies and retention', () => {
       ).toBe(choice);
     },
   );
-  it.each([null, undefined, 3, {}, '', '3:unknown', '2:ACCEPT_OPTIONAL'])(
-    'rejects unsupported consent %j',
-    (value) => {
-      expect(isCookieConsentChoice(value)).toBe(false);
-      if (typeof value === 'string' || value === undefined)
-        expect(parseCookieConsentCookie(value)).toBeNull();
+  it.each([
+    null,
+    undefined,
+    3,
+    {},
+    '',
+    '4:unknown',
+    '3:ACCEPT_OPTIONAL',
+    '3:REJECT_OPTIONAL',
+    '2:ACCEPT_OPTIONAL',
+  ])('rejects unsupported consent %j', (value) => {
+    expect(isCookieConsentChoice(value)).toBe(false);
+    if (typeof value === 'string' || value === undefined)
+      expect(parseCookieConsentCookie(value)).toBeNull();
+  });
+  it.each([
+    [false, false, 'REJECT_OPTIONAL', 'Tylko niezbędne'],
+    [true, false, 'ACCEPT_ANALYTICS', 'Tylko analityka i wydajność'],
+    [false, true, 'ACCEPT_REPLAY', 'Tylko odtwarzanie sesji'],
+    [
+      true,
+      true,
+      'ACCEPT_OPTIONAL',
+      'Analityka i wydajność oraz odtwarzanie sesji',
+    ],
+  ] as const)(
+    'keeps purposes independent: analytics %s, replay %s',
+    (analytics, replay, choice, label) => {
+      expect(getCookieConsentChoice(analytics, replay)).toBe(choice);
+      expect(allowsAnalytics(choice)).toBe(analytics);
+      expect(allowsReplay(choice)).toBe(replay);
+      expect(getCookieConsentLabel(choice)).toBe(label);
     },
   );
+  it('does not authorize either purpose without a current choice', () => {
+    expect(allowsAnalytics(null)).toBe(false);
+    expect(allowsReplay(null)).toBe(false);
+  });
   it('subtracts UTC days and calendar months without mutating the input', () => {
     const now = new Date('2024-02-29T12:34:56.789Z');
     expect(getContactMessageRetentionCutoff(now).toISOString()).toBe(

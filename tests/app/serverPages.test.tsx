@@ -572,19 +572,21 @@ describe('session and cookie history', () => {
     expect(html).toContain('127.0.0.1');
     expect(html).toContain('Wyloguj z pozostałych urządzeń');
   });
-  it.each([undefined, '3:ACCEPT_OPTIONAL', '3:REJECT_OPTIONAL'])(
+  it.each([
+    [undefined, 'Brak aktualnego wyboru'],
+    ['3:ACCEPT_OPTIONAL', 'Brak aktualnego wyboru'],
+    ['4:ACCEPT_OPTIONAL', 'Analityka i wydajność oraz odtwarzanie sesji'],
+    ['4:REJECT_OPTIONAL', 'Tylko niezbędne'],
+    ['4:ACCEPT_ANALYTICS', 'Tylko analityka i wydajność'],
+    ['4:ACCEPT_REPLAY', 'Tylko odtwarzanie sesji'],
+  ])(
     'renders current cookie choice %s for anonymous users',
-    async (value) => {
+    async (value, label) => {
       mocks.cookie.mockReturnValue(value ? { value } : undefined);
       mocks.session.mockResolvedValue({ data: null });
       const html = render(await CookiesPage());
-      expect(html).toContain(
-        value === undefined
-          ? 'Nie zapisano jeszcze wyboru'
-          : value.includes('ACCEPT')
-            ? 'Akceptacja cookies opcjonalnych'
-            : 'Tylko cookies niezbędne',
-      );
+      expect(html).toContain(label);
+      expect(html).toContain('w rejestrze bez identyfikatora Konta');
       expect(mocks.history).not.toHaveBeenCalled();
     },
   );
@@ -603,11 +605,25 @@ describe('session and cookie history', () => {
         consentVersion: '3',
         createdAt: new Date('2026-10-02'),
       },
+      {
+        id: 'c3',
+        choice: 'ACCEPT_ANALYTICS',
+        consentVersion: '4',
+        createdAt: new Date('2026-10-25'),
+      },
+      {
+        id: 'c4',
+        choice: 'ACCEPT_REPLAY',
+        consentVersion: '4',
+        createdAt: new Date('2026-10-25'),
+      },
     ]);
     const html = render(await CookiesPage());
     expect(html).toContain('2026-10-01T00:00:00.000Z');
-    expect(html).toContain('Akceptacja cookies opcjonalnych');
-    expect(html).toContain('Tylko cookies niezbędne');
+    expect(html).toContain('Analityka i wydajność oraz odtwarzanie sesji');
+    expect(html).toContain('Tylko niezbędne');
+    expect(html).toContain('Tylko analityka i wydajność');
+    expect(html).toContain('Tylko odtwarzanie sesji');
     expect(mocks.history).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { userId: user.id, createdAt: { gte: expect.any(Date) } },

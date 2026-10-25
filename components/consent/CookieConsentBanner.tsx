@@ -4,11 +4,14 @@ import { saveCookieConsent } from '@/app/cookie-consent/actions';
 import {
   COOKIE_CONSENT_CHANGED_EVENT,
   COOKIE_SETTINGS_EVENT,
+  allowsAnalytics,
+  allowsReplay,
+  getCookieConsentChoice,
   type CookieConsentChoice,
 } from '@/lib/cookieConsent';
 import Link from 'next/link';
 import { useEffect, useState, useTransition } from 'react';
-import { Alert, Button, Card, CardBody, Collapse } from 'react-bootstrap';
+import { Alert, Button, Card, CardBody, Collapse, Form } from 'react-bootstrap';
 import { BsCookie } from 'react-icons/bs';
 
 export default function CookieConsentBanner({
@@ -19,6 +22,8 @@ export default function CookieConsentBanner({
   const [isOpen, setIsOpen] = useState(initialChoice === null);
   const [showDetails, setShowDetails] = useState(false);
   const [error, setError] = useState('');
+  const [analytics, setAnalytics] = useState(allowsAnalytics(initialChoice));
+  const [replay, setReplay] = useState(allowsReplay(initialChoice));
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -89,13 +94,11 @@ export default function CookieConsentBanner({
           </div>
 
           <p className='text-body-secondary mb-3'>
-            Używamy cookies niezbędnych do logowania i działania Serwisu. Za
-            Raporty błędów Sentry pomagają nam wykrywać awarie. Za Twoją zgodą
-            uruchomimy dodatkowo Sentry Session Replay do odtwarzania
-            zanonimizowanego przebiegu sesji, Vercel Web Analytics do statystyk
-            odwiedzin oraz Speed Insights do pomiaru wydajności. Możesz
-            zaakceptować opcjonalne pomiary albo pozostać przy niezbędnych —
-            wybór nie ogranicza dostępu do Serwisu.
+            Używamy cookies niezbędnych do logowania i działania Serwisu.
+            Raporty błędów Sentry pomagają nam wykrywać awarie. Opcjonalnie
+            możesz osobno włączyć statystyki odwiedzin i pomiary wydajności
+            Vercel albo odtwarzanie sesji Sentry Replay z maskowaniem treści.
+            Odmowa nie ogranicza dostępu do Serwisu.
           </p>
 
           <Collapse in={showDetails}>
@@ -118,24 +121,65 @@ export default function CookieConsentBanner({
                   </div>
                   <hr className='my-0' />
                   <div>
-                    <p className='fw-semibold mb-1'>Opcjonalne</p>
-                    <p className='small text-body-secondary mb-0'>
-                      Sentry Session Replay, Vercel Web Analytics i Speed
-                      Insights uruchamiamy wyłącznie po akceptacji. Replay
-                      rejestruje zmiany interfejsu i interakcje z przeglądarką;
-                      domyślnie maskuje tekst i wartości pól formularzy oraz
-                      blokuje multimedia. Zmiana lub wycofanie zgody zatrzymuje
-                      dalsze nagrywanie. Nie używamy narzędzi reklamowych.
-                      Zmiana wyboru przeładuje stronę.
+                    <Form.Check
+                      id='consent-analytics'
+                      type='switch'
+                      role='switch'
+                      label='Analityka i wydajność'
+                      checked={analytics}
+                      disabled={isPending}
+                      onChange={(event) => setAnalytics(event.target.checked)}
+                      aria-describedby='consent-analytics-description'
+                    />
+                    <p
+                      id='consent-analytics-description'
+                      className='small text-body-secondary mb-0'
+                    >
+                      Vercel Web Analytics i Speed Insights: statystyki
+                      odwiedzin, czasu ładowania i responsywności strony.
+                      Uruchamiane tylko po zgodzie na tę kategorię.
                     </p>
                   </div>
+                  <div>
+                    <Form.Check
+                      id='consent-replay'
+                      type='switch'
+                      role='switch'
+                      label='Odtwarzanie sesji'
+                      checked={replay}
+                      disabled={isPending}
+                      onChange={(event) => setReplay(event.target.checked)}
+                      aria-describedby='consent-replay-description'
+                    />
+                    <p
+                      id='consent-replay-description'
+                      className='small text-body-secondary mb-0'
+                    >
+                      Sentry Replay rejestruje zmiany interfejsu i interakcje w
+                      celu diagnozowania problemów z obsługą Serwisu. Maskuje
+                      tekst i wartości pól oraz blokuje multimedia. Maskowanie
+                      nie oznacza pełnej anonimowości nagrania. Uruchamiane
+                      tylko po zgodzie na tę kategorię.
+                    </p>
+                  </div>
+                  <Button
+                    disabled={isPending}
+                    onClick={() =>
+                      choose(getCookieConsentChoice(analytics, replay))
+                    }
+                    variant='outline-secondary'
+                  >
+                    Zapisz wybrane ustawienia
+                  </Button>
                 </div>
                 <p className='small text-body-secondary border-top pt-3 mt-3 mb-0'>
                   Wybrana opcja jest zapisywana w cookie{' '}
                   <code>cookie-consent</code> przez 12 miesięcy. Rejestr decyzji
                   przechowujemy przez 30 dni. Możesz zmienić ustawienie w
                   dowolnym momencie w stopce. Więcej informacji:{' '}
-                  <Link href='/privacy#cookies'>Polityka prywatności</Link>.
+                  <Link href='/privacy#cookies'>Polityka prywatności</Link>.{' '}
+                  Zmiana wyboru przeładuje stronę i zatrzyma wycofane pomiary.
+                  Nie usuwa automatycznie wcześniej przesłanych danych.
                 </p>
               </div>
             </div>

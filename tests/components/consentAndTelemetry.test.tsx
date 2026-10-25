@@ -2,6 +2,7 @@
 import {
   COOKIE_CONSENT_CHANGED_EVENT,
   COOKIE_SETTINGS_EVENT,
+  type CookieConsentChoice,
 } from '@/lib/cookieConsent';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { testing } from '../app/dom';
@@ -52,6 +53,109 @@ afterEach(() => {
 });
 
 describe('cookie consent', () => {
+  it.each([
+    [null, false, false],
+    ['REJECT_OPTIONAL', false, false],
+    ['ACCEPT_ANALYTICS', true, false],
+    ['ACCEPT_REPLAY', false, true],
+    ['ACCEPT_OPTIONAL', true, true],
+  ] satisfies [CookieConsentChoice | null, boolean, boolean][])(
+    'prefills independent purposes for %s without collecting consent automatically',
+    (choice, analytics, replay) => {
+      render(<CookieConsentBanner initialChoice={choice} />);
+      act(() => window.dispatchEvent(new Event(COOKIE_SETTINGS_EVENT)));
+      expect(
+        screen.getByRole<HTMLInputElement>('switch', {
+          name: 'Analityka i wydajność',
+        }).checked,
+      ).toBe(analytics);
+      expect(
+        screen.getByRole<HTMLInputElement>('switch', {
+          name: 'Odtwarzanie sesji',
+        }).checked,
+      ).toBe(replay);
+      expect(mocks.save).not.toHaveBeenCalled();
+    },
+  );
+  it.each([
+    [false, false, 'REJECT_OPTIONAL'],
+    [true, false, 'ACCEPT_ANALYTICS'],
+    [false, true, 'ACCEPT_REPLAY'],
+    [true, true, 'ACCEPT_OPTIONAL'],
+  ])(
+    'saves selected analytics %s and replay %s, not merely opened settings',
+    async (analytics, replay, choice) => {
+      mocks.save.mockResolvedValue({ ok: true });
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      const changed = vi.fn();
+      window.addEventListener(COOKIE_CONSENT_CHANGED_EVENT, changed);
+      render(<CookieConsentBanner initialChoice={null} />);
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Ustawienia i szczegóły' }),
+      );
+      if (analytics)
+        fireEvent.click(
+          screen.getByRole('switch', { name: 'Analityka i wydajność' }),
+        );
+      if (replay)
+        fireEvent.click(
+          screen.getByRole('switch', { name: 'Odtwarzanie sesji' }),
+        );
+      expect(mocks.save).not.toHaveBeenCalled();
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Zapisz wybrane ustawienia' }),
+      );
+      await waitFor(() => expect(changed).toHaveBeenCalledOnce());
+      expect(mocks.save).toHaveBeenCalledWith(choice);
+      window.removeEventListener(COOKIE_CONSENT_CHANGED_EVENT, changed);
+    },
+  );
+  it('allows withdrawing one purpose while keeping the other and reports a failed save', async () => {
+    let resolve!: (result: { ok: false; message: string }) => void;
+    mocks.save.mockReturnValue(
+      new Promise((done) => {
+        resolve = done;
+      }),
+    );
+    render(<CookieConsentBanner initialChoice='ACCEPT_OPTIONAL' />);
+    act(() => window.dispatchEvent(new Event(COOKIE_SETTINGS_EVENT)));
+    fireEvent.click(screen.getByRole('switch', { name: 'Odtwarzanie sesji' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Zapisz wybrane ustawienia' }),
+    );
+    expect(mocks.save).toHaveBeenCalledWith('ACCEPT_ANALYTICS');
+    expect(
+      screen.getByRole<HTMLInputElement>('switch', {
+        name: 'Analityka i wydajność',
+      }).disabled,
+    ).toBe(true);
+    expect(
+      screen.getByRole<HTMLInputElement>('switch', {
+        name: 'Odtwarzanie sesji',
+      }).disabled,
+    ).toBe(true);
+    await act(async () =>
+      resolve({ ok: false, message: 'Błąd zapisu ustawień' }),
+    );
+    expect(screen.getByRole('alert').textContent).toBe('Błąd zapisu ustawień');
+    await waitFor(() =>
+      expect(
+        screen.getByRole<HTMLButtonElement>('button', {
+          name: 'Zapisz wybrane ustawienia',
+        }).disabled,
+      ).toBe(false),
+    );
+    expect(
+      screen.getByRole<HTMLInputElement>('switch', {
+        name: 'Analityka i wydajność',
+      }).checked,
+    ).toBe(true);
+    expect(
+      screen.getByRole<HTMLInputElement>('switch', {
+        name: 'Odtwarzanie sesji',
+      }).checked,
+    ).toBe(false);
+  });
   it('shows the initial banner, toggles details and links the policy', () => {
     render(<CookieConsentBanner initialChoice={null} />);
     expect(

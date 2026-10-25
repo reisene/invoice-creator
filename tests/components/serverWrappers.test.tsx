@@ -27,28 +27,22 @@ afterEach(() => {
 
 describe('server consent gates', () => {
   it.each([
-    undefined,
-    '2:ACCEPT_OPTIONAL',
-    '3:REJECT_OPTIONAL',
-    '3:ACCEPT_OPTIONAL',
-    '3:invalid',
+    [undefined, null, false, false],
+    ['2:ACCEPT_OPTIONAL', null, false, false],
+    ['3:ACCEPT_OPTIONAL', null, false, false],
+    ['3:REJECT_OPTIONAL', null, false, false],
+    ['4:REJECT_OPTIONAL', 'REJECT_OPTIONAL', false, false],
+    ['4:ACCEPT_OPTIONAL', 'ACCEPT_OPTIONAL', true, true],
+    ['4:ACCEPT_ANALYTICS', 'ACCEPT_ANALYTICS', true, false],
+    ['4:ACCEPT_REPLAY', 'ACCEPT_REPLAY', false, true],
+    ['4:invalid', null, false, false],
   ])(
     'loads persisted choice %j before rendering optional collection',
-    async (value) => {
+    async (value, choice, analytics, replay) => {
       cookie.mockReturnValue(value === undefined ? undefined : { value });
-      expect((await CookieConsent()).props.initialChoice).toBe(
-        value === '3:ACCEPT_OPTIONAL'
-          ? 'ACCEPT_OPTIONAL'
-          : value === '3:REJECT_OPTIONAL'
-            ? 'REJECT_OPTIONAL'
-            : null,
-      );
-      expect((await ConsentedTelemetry()) !== null).toBe(
-        value === '3:ACCEPT_OPTIONAL',
-      );
-      expect((await ConsentedSentryReplay()) !== null).toBe(
-        value === '3:ACCEPT_OPTIONAL',
-      );
+      expect((await CookieConsent()).props.initialChoice).toBe(choice);
+      expect((await ConsentedTelemetry()) !== null).toBe(analytics);
+      expect((await ConsentedSentryReplay()) !== null).toBe(replay);
       expect(cookie).toHaveBeenCalledWith('cookie-consent');
     },
   );

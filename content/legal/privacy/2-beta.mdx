@@ -1,0 +1,152 @@
+---
+version: 2-beta
+date: 2026-10-25
+---
+
+Polityka opisuje przetwarzanie danych w Serwisie Invoice Creator, dostępnym pod adresem <ServiceAddress />.
+
+## 1. Administrator i kontakt
+
+Administratorem danych jest <ServiceProviderIdentity />. Kontakt w sprawach prywatności: <ContactEmail />. Inspektor
+ochrony danych nie został wyznaczony.
+
+## 2. Zakres danych
+
+- **Konto i logowanie:** adres e-mail, imię i nazwisko, identyfikator Konta oraz dane uwierzytelniania i sesji
+  obsługiwane przez Neon Auth. Hasło nie jest zapisywane w rekordach aplikacji. Przy logowaniu przez Google otrzymujemy
+  dane profilu udostępnione przez dostawcę logowania, w tym adres e-mail i nazwę profilu.
+- **Generator i zapisane dokumenty:** dane Użytkownika i kontrahentów, dane umów, rachunków, rozliczeń oraz rachunku
+  bankowego. Zapis na Koncie następuje na żądanie Użytkownika. Dane robocze podglądu mogą pozostawać w pamięci sesyjnej
+  przeglądarki. Nie należy wprowadzać danych bez uprawnienia do ich przetwarzania.
+- **Kontakt i reklamacje:** imię lub nazwa, adres e-mail, temat, kategoria i treść wiadomości, a w przypadku zalogowania
+  także identyfikator Konta.
+- **Akceptacja Regulaminu:** adres e-mail, wersja dokumentu, sposób rejestracji i czas akceptacji oraz informacja o
+  dobrowolnym wniosku o wcześniejsze rozpoczęcie Usług, jeśli został złożony.
+- **Preferencje prywatności:** osobny wybór analityki i wydajności oraz odtwarzania sesji, wersja komunikatu i data
+  zapisu. Decyzja zalogowanego Użytkownika jest powiązana z Kontem. Decyzja bez logowania również trafia do rejestru,
+  ale bez identyfikatora Konta; nie jest później automatycznie przypisywana do Konta.
+- **Bezpieczeństwo i diagnostyka:** dane techniczne żądań, logi aplikacji, zdarzenia wysyłki wiadomości oraz raporty
+  błędów i ślady wydajności Sentry, obejmujące m.in. stos wywołań, informacje o środowisku wykonania i czasy operacji.
+  Raportowanie błędów i tracing działają niezależnie od zgód na opcjonalne pomiary.
+- **Opcjonalna analityka i wydajność:** Vercel Web Analytics i Speed Insights mogą przetwarzać adres odwiedzanej strony,
+  informacje o urządzeniu i przeglądarce oraz czas ładowania i responsywność. Aplikacja usuwa parametry zapytania i
+  fragmenty adresów oraz pomija strony logowania, Konta, akceptacji Regulaminu i endpointy API.
+- **Opcjonalne odtwarzanie sesji:** Sentry Replay rejestruje zmiany interfejsu oraz interakcje z przeglądarką i
+  informacje techniczne potrzebne do odtworzenia problemu. Tekst i wartości pól są maskowane, a multimedia blokowane.
+  Maskowanie ogranicza zakres danych, ale nie jest gwarancją pełnej anonimowości nagrania.
+
+Konfiguracja Sentry wyłącza automatyczne zbieranie danych użytkownika, cookies, nagłówków i treści HTTP, parametrów
+zapytania URL, danych operacji bazodanowych i wartości zmiennych lokalnych. Ograniczenia nie usuwają automatycznie
+danych zawartych w treści wyjątku lub przekazanych ręcznie w kontekście zdarzenia. Dostawca otrzymujący połączenie
+sieciowe może przetwarzać także informacje niezbędne do jego obsługi.
+
+## 3. Cele i podstawy przetwarzania
+
+- Utworzenie i obsługa Konta, logowanie, generator, zapis oraz eksport na żądanie Użytkownika — wykonanie umowy lub
+  działania przed jej zawarciem, na podstawie art. 6 ust. 1 lit. b RODO.
+- Obsługa pytań, reklamacji i korespondencji — wykonanie umowy, gdy zgłoszenie jej dotyczy, albo prawnie uzasadniony
+  interes polegający na udzieleniu odpowiedzi i prowadzeniu korespondencji, na podstawie art. 6 ust. 1 lit. f RODO.
+  Obowiązki prawne dotyczące zgłoszenia realizujemy na podstawie art. 6 ust. 1 lit. c RODO.
+- Ochrona Serwisu przed nadużyciami, diagnostyka awarii i utrzymanie stabilności — prawnie uzasadniony interes
+  Administratora, na podstawie art. 6 ust. 1 lit. f RODO. Obejmuje to limitowanie żądań, BotID i diagnostykę Sentry, ale
+  nie odtwarzanie sesji Replay.
+- Wykazanie treści i czasu akceptacji Regulaminu, obsługa sporów oraz zapisanie i odtworzenie preferencji prywatności —
+  prawnie uzasadniony interes polegający na rozliczalności i ochronie praw, na podstawie art. 6 ust. 1 lit. f RODO.
+  Zapis decyzji o cookies nie stanowi zgody na analitykę.
+- Statystyki odwiedzin i pomiary wydajności Vercel — odrębna dobrowolna zgoda, na podstawie art. 6 ust. 1 lit. a RODO.
+- Odtwarzanie sesji Sentry Replay w celu diagnozowania problemów z obsługą Serwisu — odrębna dobrowolna zgoda, na
+  podstawie art. 6 ust. 1 lit. a RODO.
+
+Odmowa lub wycofanie każdej z opcjonalnych zgód nie ogranicza dostępu do Serwisu. Podanie danych wymaganych do Konta lub
+odpowiedzi na zgłoszenie jest dobrowolne, ale bez nich dana funkcja nie może zostać wykonana. Serwis nie podejmuje wobec
+Użytkownika decyzji wywołujących skutki prawne lub podobnie istotne skutki wyłącznie automatycznie. Po odrzuceniu
+formularza przez ochronę antyspamową można skontaktować się bezpośrednio przez e-mail.
+
+W zakresie danych osób trzecich przetwarzanych na zlecenie Użytkownika będącego administratorem role i obowiązki
+wymagają odrębnego uregulowania powierzenia. Ta Polityka ani projekt umowy nie zastępują zawarcia takiego uzgodnienia.
+
+## 4. Dostawcy i odbiorcy
+
+- **Neon:** baza danych i Neon Auth; konfiguracja bazy wskazuje Frankfurt / EU Central.
+- **Vercel:** hosting i wykonywanie aplikacji, BotID Basic do ochrony formularza kontaktowego, a po odrębnej zgodzie Web
+  Analytics i Speed Insights. Funkcje aplikacji są przypisane do regionu Frankfurt (fra1).
+- **Sentry (Functional Software):** raportowanie błędów i tracing, a wyłącznie po zgodzie na odtwarzanie sesji także
+  Replay. Region hostingu aplikacji nie określa regionu przetwarzania danych w Sentry.
+- **Resend:** wysyłka wiadomości kontaktowych i obsługa zdarzeń ich dostarczenia lub odrzucenia.
+- **Cloudflare:** przekierowywanie poczty przez Email Routing oraz przechowywanie szyfrowanych kopii bazy w R2.
+- **Google:** logowanie przez Google, jeśli zostanie wybrane, oraz obsługa korespondencji w skrzynce Gmail
+  Administratora; Apps Script obsługuje retencję korespondencji.
+- **Upstash:** limitowanie żądań w Redis. Klucz limitu jest pseudonimem HMAC obliczanym z identyfikatora Konta lub
+  adresu IP, a nie surową wartością tych danych.
+- **GitHub Actions:** wykonywanie zadania kopii zapasowej bazy i przekazanie zaszyfrowanej kopii do R2.
+
+Odbiorcami mogą być także dostawcy poczty Użytkownika i organy uprawnione na podstawie prawa. Zakres roli dostawcy
+zależy od usługi: może działać na zlecenie Administratora albo jako odrębny administrator na podstawie własnych
+warunków. Sam wybór europejskiego regionu aplikacji nie oznacza, że wszyscy odbiorcy i ich podwykonawcy przetwarzają
+dane wyłącznie w EOG. W przypadku przekazania poza EOG wymagane są właściwe podstawy z rozdziału V RODO, np. decyzja
+stwierdzająca odpowiedni stopień ochrony albo standardowe klauzule umowne. Informacje o właściwych zabezpieczeniach i
+sposobie uzyskania ich kopii można otrzymać pod adresem kontaktowym z pkt 1.
+
+## 5. Okresy przechowywania
+
+- Dane zapisane na Koncie — do usunięcia Konta, z wyjątkiem informacji wymaganych w innym konkretnym celu prawnym.
+- Wiadomości kontaktowe w bazie aplikacji — 12 miesięcy, po czym usuwa je najbliższy codzienny cykl retencji.
+- Korespondencja w skrzynce Administratora — 12 miesięcy od otrzymania lub wysłania każdej wiadomości, po czym jest
+  trwale usuwana w najbliższym codziennym cyklu. Wyjątek obejmuje wiadomości oznaczone jako niezbędne w konkretnym
+  sporze. Po ustaniu tej potrzeby oznaczenie jest usuwane i działa zwykły cykl retencji.
+- Dowody akceptacji Regulaminu — do usunięcia Konta. Wyjątek obejmuje dowody oznaczone jako potrzebne w konkretnym
+  sporze; po ustaniu tej potrzeby podlegają usunięciu w najbliższym codziennym cyklu. Niepowiązane z Kontem wpisy z
+  rejestracji linkiem są usuwane po 30 dniach.
+- Rejestr wyborów cookies — 30 dni; wpisy przypisane do Konta są też usuwane wraz z Kontem.
+- Cookie preferencji — 365 dni od zapisu, chyba że zostanie wcześniej usunięte lub wybór zostanie zmieniony.
+- Logi wykonania w Vercel — godzina; wiadomości i logi Resend — 30 dni, zgodnie z konfiguracją tych usług.
+- Raporty błędów, tracing i nagrania Replay oraz zagregowane pomiary Vercel podlegają odrębnym okresom retencji
+  dostawców i ustawieniom projektu. Okres 30 dni dotyczący rejestru zgód nie jest okresem retencji tych danych.
+- Kopie zapasowe podlegają cyklom retencji bazy i magazynu kopii, odrębnym od usunięcia danych z aplikacji. Usunięcie
+  Konta nie powoduje natychmiastowego przepisania istniejącej kopii.
+
+Informację o okresie właściwym dla danych znajdujących się u dostawcy lub w kopii zapasowej można uzyskać pod adresem z
+pkt 1. Wycofanie zgody zatrzymuje dalsze pomiary, ale samo w sobie nie usuwa danych już przekazanych.
+
+## 6. Eksport i usunięcie Konta
+
+Eksport JSON obejmuje dane profilu, zapisane rachunki, kontrahentów, rachunek bankowy i przypisaną do Konta historię
+wyborów cookies z wersją komunikatu. Nie obejmuje dowodów akceptacji Regulaminu, wiadomości kontaktowych ani danych z
+narzędzi diagnostycznych i nie zastępuje wniosku o dostęp do wszystkich danych.
+
+Usunięcie Konta usuwa zapisane rachunki, strony, rachunek bankowy, sekwencje numeracji i przypisane wybory cookies.
+Dowody akceptacji, wiadomości kontaktowe i kopie podlegają zasadom opisanym w pkt 5.
+
+## 7. Prawa osób
+
+W zakresie i na warunkach wynikających z przepisów przysługuje dostęp do danych, sprostowanie, usunięcie, ograniczenie
+przetwarzania, przeniesienie danych i sprzeciw wobec przetwarzania opartego na uzasadnionym interesie. Zgodę można
+wycofać bez wpływu na zgodność z prawem wcześniejszego przetwarzania. Przysługuje także skarga do Prezesa Urzędu Ochrony
+Danych Osobowych. Wnioski można składać pod adresem z pkt 1.
+
+<span id="cookies" />
+
+## 8. Cookies i pamięć przeglądarki
+
+Niezbędne cookies Neon Auth (`__Secure-neon-auth.session_token` i `__Secure-neon-auth.local.session_data`) obsługują
+logowanie i sesję; ich czas życia zależy od konfiguracji uwierzytelniania. Cookie `cookie-consent` zapisuje preferencje
+przez 365 dni. Pamięć sesyjna służy także podglądowi dokumentu i — tylko po zgodzie — obsłudze Replay.
+
+Analityka i wydajność oraz odtwarzanie sesji są domyślnie wyłączone. Można osobno włączyć każdą z tych kategorii,
+zaakceptować obie lub odmówić obu. Otwarcie szczegółów ani dalsze korzystanie ze strony nie oznacza zgody. Vercel Web
+Analytics i Speed Insights nie używają cookies do tych pomiarów; mimo to aplikacja wymaga zgody. Nie używamy narzędzi
+reklamowych. Raporty błędów Sentry, tracing i ochrona BotID nie są zgodą na Replay.
+
+Wybór można zmienić przez „Ustawienia cookies” w stopce albo przycisk „Cookies”. Zapis lub usunięcie wyboru przeładowuje
+stronę i zatrzymuje wycofane pomiary. Nowa wersja komunikatu wymaga ponownego wyboru; wcześniejsza łączna zgoda nie
+uruchamia nowych kategorii. Historię decyzji powiązanych z Kontem można zobaczyć w ustawieniach.
+
+## 9. Osoby niepełnoletnie
+
+Serwis jest przeznaczony dla osób pełnoletnich. W razie informacji o przekazaniu danych przez osobę niepełnoletnią
+należy skontaktować się z Administratorem pod adresem z pkt 1.
+
+## 10. Zmiany Polityki
+
+Nowe wersje są publikowane w Serwisie. Sposób poinformowania o zmianach uwzględnia ich znaczenie dla Użytkowników i
+właściwe przepisy. Zmiana Polityki nie zastępuje zgody wymaganej do nowego celu przetwarzania.

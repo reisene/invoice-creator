@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com-reisene/reisene/invoice-creator/compare/0.3.0...0.4.0) (2026-10-25)
+
+### Features
+
+- **sentry:** implement data minimization settings and add tests ([ec1c7d5](https://github.com-reisene/reisene/invoice-creator/commit/ec1c7d51544302ee97f86cd4d418264cd2bb0917))
+- update server consent gates tests to include new cookie consent choices and improve assertions ([c4f1d30](https://github.com-reisene/reisene/invoice-creator/commit/c4f1d3099b6f0557909f14d4c6873e926d42e2a5))
+- update VSCode settings for improved coding insights and health notifications ([f743efe](https://github.com-reisene/reisene/invoice-creator/commit/f743efe59d90f454e3f46e5b0df3d5fe11857403))
+
 ## [0.3.0](https://github.com-reisene/reisene/invoice-creator/compare/0.2.0...0.3.0) (2026-10-25)
 
 ### Features

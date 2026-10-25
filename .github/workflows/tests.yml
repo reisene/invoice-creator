@@ -1,0 +1,75 @@
+name: Tests and coverage
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests and coverage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate test artifacts
+        run: |
+          npm run prebuild
+          DATABASE_URL='postgresql://127.0.0.1:5432/invoice_creator_test?schema=public' npx prisma generate
+
+      - name: Run tests and generate coverage
+        run: npm run test:coverage
+
+      - name: Check coverage upload secrets
+        id: coverage-secrets
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        run: |
+          if [[ -n "$CODECOV_TOKEN" ]]; then
+            echo "codecov=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::CODECOV_TOKEN is not configured; skipping Codecov upload."
+          fi
+
+          if [[ -n "$CODACY_PROJECT_TOKEN" ]]; then
+            echo "codacy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::CODACY_PROJECT_TOKEN is not configured; skipping Codacy upload."
+          fi
+
+      - name: Upload coverage to Codecov
+        if: steps.coverage-secrets.outputs.codecov == 'true'
+        uses: codecov/codecov-action@v7
+        with:
+          files: coverage/lcov.info
+          fail_ci_if_error: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload coverage to Codacy
+        if: steps.coverage-secrets.outputs.codacy == 'true'
+        uses: codacy/codacy-coverage-reporter-action@v1.3.0
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: coverage/lcov.info

@@ -9,7 +9,7 @@ const neonAuthOrigin = process.env.NEON_AUTH_BASE_URL
   : '';
 
 const csp = [
-  "default-src 'self'",
+  "default-src 'self' https://vercel.live",
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",

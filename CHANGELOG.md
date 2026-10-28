@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.5.0](https://github.com-reisene/reisene/invoice-creator/compare/0.4.0...0.5.0) (2026-10-28)
+
+### Features
+
+- add Content Security Policy and improve security headers in next.config.ts ([63c4b28](https://github.com-reisene/reisene/invoice-creator/commit/63c4b2857928ec03fb8cdf7ffcfeee03adc661ca))
+- integrate Cloudflare Turnstile for contact form spam protection ([4bf1f84](https://github.com-reisene/reisene/invoice-creator/commit/4bf1f84959a911d124b7658769cde7a23dfb7d4f))
+- refresh Codacy configuration timestamps ([d74be1b](https://github.com-reisene/reisene/invoice-creator/commit/d74be1b0e241b47c924d9d7f0aeba8de4b0828c5))
+- update Content Security Policy to include vercel.live in script-src ([b5c1e9d](https://github.com-reisene/reisene/invoice-creator/commit/b5c1e9d7d504f02aaf8027a962780541cb263da1))
+- update default-src in Content Security Policy to include vercel.live ([555964e](https://github.com-reisene/reisene/invoice-creator/commit/555964ed2f9c7e809f1d41bdb5d13792b24eae0a))
+- update frame-src in Content Security Policy to include vercel.live ([7d8eb22](https://github.com-reisene/reisene/invoice-creator/commit/7d8eb22e6ffa84932ab528a65ec9434133771f39))
+- update frame-src in Content Security Policy to include vercel.live ([be12c0d](https://github.com-reisene/reisene/invoice-creator/commit/be12c0d11437a4f119973c2a21080bf490637400))
+
+### Bug Fixes
+
+- update Content Security Policy to allow frames and scripts from Cloudflare challenges ([b754380](https://github.com-reisene/reisene/invoice-creator/commit/b754380a6c5c4592704b55bb815b1e30a6d134b6))
+
 ## [0.4.0](https://github.com-reisene/reisene/invoice-creator/compare/0.3.0...0.4.0) (2026-10-25)
 
 ### Features

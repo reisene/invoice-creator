@@ -1,5 +1,6 @@
 'use client';
 
+import TurnstileWidget from '@/components/TurnstileWidget';
 import { useActionState, useState } from 'react';
 import { Alert, Button, Form, Spinner } from 'react-bootstrap';
 import {
@@ -80,9 +81,8 @@ function ContactFormContent({
   return (
     <Form action={formAction} noValidate={false}>
       <p className='small text-body-secondary'>
-        Formularz jest chroniony przez Vercel BotID przed automatycznym spamem.
-        Weryfikacja wymaga JavaScript i działa niezależnie od zgody na
-        opcjonalną analitykę.
+        Formularz jest chroniony przez Cloudflare Turnstile i Vercel BotID przed
+        automatycznym spamem.
       </p>
       {/* Pole antyspamowe (honeypot) ukryte przed użytkownikami */}
       <div style={{ display: 'none' }} aria-hidden='true' tabIndex={-1}>
@@ -105,6 +105,8 @@ function ContactFormContent({
           <div>{state.message}</div>
         </Alert>
       )}
+
+      <TurnstileWidget action='contact' resetSignal={state} />
 
       <div className='row g-3 mb-3'>
         <div className='col-md-6'>

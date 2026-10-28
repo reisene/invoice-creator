@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   consentCreate: vi.fn(),
   adminEmail: vi.fn(),
   userEmail: vi.fn(),
+  turnstile: vi.fn(),
   log: vi.fn(),
   cookies: vi.fn(),
   set: vi.fn(),
@@ -38,6 +39,9 @@ vi.mock('@/lib/email', () => ({
   sendUserContactConfirmation: mocks.userEmail,
 }));
 vi.mock('@/lib/serverLogger', () => ({ logServerError: mocks.log }));
+vi.mock('@/lib/turnstile', () => ({
+  verifyTurnstileToken: mocks.turnstile,
+}));
 vi.mock('next/headers', () => ({ cookies: mocks.cookies }));
 
 function form(overrides: Record<string, string> = {}) {
@@ -47,6 +51,7 @@ function form(overrides: Record<string, string> = {}) {
     email: ' jan@example.com ',
     category: ' Pytanie ogólne ',
     message: ' Proszę o wyjaśnienie sposobu obliczeń. ',
+    'cf-turnstile-response': 'turnstile-token',
     ...overrides,
   }))
     data.set(key, value);
@@ -56,6 +61,7 @@ function form(overrides: Record<string, string> = {}) {
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.bot.mockResolvedValue({ isBot: false });
+  mocks.turnstile.mockResolvedValue(true);
   mocks.userId.mockResolvedValue('user-1');
   mocks.rateLimit.mockResolvedValue({ ok: true });
   mocks.cookies.mockResolvedValue({ set: mocks.set, delete: mocks.delete });
@@ -67,6 +73,21 @@ afterEach(() => {
 });
 
 describe('contact submissions', () => {
+  it('rejects submissions when Turnstile verification fails', async () => {
+    mocks.turnstile.mockResolvedValue(false);
+
+    expect(await submitContactForm(null, form())).toEqual({
+      ok: false,
+      message: expect.stringContaining('Weryfikacja antyspamowa'),
+    });
+    expect(mocks.turnstile).toHaveBeenCalledWith(
+      expect.any(FormData),
+      'contact',
+    );
+    expect(mocks.bot).not.toHaveBeenCalled();
+    expect(mocks.contactCreate).not.toHaveBeenCalled();
+  });
+
   it('rejects bots before checking limits or writing data', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     mocks.bot.mockResolvedValue({ isBot: true });

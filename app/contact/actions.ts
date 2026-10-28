@@ -9,6 +9,7 @@ import {
   sendUserContactConfirmation,
 } from '@/lib/email';
 import { checkRateLimit } from '@/lib/rateLimit';
+import { verifyTurnstileToken } from '@/lib/turnstile';
 import { checkBotId } from 'botid/server';
 
 export type ContactFormState = {
@@ -22,6 +23,15 @@ export async function submitContactForm(
   _prevState: ContactFormState,
   formData: FormData,
 ): Promise<ContactFormState> {
+  const turnstileVerified = await verifyTurnstileToken(formData, 'contact');
+  if (!turnstileVerified) {
+    return {
+      ok: false,
+      message:
+        'Weryfikacja antyspamowa nie powiodła się. Odśwież stronę i spróbuj ponownie.',
+    };
+  }
+
   try {
     const verification = await checkBotId({
       advancedOptions: { checkLevel: 'basic' },

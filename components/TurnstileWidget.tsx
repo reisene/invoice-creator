@@ -42,7 +42,9 @@ export default function TurnstileWidget({
     widgetIdRef.current = window.turnstile.render(containerRef.current, {
       sitekey: SITE_KEY,
       action,
-      'error-callback': () => setHasError(true),
+      'error-callback': () => {
+        setHasError(true);
+      },
     });
 
     return () => {
@@ -72,8 +74,12 @@ export default function TurnstileWidget({
       <Script
         src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
         strategy='afterInteractive'
-        onReady={() => setScriptReady(true)}
-        onError={() => setHasError(true)}
+        onReady={() => {
+          setScriptReady(true);
+        }}
+        onError={() => {
+          setHasError(true);
+        }}
       />
       <div ref={containerRef} />
       {hasError && (

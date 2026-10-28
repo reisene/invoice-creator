@@ -41,6 +41,39 @@ interface InvoiceFormProps {
 
 const percent = (rate: number) => `${Math.round(rate * 10000) / 100}%`;
 
+interface InvoiceFieldProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: 'text' | 'date';
+  maxLength?: number;
+  required?: boolean;
+}
+
+function InvoiceField({
+  label,
+  value,
+  onChange,
+  type = 'text',
+  maxLength,
+  required,
+}: InvoiceFieldProps) {
+  return (
+    <Form.Group>
+      <Form.Label>{label}</Form.Label>
+      <Form.Control
+        type={type}
+        maxLength={maxLength}
+        value={value}
+        onChange={(event) => {
+          onChange(event.target.value);
+        }}
+        required={required}
+      />
+    </Form.Group>
+  );
+}
+
 export default function InvoiceForm({
   data,
   onChange,
@@ -173,31 +206,26 @@ export default function InvoiceForm({
 
       <Row className='mb-3'>
         <Col md={6}>
-          <Form.Group>
-            <Form.Label>Miejscowość wystawienia</Form.Label>
-            <Form.Control
-              type='text'
-              maxLength={100}
-              value={data.issuePlace ?? ''}
-              onChange={(e) => {
-                updateField('issuePlace', e.target.value);
-              }}
-              required
-            />
-          </Form.Group>
+          <InvoiceField
+            label='Miejscowość wystawienia'
+            maxLength={100}
+            value={data.issuePlace ?? ''}
+            onChange={(value) => {
+              updateField('issuePlace', value);
+            }}
+            required
+          />
         </Col>
         <Col md={6}>
-          <Form.Group>
-            <Form.Label>Data wystawienia</Form.Label>
-            <Form.Control
-              type='date'
-              value={data.issueDate ?? ''}
-              onChange={(e) => {
-                updateField('issueDate', e.target.value);
-              }}
-              required
-            />
-          </Form.Group>
+          <InvoiceField
+            label='Data wystawienia'
+            type='date'
+            value={data.issueDate ?? ''}
+            onChange={(value) => {
+              updateField('issueDate', value);
+            }}
+            required
+          />
         </Col>
       </Row>
 
@@ -253,17 +281,14 @@ export default function InvoiceForm({
 
       <Row className='mb-3'>
         <Col md={6}>
-          <Form.Group>
-            <Form.Label>Nazwa / Imię i nazwisko</Form.Label>
-            <Form.Control
-              type='text'
-              value={data.clientName}
-              onChange={(e) => {
-                updateField('clientName', e.target.value);
-              }}
-              required
-            />
-          </Form.Group>
+          <InvoiceField
+            label='Nazwa / Imię i nazwisko'
+            value={data.clientName}
+            onChange={(value) => {
+              updateField('clientName', value);
+            }}
+            required
+          />
         </Col>
         <Col md={6}>
           <Form.Group>
@@ -284,31 +309,25 @@ export default function InvoiceForm({
       <Row className='mb-3'>
         {data.clientType === 'company' ? (
           <Col md={6}>
-            <Form.Group>
-              <Form.Label>NIP</Form.Label>
-              <Form.Control
-                type='text'
-                value={data.clientNip ?? ''}
-                onChange={(e) => {
-                  updateField('clientNip', e.target.value || undefined);
-                }}
-                required={data.clientType === 'company'}
-              />
-            </Form.Group>
+            <InvoiceField
+              label='NIP'
+              value={data.clientNip ?? ''}
+              onChange={(value) => {
+                updateField('clientNip', value || undefined);
+              }}
+              required={data.clientType === 'company'}
+            />
           </Col>
         ) : (
           <Col md={6}>
-            <Form.Group>
-              <Form.Label>PESEL</Form.Label>
-              <Form.Control
-                type='text'
-                value={data.clientPesel ?? ''}
-                onChange={(e) => {
-                  updateField('clientPesel', e.target.value || undefined);
-                }}
-                required={data.clientType === 'private'}
-              />
-            </Form.Group>
+            <InvoiceField
+              label='PESEL'
+              value={data.clientPesel ?? ''}
+              onChange={(value) => {
+                updateField('clientPesel', value || undefined);
+              }}
+              required={data.clientType === 'private'}
+            />
           </Col>
         )}
       </Row>
@@ -318,17 +337,14 @@ export default function InvoiceForm({
 
       <Row className='mb-3'>
         <Col md={6}>
-          <Form.Group>
-            <Form.Label>Imię i nazwisko</Form.Label>
-            <Form.Control
-              type='text'
-              value={data.contractorName}
-              onChange={(e) => {
-                updateField('contractorName', e.target.value);
-              }}
-              required
-            />
-          </Form.Group>
+          <InvoiceField
+            label='Imię i nazwisko'
+            value={data.contractorName}
+            onChange={(value) => {
+              updateField('contractorName', value);
+            }}
+            required
+          />
         </Col>
         <Col md={6}>
           <Form.Group>
@@ -348,29 +364,23 @@ export default function InvoiceForm({
 
       <Row className='mb-3'>
         <Col md={6}>
-          <Form.Group>
-            <Form.Label>PESEL</Form.Label>
-            <Form.Control
-              type='text'
-              value={data.contractorPesel}
-              onChange={(e) => {
-                updateField('contractorPesel', e.target.value);
-              }}
-              required
-            />
-          </Form.Group>
+          <InvoiceField
+            label='PESEL'
+            value={data.contractorPesel}
+            onChange={(value) => {
+              updateField('contractorPesel', value);
+            }}
+            required
+          />
         </Col>
         <Col md={6}>
-          <Form.Group>
-            <Form.Label>NIP (opcjonalnie)</Form.Label>
-            <Form.Control
-              type='text'
-              value={data.contractorNip ?? ''}
-              onChange={(e) => {
-                updateField('contractorNip', e.target.value || undefined);
-              }}
-            />
-          </Form.Group>
+          <InvoiceField
+            label='NIP (opcjonalnie)'
+            value={data.contractorNip ?? ''}
+            onChange={(value) => {
+              updateField('contractorNip', value || undefined);
+            }}
+          />
         </Col>
       </Row>
 
@@ -379,58 +389,49 @@ export default function InvoiceForm({
 
       <Row className='mb-3'>
         <Col md={6}>
-          <Form.Group>
-            <Form.Label>Numer umowy</Form.Label>
-            <Form.Control
-              type='text'
-              value={data.contractNumber ?? ''}
-              onChange={(e) => {
-                updateField('contractNumber', e.target.value || undefined);
-              }}
-            />
-          </Form.Group>
+          <InvoiceField
+            label='Numer umowy'
+            value={data.contractNumber ?? ''}
+            onChange={(value) => {
+              updateField('contractNumber', value || undefined);
+            }}
+          />
         </Col>
         <Col md={6}>
-          <Form.Group>
-            <Form.Label>Data zawarcia umowy</Form.Label>
-            <Form.Control
-              type='date'
-              value={data.contractDate}
-              onChange={(e) => {
-                updateField('contractDate', e.target.value);
-              }}
-              required
-            />
-          </Form.Group>
+          <InvoiceField
+            label='Data zawarcia umowy'
+            type='date'
+            value={data.contractDate}
+            onChange={(value) => {
+              updateField('contractDate', value);
+            }}
+            required
+          />
         </Col>
       </Row>
 
       <Row className='mb-3'>
         <Col md={6}>
-          <Form.Group>
-            <Form.Label>Okres rozliczeniowy – od</Form.Label>
-            <Form.Control
-              type='date'
-              value={data.periodStart}
-              onChange={(e) => {
-                updateField('periodStart', e.target.value);
-              }}
-              required
-            />
-          </Form.Group>
+          <InvoiceField
+            label='Okres rozliczeniowy – od'
+            type='date'
+            value={data.periodStart}
+            onChange={(value) => {
+              updateField('periodStart', value);
+            }}
+            required
+          />
         </Col>
         <Col md={6}>
-          <Form.Group>
-            <Form.Label>Okres rozliczeniowy – do</Form.Label>
-            <Form.Control
-              type='date'
-              value={data.periodEnd}
-              onChange={(e) => {
-                updateField('periodEnd', e.target.value);
-              }}
-              required
-            />
-          </Form.Group>
+          <InvoiceField
+            label='Okres rozliczeniowy – do'
+            type='date'
+            value={data.periodEnd}
+            onChange={(value) => {
+              updateField('periodEnd', value);
+            }}
+            required
+          />
         </Col>
       </Row>
 

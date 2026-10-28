@@ -9,7 +9,7 @@ import { prisma } from '@/lib/db';
 import { getInvoiceNumberScope } from '@/lib/invoice/invoiceNumbering';
 import { isValidPolishBankAccount } from '@/lib/invoice/validateInvoiceForm';
 import { checkRateLimit } from '@/lib/rateLimit';
-import { encryptText } from '@/lib/savedDataCrypto';
+import { upsertUserBankAccount } from '@/lib/userBankAccount';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
@@ -20,6 +20,10 @@ export type EmailChangeRequestState =
   | null;
 
 const NOT_SIGNED_IN = 'Zaloguj się, aby edytować konto.';
+
+function checkSensitiveAccountRateLimit(userId: string) {
+  return checkRateLimit('accountSensitive', userId);
+}
 
 export async function saveBankAccount(
   _prev: AccountFormState,
@@ -47,19 +51,10 @@ export async function saveBankAccount(
     };
   }
 
-  await prisma.userBankAccount.upsert({
-    where: { userId },
-    create: {
-      userId,
-      accountHolder: encryptText(accountHolder),
-      bankName: encryptText(bankName),
-      accountNumber: encryptText(accountNumber),
-    },
-    update: {
-      accountHolder: encryptText(accountHolder),
-      bankName: encryptText(bankName),
-      accountNumber: encryptText(accountNumber),
-    },
+  await upsertUserBankAccount(userId, {
+    accountHolder,
+    bankName,
+    accountNumber,
   });
   revalidatePath('/account');
   revalidatePath('/generator');
@@ -109,7 +104,7 @@ export async function changePassword(
 ): Promise<AccountFormState> {
   const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, message: NOT_SIGNED_IN };
-  const limit = await checkRateLimit('accountSensitive', userId);
+  const limit = await checkSensitiveAccountRateLimit(userId);
   if (!limit.ok) return { ok: false, message: limit.message };
 
   const currentPassword = String(formData.get('currentPassword') ?? '');
@@ -150,7 +145,7 @@ export async function requestEmailChange(
 ): Promise<EmailChangeRequestState> {
   const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, message: NOT_SIGNED_IN };
-  const limit = await checkRateLimit('accountSensitive', userId);
+  const limit = await checkSensitiveAccountRateLimit(userId);
   if (!limit.ok) return { ok: false, message: limit.message };
 
   const newEmail = String(formData.get('newEmail') ?? '')
@@ -183,7 +178,7 @@ export async function confirmEmailChange(
 ): Promise<AccountFormState> {
   const userId = await getCurrentUserIdWithTerms();
   if (!userId) return { ok: false, message: NOT_SIGNED_IN };
-  const limit = await checkRateLimit('accountSensitive', userId);
+  const limit = await checkSensitiveAccountRateLimit(userId);
   if (!limit.ok) return { ok: false, message: limit.message };
 
   const newEmail = String(formData.get('newEmail') ?? '')
@@ -282,7 +277,7 @@ export async function revokeAllSessions(): Promise<{
 export async function requestAccountDeletionCode(): Promise<AccountFormState> {
   const { data: session } = await auth.getSession();
   if (!session?.user) return { ok: false, message: NOT_SIGNED_IN };
-  const limit = await checkRateLimit('accountSensitive', session.user.id);
+  const limit = await checkSensitiveAccountRateLimit(session.user.id);
   if (!limit.ok) return { ok: false, message: limit.message };
 
   const { error } = await auth.emailOtp.sendVerificationOtp({
@@ -304,7 +299,7 @@ export async function deleteAccount(
 ): Promise<AccountFormState> {
   const userId = await getCurrentUserId();
   if (!userId) return { ok: false, message: NOT_SIGNED_IN };
-  const limit = await checkRateLimit('accountSensitive', userId);
+  const limit = await checkSensitiveAccountRateLimit(userId);
   if (!limit.ok) return { ok: false, message: limit.message };
 
   if (formData.get('confirm') !== 'on') {

@@ -17,6 +17,7 @@ import {
 } from '@/lib/invoice/validateInvoiceForm';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { decryptJson, encryptJson, encryptText } from '@/lib/savedDataCrypto';
+import { upsertUserBankAccount } from '@/lib/userBankAccount';
 import type {
   ActionResult,
   InvoiceNumberReservation,
@@ -151,19 +152,10 @@ export async function saveInvoice(
       .replace(/[\s-]/g, '')
       .toUpperCase()
       .replace(/^PL/, '');
-    await prisma.userBankAccount.upsert({
-      where: { userId },
-      create: {
-        userId,
-        accountHolder: encryptText(form.bankAccountHolder.trim()),
-        bankName: encryptText(form.bankName.trim()),
-        accountNumber: encryptText(accNum),
-      },
-      update: {
-        accountHolder: encryptText(form.bankAccountHolder.trim()),
-        bankName: encryptText(form.bankName.trim()),
-        accountNumber: encryptText(accNum),
-      },
+    await upsertUserBankAccount(userId, {
+      accountHolder: form.bankAccountHolder.trim(),
+      bankName: form.bankName.trim(),
+      accountNumber: accNum,
     });
     revalidatePath('/account');
   }
@@ -398,19 +390,10 @@ export async function saveUserBankAccountAction(data: {
     };
   }
 
-  await prisma.userBankAccount.upsert({
-    where: { userId },
-    create: {
-      userId,
-      accountHolder: encryptText(accountHolder),
-      bankName: encryptText(bankName),
-      accountNumber: encryptText(accountNumber),
-    },
-    update: {
-      accountHolder: encryptText(accountHolder),
-      bankName: encryptText(bankName),
-      accountNumber: encryptText(accountNumber),
-    },
+  await upsertUserBankAccount(userId, {
+    accountHolder,
+    bankName,
+    accountNumber,
   });
 
   revalidatePath('/account');

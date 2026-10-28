@@ -18,7 +18,7 @@ const csp = [
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval' https://va.vercel-scripts.com" : ''} https://vercel.live https://challenges.cloudflare.com`,
-  'frame-src https://challenges.cloudflare.com',
+  "frame-src 'self' https://challenges.cloudflare.com https://vercel.live",
   `connect-src 'self' ${neonAuthOrigin}`,
   "worker-src 'self' blob: data:",
   ...(isDev ? [] : ['upgrade-insecure-requests']),

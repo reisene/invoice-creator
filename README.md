@@ -254,6 +254,7 @@ Instalacja na Vercelu i w workflow korzysta z `npm ci`, bez aktualizowania lockf
 - Identyfikatory używane przez Upstash do limitowania są pseudonimizowane przez HMAC-SHA-256; surowy identyfikator nie jest używany jako klucz limitu.
 - Analityka i wydajność (Vercel Web Analytics i Speed Insights) oraz odtwarzanie sesji (Sentry Replay) wymagają dwóch niezależnych zgód. Domyślnie obie kategorie są wyłączone. Replay maskuje tekst i wartości pól oraz blokuje multimedia; nie jest to gwarancja anonimowości. Raporty błędów i tracing Sentry są odrębną diagnostyką, niezależną od tych zgód.
 - Wydruk rachunku i jego obliczenia wykonywane są w przeglądarce; zapis na koncie i usługi serwerowe wymagają przesłania danych do aplikacji.
+- CSP w `next.config.ts` dopuszcza `'wasm-unsafe-eval'` w `script-src`, ponieważ eksport PDF korzysta z WebAssembly. Produkcja nadal nie dopuszcza ogólnego `'unsafe-eval'`; jest ono włączone tylko podczas developmentu.
 - Więcej informacji o danych, retencji i prawach użytkownika znajduje się w [Polityce prywatności](https://invoice-creator.draugskoll.dev/privacy). Zasady korzystania z usługi określa [Regulamin](https://invoice-creator.draugskoll.dev/terms).
 
 ### Wdrożenie rozdzielonych zgód i dokumentów

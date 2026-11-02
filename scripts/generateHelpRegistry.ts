@@ -20,20 +20,34 @@ function isHelpCategory(value: string): value is HelpCategory {
   return HELP_CATEGORIES.some(({ id }) => id === value);
 }
 
+function readCategoryEntries(category: HelpCategory) {
+  switch (category) {
+    case 'podstawy':
+      return readdir('content/help/podstawy', { withFileTypes: true });
+    case 'zus':
+      return readdir('content/help/zus', { withFileTypes: true });
+    case 'podatki':
+      return readdir('content/help/podatki', { withFileTypes: true });
+    case 'aplikacja':
+      return readdir('content/help/aplikacja', { withFileTypes: true });
+  }
+}
+
 async function readArticles(): Promise<RegisteredHelpArticle[]> {
-  const entries = await readdir(helpDirectory, { withFileTypes: true });
+  const entries = await readdir('content/help', { withFileTypes: true });
   const articles: HelpArticleSource[] = [];
 
   for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
     if (!entry.isDirectory()) continue;
-    if (!isHelpCategory(entry.name)) {
-      throw new Error(`Unknown help-article category directory: ${entry.name}`);
+    const categoryName: string = entry.name;
+    if (!isHelpCategory(categoryName)) {
+      throw new Error(
+        `Unknown help-article category directory: ${categoryName}`,
+      );
     }
 
-    const category = entry.name;
-    const files = await readdir(path.join(helpDirectory, category), {
-      withFileTypes: true,
-    });
+    const category = categoryName;
+    const files = await readCategoryEntries(category);
 
     for (const file of files.sort((a, b) => a.name.localeCompare(b.name))) {
       if (!file.isFile()) continue;
@@ -45,6 +59,7 @@ async function readArticles(): Promise<RegisteredHelpArticle[]> {
       if (!file.name.endsWith('.mdx')) continue;
 
       const filePath = path.join(helpDirectory, category, file.name);
+      // The filename comes from this category's directory, not from user input.
       const { data } = matter(await readFile(filePath, 'utf8'));
       const baseName = file.name.slice(0, -'.mdx'.length);
 

@@ -44,6 +44,7 @@ next-env.d.ts
 # generated files
 generated/prisma
 content/legal/registry.generated.ts
+content/help/registry.generated.ts
 
 # From EnvUi
 .env

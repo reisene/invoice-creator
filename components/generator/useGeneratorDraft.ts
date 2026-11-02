@@ -8,7 +8,7 @@ import {
 import type { InvoiceFormData } from '@/types/invoiceForm';
 import type { SavedInvoiceSnapshot } from '@/types/savedData';
 import * as Sentry from '@sentry/nextjs';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const PRESET_KEY = 'generator_preset_data';
 
@@ -86,7 +86,7 @@ export function useGeneratorDraft({
   const [retry, setRetry] = useState(0);
   const reportedStorageFailure = useRef(false);
 
-  function reportStorageFailure(error: unknown) {
+  const reportStorageFailure = useCallback((error: unknown) => {
     if (!reportedStorageFailure.current) {
       captureDraftError(error);
       reportedStorageFailure.current = true;
@@ -94,26 +94,32 @@ export function useGeneratorDraft({
     setWarning(
       'Pamięć tej karty jest niedostępna lub pełna. Zmiany mogą nie zostać odtworzone po odświeżeniu.',
     );
-  }
+  }, []);
 
-  function persist(next: GeneratorDraft): boolean {
-    try {
-      sessionStorage.setItem(keyRef.current, JSON.stringify(next));
-      reportedStorageFailure.current = false;
-      setWarning(null);
-      return true;
-    } catch (error) {
-      reportStorageFailure(error);
-      return false;
-    }
-  }
+  const persist = useCallback(
+    (next: GeneratorDraft): boolean => {
+      try {
+        sessionStorage.setItem(keyRef.current, JSON.stringify(next));
+        reportedStorageFailure.current = false;
+        setWarning(null);
+        return true;
+      } catch (error) {
+        reportStorageFailure(error);
+        return false;
+      }
+    },
+    [reportStorageFailure],
+  );
 
-  function applyDraft(next: GeneratorDraft, save: boolean): boolean {
-    draftRef.current = next;
-    setDraft(next);
-    setNotice(null);
-    return !save || persist(next);
-  }
+  const applyDraft = useCallback(
+    (next: GeneratorDraft, save: boolean): boolean => {
+      draftRef.current = next;
+      setDraft(next);
+      setNotice(null);
+      return !save || persist(next);
+    },
+    [persist],
+  );
 
   function updateDraft(
     patch: Partial<Omit<GeneratorDraft, 'version'>>,
@@ -220,9 +226,15 @@ export function useGeneratorDraft({
     return () => {
       active = false;
     };
-    // The initial values belong to this keyed generator instance.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allowPreset, context, initial, initialSavedInvoice, retry]);
+  }, [
+    allowPreset,
+    applyDraft,
+    context,
+    initial,
+    initialSavedInvoice,
+    reportStorageFailure,
+    retry,
+  ]);
 
   async function chooseDraft() {
     if (!conflict) return;

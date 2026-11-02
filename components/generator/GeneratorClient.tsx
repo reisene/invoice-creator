@@ -456,7 +456,9 @@ export default function GeneratorClient({
           </Button>
           <Button
             variant='outline-danger'
-            onClick={() => setShowClearDraftConfirmation(true)}
+            onClick={() => {
+              setShowClearDraftConfirmation(true);
+            }}
           >
             Usuń wersję roboczą i otwórz formularz
           </Button>
@@ -652,7 +654,9 @@ export default function GeneratorClient({
 
       <Modal
         show={showBankConfirmation}
-        onHide={() => setShowBankConfirmation(false)}
+        onHide={() => {
+          setShowBankConfirmation(false);
+        }}
         aria-labelledby='bank-confirmation-title'
       >
         <Modal.Header closeButton>
@@ -684,7 +688,9 @@ export default function GeneratorClient({
         <Modal.Footer>
           <Button
             variant='secondary'
-            onClick={() => setShowBankConfirmation(false)}
+            onClick={() => {
+              setShowBankConfirmation(false);
+            }}
           >
             Anuluj
           </Button>
@@ -707,7 +713,9 @@ export default function GeneratorClient({
 
       <Modal
         show={showClearDraftConfirmation}
-        onHide={() => setShowClearDraftConfirmation(false)}
+        onHide={() => {
+          setShowClearDraftConfirmation(false);
+        }}
         aria-labelledby='clear-draft-title'
       >
         <Modal.Header closeButton>
@@ -722,7 +730,9 @@ export default function GeneratorClient({
         <Modal.Footer>
           <Button
             variant='secondary'
-            onClick={() => setShowClearDraftConfirmation(false)}
+            onClick={() => {
+              setShowClearDraftConfirmation(false);
+            }}
           >
             Anuluj
           </Button>

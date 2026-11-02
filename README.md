@@ -49,6 +49,8 @@ Polskojęzyczny generator rachunków do umowy zlecenia. Oblicza składki i zalic
 - Obliczenia ZUS i PIT z uwzględnieniem wybranego statusu zleceniobiorcy, kosztów uzyskania przychodu 20% lub 50%, PIT-2 oraz ulgi dla młodych. Generator korzysta z parametrów podatkowych zapisanych w bazie, a gdy nie są dostępne — z wartości domyślnych w kodzie.
 - Podgląd rachunku, przykładowe dokumenty i eksport do PDF.
 - Opcjonalne konto z możliwością zapisywania rachunków, kontrahentów i rachunku bankowego, a także importu i eksportu danych.
+- Menu „Konto” prowadzi do edycji konta oraz zapisanych rachunków i danych stron. Użytkownicy z rolą `admin` widzą dodatkowo odnośnik do `/admin`; sam panel administratora nie jest jeszcze dostępny.
+- `/admin` i jego podstrony wymagają sesji Neon Auth oraz roli `admin`: niezalogowani są przekierowywani do logowania, a pozostali użytkownicy otrzymują HTTP 403. Ścieżki te są wykluczone w `robots.txt` i mają nagłówek `X-Robots-Tag: noindex, nofollow`; odpowiedzi nie powinny być przechowywane w pamięci podręcznej. Roboty nie zastępują kontroli dostępu. Przyszłe akcje serwerowe i endpointy panelu muszą dodatkowo sprawdzać sesję i rolę przed dostępem do danych.
 - Rejestracja i logowanie przez Neon Auth; formularz kontaktowy z ochroną antyspamową.
 - Strony pomocy, Regulamin, Polityka prywatności i ustawienia cookies.
 

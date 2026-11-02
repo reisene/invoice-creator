@@ -4,6 +4,11 @@ import type { Prisma } from '@/generated/prisma';
 import { getCurrentUserIdWithTerms } from '@/lib/currentUser';
 import { prisma } from '@/lib/db';
 import { calculateInvoice } from '@/lib/invoice/calculateInvoice';
+import { INVOICE_UID_PATTERN } from '@/lib/invoice/generatorDraft';
+import {
+  getPreviousInvoiceTaxableIncome,
+  type InvoiceIncomeEntry,
+} from '@/lib/invoice/invoiceIncome';
 import { getInvoiceNumberScope } from '@/lib/invoice/invoiceNumbering';
 import { parseParty } from '@/lib/invoice/parseParty';
 import { sanitizeInvoiceForm } from '@/lib/invoice/sanitizeInvoiceForm';
@@ -17,9 +22,11 @@ import {
   getSavedPartiesForUser,
   getUserBankAccount,
 } from '@/lib/savedDataAccess';
-import { encryptJson, encryptText } from '@/lib/savedDataCrypto';
+import { decryptJson, encryptJson, encryptText } from '@/lib/savedDataCrypto';
 import { logServerError } from '@/lib/serverLogger';
+import type { InvoiceFormData } from '@/types/invoiceForm';
 import type { ActionResult } from '@/types/savedData';
+import type { TaxParams } from '@/types/taxParams';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'node:crypto';
 
@@ -95,11 +102,15 @@ export async function importUserData(
   });
   const existingNumbers = new Set(existingInvoices.map((r) => r.invoiceNumber));
   const existingUids = new Set(existingInvoices.map((r) => r.uid));
-  const UUID_RE =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-  const invoiceRows: Prisma.InvoiceCreateManyInput[] = [];
+  const invoiceCandidates: {
+    uid: string;
+    invoiceNumber: string | null;
+    createdAt: Date;
+    form: InvoiceFormData;
+    params: TaxParams;
+  }[] = [];
   const maxPerYear = new Map<number, number>();
+  const importStartedAt = Date.now();
 
   invoicesIn.forEach((item, index) => {
     const label = `Rachunek #${index + 1}`;
@@ -126,9 +137,31 @@ export async function importUserData(
       return;
     }
 
+    const rawCreatedAt = isRecord(item)
+      ? (item.createdAt ?? item.updatedAt)
+      : undefined;
+    const createdAt =
+      rawCreatedAt === undefined
+        ? new Date(importStartedAt + index)
+        : typeof rawCreatedAt === 'string'
+          ? new Date(rawCreatedAt)
+          : null;
+    if (
+      !createdAt ||
+      Number.isNaN(createdAt.getTime()) ||
+      createdAt.getUTCFullYear() < 1 ||
+      createdAt.getUTCFullYear() > 9999
+    ) {
+      summary.invoices.invalid++;
+      problems.push(`${label}: nieprawidłowa data zapisania.`);
+      return;
+    }
+
     const rawUid =
       isRecord(item) && typeof item.uid === 'string' ? item.uid.trim() : '';
-    const uid = UUID_RE.test(rawUid) ? rawUid.toLowerCase() : randomUUID();
+    const uid = INVOICE_UID_PATTERN.test(rawUid)
+      ? rawUid.toLowerCase()
+      : randomUUID();
     if (existingUids.has(uid)) {
       summary.invoices.duplicates++;
       return;
@@ -157,23 +190,7 @@ export async function importUserData(
 
     summary.invoices.add++;
     if (!commit) return;
-    const { calculations } = calculateInvoice(form, params);
-    invoiceRows.push({
-      userId,
-      uid,
-      invoiceNumber,
-      title: encryptText(
-        form.contractNumber?.trim() || `Rachunek ${form.periodStart}`,
-      ),
-      contractNumber: form.contractNumber
-        ? encryptText(form.contractNumber)
-        : null,
-      issuePlace: form.issuePlace?.trim() || null,
-      issueDate: form.issueDate || null,
-      periodStart: form.periodStart,
-      net: calculations.net,
-      data: encryptJson(form),
-    });
+    invoiceCandidates.push({ uid, invoiceNumber, createdAt, form, params });
   });
 
   const existingParties = await getSavedPartiesForUser(userId);
@@ -256,33 +273,121 @@ export async function importUserData(
 
   if (commit) {
     try {
-      await prisma.$transaction([
-        prisma.invoice.createMany({ data: invoiceRows }),
-        prisma.savedParty.createMany({ data: partyRows }),
-        ...[...maxPerYear].flatMap(([year, value]) => [
-          prisma.invoiceSequence.upsert({
-            where: { scope_year: { scope, year } },
-            create: { scope, year, value },
-            update: {},
-          }),
-          prisma.invoiceSequence.updateMany({
-            where: { scope, year, value: { lt: value } },
-            data: { value },
-          }),
-        ]),
-        ...(bankRow
-          ? [
-              prisma.userBankAccount.create({
-                data: {
-                  userId,
-                  accountHolder: encryptText(bankRow.accountHolder),
-                  bankName: encryptText(bankRow.bankName),
-                  accountNumber: encryptText(bankRow.accountNumber),
+      const result = await prisma.$transaction(
+        async (tx): Promise<ActionResult> => {
+          const incomeEntries: InvoiceIncomeEntry[] = [];
+          if (invoiceCandidates.length > 0) {
+            const years = new Set(
+              invoiceCandidates.map((candidate) =>
+                candidate.form.periodStart.slice(0, 4),
+              ),
+            );
+            const currentInvoices = await tx.invoice.findMany({
+              where: { userId },
+              select: {
+                id: true,
+                uid: true,
+                periodStart: true,
+                createdAt: true,
+                data: true,
+              },
+            });
+            for (const invoice of currentInvoices) {
+              if (!years.has(invoice.periodStart.slice(0, 4))) continue;
+              const form = sanitizeInvoiceForm(decryptJson(invoice.data).data);
+              if (!form || form.periodStart !== invoice.periodStart) {
+                return {
+                  ok: false,
+                  error:
+                    'Nie udało się odczytać jednego z zapisanych rachunków. Popraw lub usuń go przed importem rachunków z tego roku.',
+                };
+              }
+              incomeEntries.push({
+                id: invoice.id,
+                uid: invoice.uid,
+                createdAt: invoice.createdAt,
+                form,
+              });
+            }
+            incomeEntries.push(
+              ...invoiceCandidates.map((candidate) => ({
+                id: candidate.uid,
+                uid: candidate.uid,
+                createdAt: candidate.createdAt,
+                form: candidate.form,
+              })),
+            );
+          }
+
+          const invoiceRows: Prisma.InvoiceCreateManyInput[] =
+            invoiceCandidates.map((candidate) => {
+              const { form, params } = candidate;
+              const savedIncome = getPreviousInvoiceTaxableIncome(
+                incomeEntries,
+                {
+                  id: candidate.uid,
+                  uid: candidate.uid,
+                  createdAt: candidate.createdAt,
+                  periodStart: form.periodStart,
+                  contractorPesel: form.contractorPesel,
                 },
-              }),
-            ]
-          : []),
-      ]);
+                params,
+              );
+              const { calculations } = calculateInvoice(
+                {
+                  ...form,
+                  yearToDateTaxableIncome:
+                    form.yearToDateTaxableIncome + savedIncome,
+                },
+                params,
+              );
+              return {
+                userId,
+                uid: candidate.uid,
+                invoiceNumber: candidate.invoiceNumber,
+                createdAt: candidate.createdAt,
+                title: encryptText(
+                  form.contractNumber?.trim() || `Rachunek ${form.periodStart}`,
+                ),
+                contractNumber: form.contractNumber
+                  ? encryptText(form.contractNumber)
+                  : null,
+                issuePlace: form.issuePlace?.trim() || null,
+                issueDate: form.issueDate || null,
+                periodStart: form.periodStart,
+                net: calculations.net,
+                data: encryptJson(form),
+              };
+            });
+
+          await tx.invoice.createMany({ data: invoiceRows });
+          await tx.savedParty.createMany({ data: partyRows });
+          for (const [year, value] of maxPerYear) {
+            await tx.invoiceSequence.upsert({
+              where: { scope_year: { scope, year } },
+              create: { scope, year, value },
+              update: {},
+            });
+            await tx.invoiceSequence.updateMany({
+              where: { scope, year, value: { lt: value } },
+              data: { value },
+            });
+          }
+          if (bankRow) {
+            await tx.userBankAccount.create({
+              data: {
+                userId,
+                accountHolder: encryptText(bankRow.accountHolder),
+                bankName: encryptText(bankRow.bankName),
+                accountNumber: encryptText(bankRow.accountNumber),
+              },
+            });
+          }
+          return { ok: true, data: undefined };
+        },
+        { isolationLevel: 'Serializable' },
+      );
+      if (!result.ok) return result;
     } catch (error) {
       logServerError('[account/import] Failed to commit imported data.', error);
       return {

@@ -61,6 +61,7 @@ export async function GET() {
       invoiceNumber: invoice.invoiceNumber,
       title: invoice.title,
       contractNumber: invoice.contractNumber,
+      createdAt: invoice.createdAt,
       updatedAt: invoice.updatedAt,
       data: decryptJson(invoice.data).data,
     })),

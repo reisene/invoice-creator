@@ -20,6 +20,7 @@ type PartiesProps = ComponentProps<
 >;
 const mocks = vi.hoisted(() => ({
   income: vi.fn(),
+  snapshot: vi.fn(),
   save: vi.fn(),
   reserve: vi.fn(),
   pdf: vi.fn(),
@@ -38,6 +39,7 @@ vi.mock('@/app/actions/savedData', () => ({
   getYearToDateInvoiceTaxableIncome: mocks.income,
   saveInvoice: mocks.save,
   reserveInvoiceNumber: mocks.reserve,
+  getSavedInvoiceSnapshot: mocks.snapshot,
 }));
 vi.mock('@/components/generator/InvoiceForm', () => ({ default: mocks.form }));
 vi.mock('@/components/generator/InvoicePreview', () => ({
@@ -73,15 +75,25 @@ const baseProps = {
   signedIn: false,
   initialParties: [],
   bankAccount: null,
+  draftScope: 'test-user',
+  draftContext: 'new',
 };
+const updatedAt = '2026-10-21T00:00:00.000Z';
 beforeEach(() => {
   vi.resetAllMocks();
   sessionStorage.clear();
+  window.history.replaceState(null, '', '/generator');
   mocks.patch = {};
   mocks.income.mockResolvedValue({ ok: true, data: 0 });
+  mocks.snapshot.mockResolvedValue({ ok: true, data: null });
   mocks.save.mockResolvedValue({
     ok: true,
-    data: { id: 'saved-id', invoiceNumber: 'R/2026/1' },
+    data: {
+      id: 'saved-id',
+      invoiceNumber: 'R/2026/1',
+      updatedAt,
+      savedInvoiceTaxableIncome: 0,
+    },
   });
   mocks.reserve.mockResolvedValue({
     ok: true,
@@ -151,6 +163,22 @@ async function ready() {
     ),
   );
 }
+function storeDraft(draft: object, context = 'new') {
+  sessionStorage.setItem(
+    `generator_draft_v1:test-user:${context}`,
+    JSON.stringify({ version: 1, ...draft }),
+  );
+}
+async function closeDialogWith(name: string) {
+  fireEvent.click(screen.getByRole('button', { name }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+}
+const existingInvoice = {
+  id: 'existing',
+  updatedAt,
+  invoiceNumber: 'R/old',
+  data: formData(),
+};
 
 describe('generator initialization and saved data', () => {
   it('starts with local dates, formatted bank data and validation preventing downloads', () => {
@@ -194,7 +222,10 @@ describe('generator initialization and saved data', () => {
   it('keeps a valid preset issue date and tolerates storage failure', () => {
     sessionStorage.setItem('generator_preset_data', JSON.stringify(formData()));
     const first = render(<GeneratorClient {...baseProps} />);
-    expect(storedData()).toEqual(formData());
+    expect(storedData()).toEqual({
+      ...formData(),
+      yearToDateEmploymentIncome: 0,
+    });
     first.unmount();
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('blocked');
@@ -211,8 +242,10 @@ describe('generator initialization and saved data', () => {
       <GeneratorClient
         {...baseProps}
         signedIn
+        draftContext='invoice:existing'
         initialInvoice={{
           id: 'existing',
+          updatedAt,
           invoiceNumber: 'R/old',
           data: formData(),
         }}
@@ -221,7 +254,11 @@ describe('generator initialization and saved data', () => {
     );
     await ready();
     expect(storedData()).toEqual(formData());
-    expect(mocks.income).toHaveBeenCalledWith(2026, 'existing');
+    expect(mocks.income).toHaveBeenCalledWith(
+      formData().periodStart,
+      formData().contractorPesel,
+      'existing',
+    );
     expect(
       screen.getByRole('button', { name: 'Zaktualizuj rachunek' }),
     ).toBeDefined();
@@ -238,7 +275,9 @@ describe('generator initialization and saved data', () => {
     expect(storedData().issueDate).not.toBe('2000-01-01');
   });
   it('wires saved parties and bank updates to the form', async () => {
-    render(<GeneratorClient {...baseProps} signedIn />);
+    render(
+      <GeneratorClient {...baseProps} signedIn duplicateData={formData()} />,
+    );
     await ready();
     fireEvent.click(screen.getByRole('button', { name: 'Save party' }));
     expect(JSON.parse(screen.getByTestId('parties').textContent!)).toEqual([
@@ -284,6 +323,7 @@ describe('annual income synchronization', () => {
       screen.getByRole<HTMLButtonElement>('button', { name: 'Pobierz PDF' })
         .disabled,
     ).toBe(true);
+    await waitFor(() => expect(mocks.income).toHaveBeenCalledOnce());
     await act(async () => {
       resolve({ ok: true, data: 120000 });
     });
@@ -338,13 +378,18 @@ describe('annual income synchronization', () => {
     render(
       <GeneratorClient {...baseProps} signedIn duplicateData={formData()} />,
     );
+    await waitFor(() => expect(mocks.income).toHaveBeenCalledOnce());
     edit({ periodStart: '2027-01-01', periodEnd: '2027-01-31' });
     await ready();
     await act(async () => {
       stale({ ok: true, data: 9999 });
     });
     expect(screen.getByTestId('income').textContent).toContain('"income":500');
-    expect(mocks.income).toHaveBeenLastCalledWith(2027, undefined);
+    expect(mocks.income).toHaveBeenLastCalledWith(
+      '2027-01-01',
+      formData().contractorPesel,
+      undefined,
+    );
   });
   it('reports a rejected request even after unmount without updating state', async () => {
     let reject!: (reason: Error) => void;
@@ -354,7 +399,10 @@ describe('annual income synchronization', () => {
         reject = fail;
       }),
     );
-    const { unmount } = render(<GeneratorClient {...baseProps} signedIn />);
+    const { unmount } = render(
+      <GeneratorClient {...baseProps} signedIn duplicateData={formData()} />,
+    );
+    await waitFor(() => expect(mocks.income).toHaveBeenCalledOnce());
     unmount();
     await act(async () => {
       reject(error);
@@ -364,18 +412,104 @@ describe('annual income synchronization', () => {
 });
 
 describe('saving invoices and downloading PDF', () => {
+  it.each(['invoice-only', 'profile'] as const)(
+    'asks before changing a different profile account and respects %s',
+    async (choice) => {
+      const differentAccount = { ...bankAccount, bankName: 'Another bank' };
+      render(
+        <GeneratorClient
+          {...baseProps}
+          signedIn
+          bankAccount={differentAccount}
+          duplicateData={formData()}
+        />,
+      );
+      await ready();
+      fireEvent.click(screen.getByRole('button', { name: 'Zapisz rachunek' }));
+      expect(mocks.save).not.toHaveBeenCalled();
+      const dialog = await screen.findByRole('dialog');
+      expect(dialog.textContent).toContain('profil');
+      fireEvent.click(
+        screen.getByRole('button', {
+          name:
+            choice === 'profile'
+              ? 'Zapisz i zmień profil'
+              : 'Zapisz tylko rachunek',
+        }),
+      );
+      await screen.findByText('Rachunek zapisany.');
+      expect(mocks.save).toHaveBeenCalledWith(
+        expect.any(Object),
+        undefined,
+        undefined,
+        choice === 'profile',
+        0,
+        undefined,
+        expect.stringMatching(/^[0-9a-f-]{36}$/),
+      );
+      expect(JSON.parse(screen.getByTestId('bank').textContent!)).toEqual(
+        choice === 'profile' ? bankAccount : differentAccount,
+      );
+    },
+  );
+
+  it('reuses the creation identity after an interrupted response', async () => {
+    mocks.save.mockRejectedValueOnce(new Error('interrupted'));
+    render(
+      <GeneratorClient
+        {...baseProps}
+        signedIn
+        bankAccount={bankAccount}
+        duplicateData={formData()}
+      />,
+    );
+    await ready();
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz rachunek' }));
+    await screen.findByText(
+      'Nie udało się zapisać rachunku. Spróbuj ponownie.',
+    );
+    const firstIdentity = mocks.save.mock.calls[0][6];
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz rachunek' }));
+    await screen.findByText('Rachunek zapisany.');
+    expect(mocks.save.mock.calls[1][6]).toBe(firstIdentity);
+  });
+
+  it('blocks new saves if their identity cannot be persisted in this tab', async () => {
+    render(
+      <GeneratorClient
+        {...baseProps}
+        signedIn
+        bankAccount={bankAccount}
+        duplicateData={formData()}
+      />,
+    );
+    await ready();
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('quota');
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Zapisz rachunek' }));
+    await screen.findByText(/Nie można zabezpieczyć nowego rachunku/);
+    expect(mocks.save).not.toHaveBeenCalled();
+  });
+
   it.each(['CASH', 'TRANSFER'] as const)(
     'saves a new %s invoice, then updates it',
     async (paymentMethod) => {
       const data = formData({
         paymentMethod,
         transferTarget: paymentMethod === 'CASH' ? '' : 'SAVED_ACCOUNT',
+        yearToDateEmploymentIncome: 0,
       });
       expect(validateInvoiceForm(data, DEFAULT_TAX_PARAMS)).toEqual([]);
       sessionStorage.setItem('generator_preset_data', JSON.stringify(data));
       let finish!: (result: {
         ok: true;
-        data: { id: string; invoiceNumber: string };
+        data: {
+          id: string;
+          invoiceNumber: string;
+          updatedAt: string;
+          savedInvoiceTaxableIncome: number;
+        };
       }) => void;
       mocks.save
         .mockReturnValueOnce(
@@ -385,20 +519,44 @@ describe('saving invoices and downloading PDF', () => {
         )
         .mockResolvedValueOnce({
           ok: true,
-          data: { id: 'saved-id', invoiceNumber: 'R/2026/1' },
+          data: {
+            id: 'saved-id',
+            invoiceNumber: 'R/2026/1',
+            updatedAt,
+            savedInvoiceTaxableIncome: 0,
+          },
         });
       render(<GeneratorClient {...baseProps} signedIn />);
       await ready();
       fireEvent.click(screen.getByRole('button', { name: 'Zapisz rachunek' }));
+      if (paymentMethod === 'TRANSFER')
+        fireEvent.click(
+          screen.getByRole('button', {
+            name: 'Zapisz i dodaj konto w profilu',
+          }),
+        );
       expect(
         screen.getByRole<HTMLButtonElement>('button', { name: 'Zapisywanie…' })
           .disabled,
       ).toBe(true);
-      expect(mocks.save).toHaveBeenCalledWith(data, undefined, undefined, true);
+      expect(mocks.save).toHaveBeenCalledWith(
+        data,
+        undefined,
+        undefined,
+        paymentMethod === 'TRANSFER',
+        0,
+        undefined,
+        expect.any(String),
+      );
       await act(async () => {
         finish({
           ok: true,
-          data: { id: 'saved-id', invoiceNumber: 'R/2026/1' },
+          data: {
+            id: 'saved-id',
+            invoiceNumber: 'R/2026/1',
+            updatedAt,
+            savedInvoiceTaxableIncome: 0,
+          },
         });
       });
       expect(screen.getByText('Rachunek zapisany.')).toBeDefined();
@@ -413,7 +571,10 @@ describe('saving invoices and downloading PDF', () => {
           data,
           'saved-id',
           undefined,
-          true,
+          false,
+          0,
+          updatedAt,
+          undefined,
         ),
       );
     },
@@ -424,7 +585,12 @@ describe('saving invoices and downloading PDF', () => {
       .mockResolvedValueOnce({ ok: false, error: 'Rejected save' })
       .mockRejectedValueOnce(error);
     render(
-      <GeneratorClient {...baseProps} signedIn duplicateData={formData()} />,
+      <GeneratorClient
+        {...baseProps}
+        bankAccount={bankAccount}
+        signedIn
+        duplicateData={formData()}
+      />,
     );
     await ready();
     fireEvent.click(screen.getByRole('button', { name: 'Zapisz rachunek' }));
@@ -445,7 +611,12 @@ describe('saving invoices and downloading PDF', () => {
       data: { number: 'R/2026/2?ą', token: 'signed-token' },
     });
     render(
-      <GeneratorClient {...baseProps} signedIn duplicateData={formData()} />,
+      <GeneratorClient
+        {...baseProps}
+        bankAccount={bankAccount}
+        signedIn
+        duplicateData={formData()}
+      />,
     );
     await ready();
     const click = vi
@@ -472,7 +643,10 @@ describe('saving invoices and downloading PDF', () => {
         expect.any(Object),
         undefined,
         { number: 'R/2026/2?ą', token: 'signed-token' },
-        true,
+        false,
+        0,
+        undefined,
+        expect.any(String),
       ),
     );
     await screen.findByText('Rachunek zapisany.');
@@ -484,7 +658,10 @@ describe('saving invoices and downloading PDF', () => {
         expect.any(Object),
         'saved-id',
         undefined,
-        true,
+        false,
+        0,
+        updatedAt,
+        undefined,
       ),
     );
   });
@@ -500,6 +677,7 @@ describe('saving invoices and downloading PDF', () => {
         {...baseProps}
         initialInvoice={{
           id: 'old',
+          updatedAt,
           invoiceNumber: 'Existing/1',
           data: formData(),
         }}
@@ -557,4 +735,288 @@ describe('saving invoices and downloading PDF', () => {
       ).toBe(false);
     },
   );
+});
+
+describe('draft states, conflicts and dialogs', () => {
+  it('lets a blocked draft be cleared only after confirmation', async () => {
+    sessionStorage.setItem('generator_draft_v1:test-user:new', '{');
+    render(<GeneratorClient {...baseProps} />);
+    await screen.findByText(/Nie udało się odczytać wersji roboczej/);
+    expect(screen.queryByTestId('form')).toBeNull();
+    const openDialog = () =>
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: 'Usuń wersję roboczą i otwórz formularz',
+        }),
+      );
+    openDialog();
+    await closeDialogWith('Close');
+    openDialog();
+    await closeDialogWith('Anuluj');
+    expect(sessionStorage.getItem('generator_draft_v1:test-user:new')).toBe(
+      '{',
+    );
+    openDialog();
+    await closeDialogWith('Usuń wersję roboczą');
+    expect(
+      screen.getByText(/Wersja robocza została usunięta z pamięci karty/),
+    ).toBeDefined();
+    expect(storedData().clientName).toBe('');
+    expect(
+      sessionStorage.getItem('generator_draft_v1:test-user:new'),
+    ).toBeNull();
+  });
+
+  it('clears the draft of a ready form', async () => {
+    render(<GeneratorClient {...baseProps} duplicateData={formData()} />);
+    edit({ grossAmount: 4321 });
+    expect(
+      sessionStorage.getItem('generator_draft_v1:test-user:new'),
+    ).not.toBeNull();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Usuń wersję roboczą z tej karty' }),
+    );
+    await closeDialogWith('Usuń wersję roboczą');
+    expect(
+      sessionStorage.getItem('generator_draft_v1:test-user:new'),
+    ).toBeNull();
+    expect(
+      screen.getByText(/Wersja robocza została usunięta z pamięci karty/),
+    ).toBeDefined();
+  });
+
+  it.each([
+    ['Wybierz wzorzec', 7000],
+    ['Wybierz wersję roboczą', 1234],
+  ])(
+    'resolves a draft and preset conflict with "%s"',
+    async (choice, grossAmount) => {
+      storeDraft({ formData: formData({ grossAmount: 1234 }) });
+      sessionStorage.setItem(
+        'generator_preset_data',
+        JSON.stringify({ grossAmount: 7000 }),
+      );
+      render(<GeneratorClient {...baseProps} />);
+      const heading = await screen.findByRole('heading', {
+        name: 'Wybierz wersję formularza',
+      });
+      expect(document.activeElement).toBe(heading);
+      expect(heading.parentElement?.textContent).toContain('wybrany wzorzec');
+      fireEvent.click(screen.getByRole('button', { name: choice }));
+      await waitFor(() => expect(storedData().grossAmount).toBe(grossAmount));
+      expect(sessionStorage.getItem('generator_preset_data')).toBeNull();
+    },
+  );
+
+  it.each([
+    ['Wybierz zapisany rachunek', 5000],
+    ['Wybierz wersję roboczą', 1234],
+  ])(
+    'resolves a conflict with a changed saved invoice using "%s"',
+    async (choice, grossAmount) => {
+      storeDraft(
+        {
+          formData: formData({ grossAmount: 1234 }),
+          invoiceId: 'existing',
+          invoiceNumber: 'R/old',
+          updatedAt: '2026-10-01T00:00:00.000Z',
+        },
+        'invoice:existing',
+      );
+      render(
+        <GeneratorClient
+          {...baseProps}
+          draftContext='invoice:existing'
+          initialInvoice={existingInvoice}
+        />,
+      );
+      const heading = await screen.findByRole('heading', {
+        name: 'Wybierz wersję formularza',
+      });
+      expect(heading.parentElement?.textContent).toContain(
+        'Istnieje zapisany rachunek',
+      );
+      fireEvent.click(screen.getByRole('button', { name: choice }));
+      expect(storedData().grossAmount).toBe(grossAmount);
+      expect(
+        JSON.parse(screen.getByTestId('preview').textContent!).invoiceNumber,
+      ).toBe('R/old');
+    },
+  );
+
+  it.each([
+    ['Odtwórz jako nowy rachunek', 1234],
+    ['Odrzuć wersję roboczą', undefined],
+  ])(
+    'resolves a draft of a deleted invoice using "%s"',
+    async (choice, grossAmount) => {
+      let resolve!: (result: { ok: true; data: null }) => void;
+      mocks.snapshot.mockReturnValue(
+        new Promise((done) => {
+          resolve = done;
+        }),
+      );
+      storeDraft({
+        formData: formData({ grossAmount: 1234 }),
+        invoiceId: 'gone',
+        invoiceNumber: 'R/gone',
+        updatedAt,
+      });
+      render(<GeneratorClient {...baseProps} />);
+      expect(screen.getByRole('status').textContent).toBe(
+        'Odczytywanie wersji roboczej…',
+      );
+      await act(async () => {
+        resolve({ ok: true, data: null });
+      });
+      expect(mocks.snapshot).toHaveBeenCalledWith('gone', false);
+      expect(
+        screen.getByRole('heading', { name: 'Wybierz wersję formularza' })
+          .parentElement?.textContent,
+      ).toContain('nie istnieje już');
+      fireEvent.click(screen.getByRole('button', { name: choice }));
+      expect(storedData().grossAmount).toBe(grossAmount);
+      expect(
+        JSON.parse(screen.getByTestId('preview').textContent!).invoiceNumber,
+      ).toBeUndefined();
+    },
+  );
+
+  it('closes the bank confirmation without saving', async () => {
+    render(
+      <GeneratorClient
+        {...baseProps}
+        signedIn
+        bankAccount={{ ...bankAccount, bankName: 'Another bank' }}
+        duplicateData={formData()}
+      />,
+    );
+    await ready();
+    const save = screen.getByRole('button', { name: 'Zapisz rachunek' });
+    fireEvent.click(save);
+    await screen.findByRole('dialog');
+    await closeDialogWith('Close');
+    fireEvent.click(save);
+    await screen.findByRole('dialog');
+    await closeDialogWith('Anuluj');
+    expect(mocks.save).not.toHaveBeenCalled();
+    edit({
+      paymentMethod: 'TRANSFER',
+      transferTarget: 'SAVED_ACCOUNT',
+      bankAccountNumber: undefined,
+    });
+    expect(
+      screen.getByRole<HTMLButtonElement>('button', { name: 'Zapisz rachunek' })
+        .disabled,
+    ).toBe(true);
+  });
+});
+
+describe('annual income validation and recovery', () => {
+  it('explains invalid PESEL and settlement period without requesting income', async () => {
+    render(
+      <GeneratorClient {...baseProps} signedIn duplicateData={formData()} />,
+    );
+    await ready();
+    mocks.income.mockClear();
+    edit({ contractorPesel: '123' });
+    expect(screen.getByTestId('income').textContent).toContain(
+      'Podaj prawidłowy PESEL zleceniobiorcy.',
+    );
+    edit({ periodStart: 'invalid' });
+    expect(screen.getByTestId('income').textContent).toContain(
+      'Podaj prawidłowy początek okresu rozliczeniowego.',
+    );
+    expect(screen.getByText(/Brak parametrów podatkowych/)).toBeDefined();
+    expect(mocks.income).not.toHaveBeenCalled();
+  });
+
+  it('retries a failed income check', async () => {
+    mocks.income
+      .mockResolvedValueOnce({ ok: false, error: 'Denied' })
+      .mockResolvedValueOnce({ ok: true, data: 700 });
+    render(
+      <GeneratorClient {...baseProps} signedIn duplicateData={formData()} />,
+    );
+    await ready();
+    expect(screen.getByText(/Podgląd nie uwzględnia jeszcze/)).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Spróbuj ponownie' }));
+    await waitFor(() =>
+      expect(screen.getByTestId('income').textContent).toContain(
+        '"income":700',
+      ),
+    );
+    expect(mocks.income).toHaveBeenCalledTimes(2);
+    expect(mocks.snapshot).not.toHaveBeenCalled();
+  });
+
+  it('shows a server conflict instead of retrying income for a deleted invoice', async () => {
+    mocks.income.mockResolvedValueOnce({ ok: false, error: 'Denied' });
+    render(
+      <GeneratorClient
+        {...baseProps}
+        signedIn
+        bankAccount={bankAccount}
+        draftContext='invoice:existing'
+        initialInvoice={existingInvoice}
+      />,
+    );
+    await ready();
+    fireEvent.click(screen.getByRole('button', { name: 'Spróbuj ponownie' }));
+    const heading = await screen.findByRole('heading', {
+      name: 'Wybierz wersję formularza',
+    });
+    expect(mocks.snapshot).toHaveBeenCalledWith('existing', false);
+    expect(mocks.income).toHaveBeenCalledOnce();
+    await waitFor(() => expect(document.activeElement).toBe(heading));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Odtwórz jako nowy rachunek' }),
+    );
+    expect(
+      screen.getByRole('button', { name: 'Zapisz rachunek' }),
+    ).toBeDefined();
+  });
+
+  it('applies current income and opens a conflict after rejected updates', async () => {
+    mocks.save
+      .mockResolvedValueOnce({
+        ok: false,
+        error: 'Income changed',
+        currentSavedInvoiceTaxableIncome: 900,
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        error: 'Changed elsewhere',
+        invoiceChanged: true,
+      });
+    mocks.snapshot.mockResolvedValue({
+      ok: true,
+      data: { ...existingInvoice, updatedAt: '2026-10-22T00:00:00.000Z' },
+    });
+    render(
+      <GeneratorClient
+        {...baseProps}
+        signedIn
+        bankAccount={bankAccount}
+        draftContext='invoice:existing'
+        initialInvoice={existingInvoice}
+      />,
+    );
+    await ready();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Zaktualizuj rachunek' }),
+    );
+    await screen.findByText('Income changed');
+    expect(screen.getByTestId('income').textContent).toContain('"income":900');
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Zaktualizuj rachunek' }),
+    );
+    const heading = await screen.findByRole('heading', {
+      name: 'Wybierz wersję formularza',
+    });
+    expect(heading.parentElement?.textContent).toContain(
+      'Istnieje zapisany rachunek',
+    );
+    expect(mocks.snapshot).toHaveBeenCalledWith('existing', false);
+  });
 });

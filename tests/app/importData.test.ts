@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   bank: vi.fn(),
   encrypt: vi.fn(),
   encryptJson: vi.fn(),
+  decryptJson: vi.fn(),
   log: vi.fn(),
   revalidate: vi.fn(),
   invoices: vi.fn(),
@@ -52,6 +53,7 @@ vi.mock('@/lib/savedDataAccess', () => ({
 vi.mock('@/lib/savedDataCrypto', () => ({
   encryptText: mocks.encrypt,
   encryptJson: mocks.encryptJson,
+  decryptJson: mocks.decryptJson,
 }));
 vi.mock('@/lib/serverLogger', () => ({ logServerError: mocks.log }));
 vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidate }));
@@ -97,14 +99,27 @@ beforeEach(() => {
   mocks.bank.mockResolvedValue(null);
   mocks.sanitize.mockImplementation((data: unknown) => data);
   mocks.validate.mockReturnValue([]);
-  mocks.calculate.mockReturnValue({ calculations: { net: 4000 } });
+  mocks.calculate.mockReturnValue({
+    calculations: { net: 4000, taxableBase: 3000 },
+  });
   mocks.parseParty.mockImplementation((value: unknown) => ({
     ok: true,
     party: value,
   }));
   mocks.encrypt.mockImplementation((value: string) => `encrypted:${value}`);
   mocks.encryptJson.mockReturnValue('encrypted-form');
-  mocks.transaction.mockResolvedValue([]);
+  mocks.decryptJson.mockImplementation((data: unknown) => ({ data }));
+  mocks.transaction.mockImplementation(async (run) =>
+    run({
+      invoice: { findMany: mocks.invoices, createMany: mocks.createInvoices },
+      savedParty: { createMany: mocks.createParties },
+      invoiceSequence: {
+        upsert: mocks.upsertSequence,
+        updateMany: mocks.updateSequence,
+      },
+      userBankAccount: { create: mocks.createBank },
+    }),
+  );
 });
 
 describe('import format and access', () => {
@@ -171,6 +186,81 @@ describe('import format and access', () => {
 });
 
 describe('invoice import', () => {
+  it('preserves chronology and calculates net from existing history plus earlier incoming records regardless of file order', async () => {
+    const { calculateInvoice } = await vi.importActual<
+      typeof import('@/lib/invoice/calculateInvoice')
+    >('@/lib/invoice/calculateInvoice');
+    mocks.calculate.mockImplementation(calculateInvoice);
+    const data = {
+      ...base,
+      contractorStatus: 'student_under_26',
+      youngRelief: false,
+      voluntarySickness: false,
+      taxReduction: false,
+      noTaxAdvanceRequest: false,
+    } as const;
+    const existing = {
+      id: 'existing',
+      uid: null,
+      invoiceNumber: '1/2026',
+      periodStart: '2026-02-01',
+      createdAt: new Date('2026-02-01'),
+      data: { ...data, periodStart: '2026-02-01', grossAmount: 150000 },
+    };
+    mocks.invoices.mockResolvedValue([existing]);
+    const earlier = { ...data, grossAmount: 50000 };
+    const later = { ...data, grossAmount: 5000 };
+    const earlierDate = '2026-03-10T00:00:00.000Z';
+    const laterDate = '2026-03-11T00:00:00.000Z';
+    expect(
+      await run(
+        {
+          invoices: [
+            { invoiceNumber: '3/2026', createdAt: laterDate, data: later },
+            { invoiceNumber: '2/2026', createdAt: earlierDate, data: earlier },
+          ],
+        },
+        true,
+      ),
+    ).toMatchObject({ ok: true, data: { invoices: { add: 2 } } });
+    const rows = mocks.createInvoices.mock.calls[0][0].data;
+    expect(rows).toEqual([
+      expect.objectContaining({
+        createdAt: new Date(laterDate),
+        net: calculateInvoice(
+          { ...later, yearToDateTaxableIncome: 160000 },
+          DEFAULT_TAX_PARAMS,
+        ).calculations.net,
+      }),
+      expect.objectContaining({
+        createdAt: new Date(earlierDate),
+        net: calculateInvoice(
+          { ...earlier, yearToDateTaxableIncome: 120000 },
+          DEFAULT_TAX_PARAMS,
+        ).calculations.net,
+      }),
+    ]);
+    expect(mocks.transaction).toHaveBeenCalledWith(expect.any(Function), {
+      isolationLevel: 'Serializable',
+    });
+  });
+
+  it.each(['invalid', 123, null])(
+    'rejects invalid creation dates %s before committing them',
+    async (createdAt) => {
+      expect(
+        await run({ invoices: [{ createdAt, updatedAt: 'bad', data: base }] }),
+      ).toMatchObject({
+        ok: true,
+        data: {
+          invoices: { invalid: 1 },
+          problems: [expect.stringContaining('data zapisania')],
+        },
+      });
+      expect(mocks.transaction).not.toHaveBeenCalled();
+    },
+  );
+
   it('reports malformed records and missing tax parameters', async () => {
     mocks.tax.mockResolvedValue([]);
     const result = await run({ invoices: [null, {}, { data: base }] });

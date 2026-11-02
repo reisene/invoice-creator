@@ -1,5 +1,5 @@
 // @vitest-environment node
-import * as actions from '@/app/actions/savedData';
+import * as savedDataActions from '@/app/actions/savedData';
 import { DEFAULT_TAX_PARAMS } from '@/lib/invoice/taxConstants';
 import { SAMPLE_INVOICE_PRESETS } from '@/lib/sampleInvoices';
 import type { InvoiceFormData } from '@/types/invoiceForm';
@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => {
   const model = () => ({
     findMany: vi.fn(),
     findFirst: vi.fn(),
+    findFirstOrThrow: vi.fn(),
     create: vi.fn(),
     updateMany: vi.fn(),
     deleteMany: vi.fn(),
@@ -29,6 +30,7 @@ const mocks = vi.hoisted(() => {
     reserve: vi.fn(),
     verify: vi.fn(),
     revalidate: vi.fn(),
+    transaction: vi.fn(),
     invoice: model(),
     party: model(),
     bank: model(),
@@ -67,11 +69,35 @@ vi.mock('@/lib/db', () => ({
     invoice: mocks.invoice,
     savedParty: mocks.party,
     userBankAccount: mocks.bank,
+    $transaction: mocks.transaction,
   },
 }));
 vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidate }));
 
-const base = SAMPLE_INVOICE_PRESETS[0].formData;
+const base = {
+  ...SAMPLE_INVOICE_PRESETS[0].formData,
+  contractorPesel: '90010112349',
+};
+const updatedAt = new Date('2026-10-21T00:00:00.000Z');
+const creationUid = 'd92da4c7-c999-4856-96d6-7681b1b96f71';
+const actions = {
+  ...savedDataActions,
+  saveInvoice: (
+    input: unknown,
+    id?: string,
+    reserved?: Parameters<typeof savedDataActions.saveInvoice>[2],
+    saveAccount?: boolean,
+  ) =>
+    savedDataActions.saveInvoice(
+      input,
+      id,
+      reserved,
+      saveAccount,
+      0,
+      id ? updatedAt.toISOString() : undefined,
+      id ? undefined : creationUid,
+    ),
+};
 const reservation = { number: '7/2026', token: 'signed' };
 const bank = {
   accountHolder: ' Jan ',
@@ -107,8 +133,25 @@ beforeEach(() => {
   mocks.verify.mockReturnValue(true);
   mocks.parseParty.mockReturnValue({ ok: true, party });
   mocks.invoice.findMany.mockResolvedValue([]);
-  mocks.invoice.findFirst.mockResolvedValue({ invoiceNumber: '1/2026' });
-  mocks.invoice.create.mockResolvedValue({ id: 'invoice-1' });
+  mocks.invoice.findFirst.mockImplementation(async ({ where }) =>
+    where.uid
+      ? null
+      : {
+          id: 'invoice-1',
+          uid: creationUid,
+          invoiceNumber: '1/2026',
+          createdAt: updatedAt,
+          updatedAt,
+        },
+  );
+  mocks.invoice.findFirstOrThrow.mockResolvedValue({
+    id: 'invoice-1',
+    updatedAt,
+  });
+  mocks.invoice.create.mockResolvedValue({ id: 'invoice-1', updatedAt });
+  mocks.transaction.mockImplementation(async (run) =>
+    run({ invoice: mocks.invoice, userBankAccount: mocks.bank }),
+  );
   mocks.invoice.updateMany.mockResolvedValue({ count: 1 });
   mocks.invoice.deleteMany.mockResolvedValue({ count: 2 });
   mocks.party.count.mockResolvedValue(0);
@@ -120,7 +163,14 @@ afterEach(() => vi.useRealTimers());
 
 describe('saved data access gates', () => {
   it.each([
-    ['income', () => actions.getYearToDateInvoiceTaxableIncome(2026)],
+    [
+      'income',
+      () =>
+        actions.getYearToDateInvoiceTaxableIncome(
+          base.periodStart,
+          base.contractorPesel,
+        ),
+    ],
     ['save', () => actions.saveInvoice(base)],
     ['delete', () => actions.deleteInvoice('invoice-1')],
     ['party save', () => actions.saveParty(party)],
@@ -137,7 +187,14 @@ describe('saved data access gates', () => {
   });
 
   it.each([
-    ['income', () => actions.getYearToDateInvoiceTaxableIncome(2026)],
+    [
+      'income',
+      () =>
+        actions.getYearToDateInvoiceTaxableIncome(
+          base.periodStart,
+          base.contractorPesel,
+        ),
+    ],
     ['reserve', () => actions.reserveInvoiceNumber(2026)],
     ['save', () => actions.saveInvoice(base)],
     ['party', () => actions.saveParty(party)],
@@ -155,7 +212,10 @@ describe('yearly taxable income and numbering', () => {
     'rejects invalid year %s',
     async (year) => {
       expect(
-        await actions.getYearToDateInvoiceTaxableIncome(year),
+        await actions.getYearToDateInvoiceTaxableIncome(
+          String(year),
+          base.contractorPesel,
+        ),
       ).toMatchObject({ ok: false });
       expect(await actions.reserveInvoiceNumber(year)).toMatchObject({
         ok: false,
@@ -167,39 +227,70 @@ describe('yearly taxable income and numbering', () => {
 
   it('rejects an overlong excluded invoice id', async () => {
     expect(
-      await actions.getYearToDateInvoiceTaxableIncome(2026, 'x'.repeat(101)),
+      await actions.getYearToDateInvoiceTaxableIncome(
+        base.periodStart,
+        base.contractorPesel,
+        'x'.repeat(101),
+      ),
     ).toMatchObject({ ok: false });
     expect(mocks.invoice.findMany).not.toHaveBeenCalled();
   });
 
   it('reports missing tax parameters', async () => {
     mocks.tax.mockResolvedValue([{ ...DEFAULT_TAX_PARAMS, year: 2027 }]);
-    expect(await actions.getYearToDateInvoiceTaxableIncome(2026)).toEqual({
+    expect(
+      await actions.getYearToDateInvoiceTaxableIncome(
+        base.periodStart,
+        base.contractorPesel,
+      ),
+    ).toEqual({
       ok: false,
       error: expect.stringContaining('Brak parametrów podatkowych'),
     });
   });
 
-  it.each([undefined, '', 'excluded-id'])(
-    'scopes the sum to owner and year, excluding %s',
+  it.each([undefined, 'invoice-1'])(
+    'scopes the sum to owner, person and period, excluding %s',
     async (excludedId) => {
       mocks.invoice.findMany.mockResolvedValue([
-        { data: base },
-        { data: base },
+        {
+          id: 'previous-1',
+          uid: null,
+          createdAt: new Date('2026-03-01'),
+          periodStart: base.periodStart,
+          data: base,
+        },
+        {
+          id: 'previous-2',
+          uid: null,
+          createdAt: new Date('2026-03-02'),
+          periodStart: base.periodStart,
+          data: base,
+        },
       ]);
       mocks.calculate
         .mockReturnValueOnce({ calculations: { taxableBase: 1000 } })
         .mockReturnValueOnce({ calculations: { taxableBase: 2000 } });
       expect(
-        await actions.getYearToDateInvoiceTaxableIncome(2026, excludedId),
+        await actions.getYearToDateInvoiceTaxableIncome(
+          base.periodStart,
+          base.contractorPesel,
+          excludedId,
+        ),
       ).toEqual({ ok: true, data: 3000 });
       expect(mocks.invoice.findMany).toHaveBeenCalledWith({
         where: {
           userId: 'user-1',
-          periodStart: { startsWith: '2026-' },
+          periodStart: { gte: '2026-01-01', lte: base.periodStart },
           ...(excludedId ? { id: { not: excludedId } } : {}),
         },
-        select: { data: true },
+        select: {
+          id: true,
+          uid: true,
+          createdAt: true,
+          periodStart: true,
+          data: true,
+        },
       });
       expect(mocks.calculate).toHaveBeenCalledWith(
         {
@@ -217,7 +308,12 @@ describe('yearly taxable income and numbering', () => {
   it('rejects unreadable saved invoices instead of understating income', async () => {
     mocks.invoice.findMany.mockResolvedValue([{ data: {} }]);
     mocks.sanitize.mockReturnValue(null);
-    expect(await actions.getYearToDateInvoiceTaxableIncome(2026)).toEqual({
+    expect(
+      await actions.getYearToDateInvoiceTaxableIncome(
+        base.periodStart,
+        base.contractorPesel,
+      ),
+    ).toEqual({
       ok: false,
       error: expect.stringContaining('Nie udało się odczytać'),
     });
@@ -241,6 +337,125 @@ describe('yearly taxable income and numbering', () => {
 });
 
 describe('saving invoices', () => {
+  it.each([
+    [undefined, 0, undefined, undefined],
+    [undefined, -1, undefined, creationUid],
+    [undefined, 0.5, undefined, creationUid],
+    [undefined, NaN, undefined, creationUid],
+    ['invoice-1', 0, undefined, undefined],
+    ['invoice-1', 0, 'not-a-date', undefined],
+  ] as const)(
+    'rejects missing or invalid concurrency metadata %#',
+    async (id, income, version, uid) => {
+      expect(
+        await savedDataActions.saveInvoice(
+          base,
+          id,
+          undefined,
+          false,
+          income,
+          version,
+          uid,
+        ),
+      ).toMatchObject({ ok: false });
+      expect(mocks.transaction).not.toHaveBeenCalled();
+    },
+  );
+
+  it('rejects duplicate creation identities without allocating a number or updating the profile', async () => {
+    mocks.invoice.findFirst.mockResolvedValue({ id: 'existing' });
+    expect(
+      await actions.saveInvoice(base, undefined, undefined, true),
+    ).toMatchObject({
+      ok: false,
+      invoiceChanged: true,
+    });
+    expect(mocks.invoice.findFirst).toHaveBeenCalledWith({
+      where: { userId: 'user-1', uid: creationUid },
+      select: { id: true },
+    });
+    expect(mocks.invoice.create).not.toHaveBeenCalled();
+    expect(mocks.reserve).not.toHaveBeenCalled();
+    expect(mocks.bank.upsert).not.toHaveBeenCalled();
+    expect(mocks.revalidate).not.toHaveBeenCalled();
+  });
+
+  it('rejects a stale server version before changing the invoice or account', async () => {
+    expect(
+      await savedDataActions.saveInvoice(
+        base,
+        'invoice-1',
+        undefined,
+        true,
+        0,
+        '2026-10-20T00:00:00.000Z',
+      ),
+    ).toMatchObject({
+      ok: false,
+      invoiceChanged: true,
+    });
+    expect(mocks.invoice.updateMany).not.toHaveBeenCalled();
+    expect(mocks.bank.upsert).not.toHaveBeenCalled();
+    expect(mocks.revalidate).not.toHaveBeenCalled();
+  });
+
+  it('returns changed history income for review instead of saving mismatched net', async () => {
+    mocks.invoice.findMany.mockResolvedValue([
+      {
+        id: 'earlier',
+        uid: null,
+        createdAt: new Date('2026-02-01'),
+        periodStart: '2026-02-01',
+        data: { ...base, periodStart: '2026-02-01' },
+      },
+    ]);
+    expect(await actions.saveInvoice(base)).toMatchObject({
+      ok: false,
+      currentSavedInvoiceTaxableIncome: 3000,
+    });
+    expect(mocks.invoice.create).not.toHaveBeenCalled();
+    expect(mocks.revalidate).not.toHaveBeenCalled();
+  });
+
+  it('adds verified history to manual income and persists the net from that calculation', async () => {
+    mocks.invoice.findMany.mockResolvedValue([
+      {
+        id: 'earlier',
+        uid: null,
+        createdAt: new Date('2026-02-01'),
+        periodStart: '2026-02-01',
+        data: { ...base, periodStart: '2026-02-01' },
+      },
+    ]);
+    expect(
+      await savedDataActions.saveInvoice(
+        { ...base, yearToDateTaxableIncome: 100 },
+        undefined,
+        undefined,
+        false,
+        3000,
+        undefined,
+        creationUid,
+      ),
+    ).toMatchObject({ ok: true, data: { savedInvoiceTaxableIncome: 3000 } });
+    expect(mocks.calculate).toHaveBeenLastCalledWith(
+      {
+        ...base,
+        yearToDateTaxableIncome: 3100,
+      },
+      DEFAULT_TAX_PARAMS,
+    );
+    expect(mocks.invoice.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ net: 4000, data: 'encrypted-form' }),
+      }),
+    );
+    expect(mocks.transaction).toHaveBeenCalledWith(expect.any(Function), {
+      isolationLevel: 'Serializable',
+    });
+    expect(mocks.bank.upsert).not.toHaveBeenCalled();
+  });
+
   it('rejects invalid sanitized data', async () => {
     mocks.sanitize.mockReturnValue(null);
     expect(await actions.saveInvoice({})).toEqual({
@@ -267,12 +482,18 @@ describe('saving invoices', () => {
   it('creates encrypted invoices with owner, UID and reserved number', async () => {
     expect(await actions.saveInvoice(base)).toEqual({
       ok: true,
-      data: { id: 'invoice-1', invoiceNumber: reservation.number },
+      data: {
+        id: 'invoice-1',
+        invoiceNumber: reservation.number,
+        updatedAt: updatedAt.toISOString(),
+        savedInvoiceTaxableIncome: 0,
+      },
     });
     expect(mocks.invoice.create).toHaveBeenCalledWith({
       data: {
         userId: 'user-1',
         uid: expect.stringMatching(/^[0-9a-f-]{36}$/),
+        createdAt: updatedAt,
         invoiceNumber: reservation.number,
         title: 'encrypted:Rachunek 2026-03-01',
         contractNumber: null,
@@ -282,9 +503,13 @@ describe('saving invoices', () => {
         net: 4000,
         data: 'encrypted-form',
       },
-      select: { id: true, invoiceNumber: true },
+      select: { id: true, updatedAt: true },
     });
-    expect(mocks.reserve).toHaveBeenCalledWith('user:user-1', 2026);
+    expect(mocks.reserve).toHaveBeenCalledWith(
+      'user:user-1',
+      2026,
+      expect.any(Object),
+    );
   });
 
   it('uses a valid signed reservation instead of allocating another number', async () => {
@@ -313,10 +538,24 @@ describe('saving invoices', () => {
         { ...base, contractNumber: ' U/1 ' },
         'invoice-1',
       ),
-    ).toEqual({ ok: true, data: { id: 'invoice-1', invoiceNumber: '1/2026' } });
+    ).toEqual({
+      ok: true,
+      data: {
+        id: 'invoice-1',
+        invoiceNumber: '1/2026',
+        updatedAt: updatedAt.toISOString(),
+        savedInvoiceTaxableIncome: 0,
+      },
+    });
     expect(mocks.invoice.findFirst).toHaveBeenCalledWith({
       where: { id: 'invoice-1', userId: 'user-1' },
-      select: { invoiceNumber: true },
+      select: {
+        id: true,
+        uid: true,
+        invoiceNumber: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
     expect(mocks.invoice.updateMany).toHaveBeenCalledWith({
       where: { id: 'invoice-1', userId: 'user-1' },
@@ -330,12 +569,27 @@ describe('saving invoices', () => {
   });
 
   it('allocates a number when updating a legacy unnumbered invoice', async () => {
-    mocks.invoice.findFirst.mockResolvedValue({ invoiceNumber: null });
+    mocks.invoice.findFirst.mockResolvedValue({
+      id: 'invoice-1',
+      uid: creationUid,
+      invoiceNumber: null,
+      createdAt: updatedAt,
+      updatedAt,
+    });
     expect(await actions.saveInvoice(base, 'invoice-1')).toEqual({
       ok: true,
-      data: { id: 'invoice-1', invoiceNumber: reservation.number },
+      data: {
+        id: 'invoice-1',
+        invoiceNumber: reservation.number,
+        updatedAt: updatedAt.toISOString(),
+        savedInvoiceTaxableIncome: 0,
+      },
     });
-    expect(mocks.reserve).toHaveBeenCalledWith('user:user-1', 2026);
+    expect(mocks.reserve).toHaveBeenCalledWith(
+      'user:user-1',
+      2026,
+      expect.any(Object),
+    );
   });
 
   it.each(['not-found', 'deleted-concurrently', 'long-id'])(

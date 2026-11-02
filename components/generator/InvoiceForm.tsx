@@ -86,8 +86,7 @@ export default function InvoiceForm({
   onBankAccountSaved,
 }: InvoiceFormProps) {
   const fullReduction = taxParams?.monthlyTaxReduction ?? 300;
-  const [currentAccount, setCurrentAccount] =
-    useState<UserBankAccountDto | null>(bankAccount);
+  const currentAccount = bankAccount;
   const [isSavingAccount, setIsSavingAccount] = useState(false);
   const [saveAccountFeedback, setSaveAccountFeedback] = useState<{
     ok: boolean;
@@ -170,7 +169,6 @@ export default function InvoiceForm({
         accountNumber: rawAccount,
       });
       if (res.ok) {
-        setCurrentAccount(res.data);
         onBankAccountSaved?.(res.data);
         setSaveAccountFeedback({
           ok: true,
@@ -752,13 +750,14 @@ export default function InvoiceForm({
             />
             <Form.Text id='year-to-date-income-help'>
               Wpisz podstawę opodatkowania uzyskaną w tym roku z innych źródeł.
-              Jeśli jej nie masz, pozostaw 0.
+              Jeśli jej nie masz, pozostaw 0. Nie dodawaj ponownie rachunków
+              uwzględnionych automatycznie.
             </Form.Text>
-            {signedIn ? (
+            {signedIn && !savedIncomeError ? (
               <div className='small mt-2' aria-live='polite'>
                 {isLoadingSavedIncome
                   ? 'Sumowanie zapisanych rachunków…'
-                  : `Podstawa z zapisanych rachunków w tym roku: ${savedInvoiceTaxableIncome.toLocaleString('pl-PL')} zł. Kwota wpisana powyżej zostanie do niej dodana.`}
+                  : `Podstawa z wcześniejszych rachunków tej osoby w tym roku: ${savedInvoiceTaxableIncome.toLocaleString('pl-PL')} zł. Kwota wpisana powyżej zostanie do niej dodana.`}
               </div>
             ) : null}
             {savedIncomeError ? (

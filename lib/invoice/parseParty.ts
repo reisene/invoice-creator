@@ -20,14 +20,19 @@ export function parseParty(
   if (
     (value.kind !== 'CLIENT' && value.kind !== 'CONTRACTOR') ||
     (value.clientType !== undefined &&
+      value.clientType !== null &&
       value.clientType !== 'company' &&
       value.clientType !== 'private') ||
     typeof value.name !== 'string' ||
     value.name.length > 200 ||
     typeof value.address !== 'string' ||
     value.address.length > 300 ||
-    (value.nip !== undefined && typeof value.nip !== 'string') ||
-    (value.pesel !== undefined && typeof value.pesel !== 'string')
+    (value.nip !== undefined &&
+      value.nip !== null &&
+      typeof value.nip !== 'string') ||
+    (value.pesel !== undefined &&
+      value.pesel !== null &&
+      typeof value.pesel !== 'string')
   ) {
     return { ok: false as const, error: 'Nieprawidłowe dane strony.' };
   }

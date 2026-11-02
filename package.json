@@ -42,7 +42,11 @@
     "node": "24.x"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,json,css,scss,md,mdx,html}": [
+    "*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}": [
+      "prettier --write",
+      "npm run lint -- --no-warn-ignored"
+    ],
+    "*.{json,css,scss,md,mdx,html}": [
       "prettier --write"
     ]
   },

@@ -16,18 +16,26 @@ const optionalText = (
     ? undefined
     : text(value, max);
 
-const num = (value: unknown): number | null =>
-  typeof value === 'number' && Number.isFinite(value) && Math.abs(value) < 1e9
+const num = (value: unknown, limit: number): number | null =>
+  typeof value === 'number' && Number.isFinite(value) && Math.abs(value) < limit
     ? value
     : null;
 
-const optionalNum = (value: unknown): number | undefined | null =>
-  value === undefined || value === null ? undefined : num(value);
+const optionalNum = (
+  value: unknown,
+  limit: number,
+): number | undefined | null =>
+  value === undefined || value === null ? undefined : num(value, limit);
 
 /** Builds a trusted InvoiceFormData from untrusted input, or returns null. */
-export function sanitizeInvoiceForm(input: unknown): InvoiceFormData | null {
+export function sanitizeInvoiceForm(
+  input: unknown,
+  options: { draft?: boolean } = {},
+): InvoiceFormData | null {
   if (typeof input !== 'object' || input === null) return null;
   const v = input as Record<string, unknown>;
+  const maxLength = (limit: number) => (options.draft ? Infinity : limit);
+  const numberLimit = options.draft ? Infinity : 1e9;
 
   const clientType = oneOf(v.clientType, ['company', 'private'] as const);
   const contractType = oneOf(v.contractType, ['monthly', 'hourly'] as const);
@@ -51,33 +59,36 @@ export function sanitizeInvoiceForm(input: unknown): InvoiceFormData | null {
       ? ''
       : oneOf(v.transferTarget, ['SAVED_ACCOUNT', 'DECLARATION', ''] as const);
 
-  const clientName = text(v.clientName, 200);
-  const clientAddress = text(v.clientAddress, 300);
-  const clientNip = optionalText(v.clientNip, 20);
-  const clientPesel = optionalText(v.clientPesel, 20);
-  const contractorName = text(v.contractorName, 200);
-  const contractorAddress = text(v.contractorAddress, 300);
-  const contractorPesel = text(v.contractorPesel, 20);
-  const contractorNip = optionalText(v.contractorNip, 20);
-  const contractNumber = optionalText(v.contractNumber, 100);
-  const contractDate = text(v.contractDate, 10);
-  const issuePlace = optionalText(v.issuePlace, 100);
-  const issueDate = optionalText(v.issueDate, 10);
-  const periodStart = text(v.periodStart, 10);
-  const periodEnd = text(v.periodEnd, 10);
-  const grossAmount = optionalNum(v.grossAmount);
-  const hourlyRate = optionalNum(v.hourlyRate);
-  const hoursWorked = optionalNum(v.hoursWorked);
-  const yearToDateTaxableIncome = num(v.yearToDateTaxableIncome);
+  const clientName = text(v.clientName, maxLength(200));
+  const clientAddress = text(v.clientAddress, maxLength(300));
+  const clientNip = optionalText(v.clientNip, maxLength(20));
+  const clientPesel = optionalText(v.clientPesel, maxLength(20));
+  const contractorName = text(v.contractorName, maxLength(200));
+  const contractorAddress = text(v.contractorAddress, maxLength(300));
+  const contractorPesel = text(v.contractorPesel, maxLength(20));
+  const contractorNip = optionalText(v.contractorNip, maxLength(20));
+  const contractNumber = optionalText(v.contractNumber, maxLength(100));
+  const contractDate = text(v.contractDate, maxLength(10));
+  const issuePlace = optionalText(v.issuePlace, maxLength(100));
+  const issueDate = optionalText(v.issueDate, maxLength(10));
+  const periodStart = text(v.periodStart, maxLength(10));
+  const periodEnd = text(v.periodEnd, maxLength(10));
+  const grossAmount = optionalNum(v.grossAmount, numberLimit);
+  const hourlyRate = optionalNum(v.hourlyRate, numberLimit);
+  const hoursWorked = optionalNum(v.hoursWorked, numberLimit);
+  const yearToDateTaxableIncome = num(v.yearToDateTaxableIncome, numberLimit);
   const yearToDateEmploymentIncome =
     v.yearToDateEmploymentIncome === undefined
       ? 0
-      : num(v.yearToDateEmploymentIncome);
-  const yearToDateYoungReliefIncome = num(v.yearToDateYoungReliefIncome);
-  const notes = optionalText(v.notes, 2000);
-  const bankAccountHolder = optionalText(v.bankAccountHolder, 200);
-  const bankName = optionalText(v.bankName, 100);
-  const bankAccountNumber = optionalText(v.bankAccountNumber, 34);
+      : num(v.yearToDateEmploymentIncome, numberLimit);
+  const yearToDateYoungReliefIncome = num(
+    v.yearToDateYoungReliefIncome,
+    numberLimit,
+  );
+  const notes = optionalText(v.notes, maxLength(2000));
+  const bankAccountHolder = optionalText(v.bankAccountHolder, maxLength(200));
+  const bankName = optionalText(v.bankName, maxLength(100));
+  const bankAccountNumber = optionalText(v.bankAccountNumber, maxLength(34));
 
   if (
     !clientType ||

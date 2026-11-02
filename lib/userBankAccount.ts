@@ -1,3 +1,4 @@
+import type { Prisma } from '@/generated/prisma';
 import { prisma } from '@/lib/db';
 import { encryptText } from '@/lib/savedDataCrypto';
 
@@ -8,6 +9,7 @@ export async function upsertUserBankAccount(
     bankName: string;
     accountNumber: string;
   },
+  db: Pick<Prisma.TransactionClient, 'userBankAccount'> = prisma,
 ) {
   const encryptedAccount = {
     accountHolder: encryptText(account.accountHolder),
@@ -15,7 +17,7 @@ export async function upsertUserBankAccount(
     accountNumber: encryptText(account.accountNumber),
   };
 
-  await prisma.userBankAccount.upsert({
+  await db.userBankAccount.upsert({
     where: { userId },
     create: { userId, ...encryptedAccount },
     update: encryptedAccount,

@@ -1,3 +1,5 @@
+import type { InvoiceFormData } from '@/types/invoiceForm';
+
 export interface SavedPartyDto {
   id: string;
   kind: 'CLIENT' | 'CONTRACTOR';
@@ -18,6 +20,13 @@ export interface UserBankAccountDto {
 export interface InvoiceNumberReservation {
   number: string;
   token: string;
+}
+
+export interface SavedInvoiceSnapshot {
+  id: string;
+  invoiceNumber: string;
+  updatedAt: string;
+  data: InvoiceFormData;
 }
 
 export type ActionResult<T = undefined> =

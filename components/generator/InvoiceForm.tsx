@@ -41,6 +41,29 @@ interface InvoiceFormProps {
 
 const percent = (rate: number) => `${Math.round(rate * 10000) / 100}%`;
 
+type UpdateInvoiceField = <K extends keyof InvoiceFormData>(
+  field: K,
+  value: InvoiceFormData[K],
+) => void;
+
+interface FormSectionProps extends InvoiceFormProps {
+  updateField: UpdateInvoiceField;
+}
+
+interface BankDetailsProps extends FormSectionProps {
+  handleAccountNumberChange: (raw: string) => void;
+  handleApplySavedAccount: () => void;
+  handleSaveAccountToProfile: () => Promise<void>;
+  isSavingAccount: boolean;
+  saveAccountFeedback: { ok: boolean; text: string } | null;
+  clearSaveAccountFeedback: () => void;
+}
+
+interface BankAccountSectionProps extends BankDetailsProps {
+  cleanedAccount: string;
+  isAccountValid: boolean;
+}
+
 interface InvoiceFieldProps {
   label: string;
   value: string;
@@ -85,7 +108,6 @@ export default function InvoiceForm({
   savedIncomeError = null,
   onBankAccountSaved,
 }: InvoiceFormProps) {
-  const fullReduction = taxParams?.monthlyTaxReduction ?? 300;
   const currentAccount = bankAccount;
   const [isSavingAccount, setIsSavingAccount] = useState(false);
   const [saveAccountFeedback, setSaveAccountFeedback] = useState<{
@@ -194,12 +216,49 @@ export default function InvoiceForm({
     }
   };
 
-  const cleanedAccount = cleanPolishBankAccount(data.bankAccountNumber ?? '');
-  const isAccountValid =
-    cleanedAccount.length === 26 && isValidPolishBankAccount(cleanedAccount);
-
+  // State stays in the form so hiding payment details never resets feedback.
+  const sectionProps: FormSectionProps = {
+    data,
+    onChange,
+    updateField,
+    taxParams,
+    bankAccount,
+    signedIn,
+    savedInvoiceTaxableIncome,
+    isLoadingSavedIncome,
+    savedIncomeError,
+  };
   return (
     <Form>
+      <IssueFields {...sectionProps} />
+      <ClientFields {...sectionProps} />
+      <ContractorFields {...sectionProps} />
+      <ContractFields {...sectionProps} />
+      <RemunerationFields {...sectionProps} />
+      <PaymentMethodFields {...sectionProps} />
+      <StatusFields {...sectionProps} />
+      <AnnualIncomeFields {...sectionProps} />
+      <InsuranceFields {...sectionProps} />
+      <TaxAdvanceFields {...sectionProps} />
+      <PaymentAccountFields {...sectionProps} />
+      <BankDetails
+        {...sectionProps}
+        handleAccountNumberChange={handleAccountNumberChange}
+        handleApplySavedAccount={handleApplySavedAccount}
+        handleSaveAccountToProfile={handleSaveAccountToProfile}
+        isSavingAccount={isSavingAccount}
+        saveAccountFeedback={saveAccountFeedback}
+        clearSaveAccountFeedback={() => setSaveAccountFeedback(null)}
+      />
+      <PaymentNotices {...sectionProps} />
+      <NotesFields {...sectionProps} />
+    </Form>
+  );
+}
+
+function IssueFields({ data, updateField }: FormSectionProps) {
+  return (
+    <>
       <h3 className='mb-3'>Miejsce i data wystawienia</h3>
 
       <Row className='mb-3'>
@@ -226,7 +285,13 @@ export default function InvoiceForm({
           />
         </Col>
       </Row>
+    </>
+  );
+}
 
+function ClientFields({ data, updateField, taxParams }: FormSectionProps) {
+  return (
+    <>
       {/* Zleceniodawca */}
       <h3 className='mb-3'>Dane zleceniodawcy</h3>
 
@@ -329,7 +394,13 @@ export default function InvoiceForm({
           </Col>
         )}
       </Row>
+    </>
+  );
+}
 
+function ContractorFields({ data, updateField }: FormSectionProps) {
+  return (
+    <>
       {/* Zleceniobiorca */}
       <h3 className='mb-3 mt-4'>Dane zleceniobiorcy</h3>
 
@@ -381,7 +452,13 @@ export default function InvoiceForm({
           />
         </Col>
       </Row>
+    </>
+  );
+}
 
+function ContractFields({ data, updateField }: FormSectionProps) {
+  return (
+    <>
       {/* Dane umowy */}
       <h3 className='mb-3 mt-4'>Dane umowy</h3>
 
@@ -450,7 +527,13 @@ export default function InvoiceForm({
           </Form.Group>
         </Col>
       </Row>
+    </>
+  );
+}
 
+function RemunerationFields({ data, updateField }: FormSectionProps) {
+  return (
+    <>
       {/* Wynagrodzenie */}
       <h3 className='mb-3 mt-4'>Wynagrodzenie</h3>
 
@@ -527,7 +610,18 @@ export default function InvoiceForm({
           </Col>
         </Row>
       )}
+    </>
+  );
+}
 
+function PaymentMethodFields({
+  data,
+  onChange,
+  updateField,
+  bankAccount,
+}: FormSectionProps) {
+  return (
+    <>
       <h3 className='mb-3 mt-4'>Forma wypłaty</h3>
       <Row className='mb-3'>
         <Col md={8}>
@@ -640,7 +734,18 @@ export default function InvoiceForm({
             </Col>
           </Row>
         )}
+    </>
+  );
+}
 
+function StatusFields({
+  data,
+  onChange,
+  updateField,
+  taxParams,
+}: FormSectionProps) {
+  return (
+    <>
       {/* Opcje */}
       <h3 className='mb-3 mt-4'>Status i opcje</h3>
 
@@ -727,7 +832,20 @@ export default function InvoiceForm({
           </Form.Group>
         </Col>
       </Row>
+    </>
+  );
+}
 
+function AnnualIncomeFields({
+  data,
+  updateField,
+  signedIn,
+  savedInvoiceTaxableIncome = 0,
+  isLoadingSavedIncome,
+  savedIncomeError,
+}: FormSectionProps) {
+  return (
+    <>
       <Row className='mb-3'>
         <Col md={6}>
           <Form.Group>
@@ -798,7 +916,13 @@ export default function InvoiceForm({
           </Col>
         </Row>
       ) : null}
+    </>
+  );
+}
 
+function InsuranceFields({ data, updateField }: FormSectionProps) {
+  return (
+    <>
       <Row className='mb-3'>
         <Col md={6}>
           <Form.Group>
@@ -865,7 +989,19 @@ export default function InvoiceForm({
           </Form.Group>
         </Col>
       </Row>
+    </>
+  );
+}
 
+function TaxAdvanceFields({
+  data,
+  onChange,
+  updateField,
+  taxParams,
+}: FormSectionProps) {
+  const fullReduction = taxParams?.monthlyTaxReduction ?? 300;
+  return (
+    <>
       <Row className='mb-3'>
         <Col md={6}>
           <Form.Group>
@@ -961,7 +1097,17 @@ export default function InvoiceForm({
           </Col>
         </Row>
       )}
+    </>
+  );
+}
 
+function PaymentAccountFields({
+  data,
+  onChange,
+  bankAccount: currentAccount,
+}: FormSectionProps) {
+  return (
+    <>
       {/* Forma wypłaty wynagrodzenia */}
       <h3 className='mb-3 mt-4'>Wypłata wynagrodzenia</h3>
 
@@ -1022,7 +1168,18 @@ export default function InvoiceForm({
           </Form.Group>
         </Col>
       </Row>
+    </>
+  );
+}
 
+function BankDetails(props: BankDetailsProps) {
+  const { data, bankAccount: currentAccount, signedIn } = props;
+  const cleanedAccount = cleanPolishBankAccount(data.bankAccountNumber ?? '');
+  const isAccountValid =
+    cleanedAccount.length === 26 && isValidPolishBankAccount(cleanedAccount);
+  const accountProps = { ...props, cleanedAccount, isAccountValid };
+  return (
+    <>
       {/* Szczegóły dla przelewu na konto */}
       {data.paymentMethod === 'TRANSFER' &&
         (data.transferTarget === 'SAVED_ACCOUNT' || !data.transferTarget) && (
@@ -1043,189 +1200,216 @@ export default function InvoiceForm({
                   type='button'
                   variant='outline-primary'
                   size='sm'
-                  onClick={handleApplySavedAccount}
+                  onClick={props.handleApplySavedAccount}
                 >
                   Użyj tego konta
                 </Button>
               </div>
             )}
 
-            <Row className='mb-3'>
-              <Col md={12}>
-                <Form.Group>
-                  <Form.Label className='d-flex align-items-center justify-content-between'>
-                    <span>Numer rachunku bankowego (NRB / IBAN)</span>
-                    {cleanedAccount.length === 26 && (
-                      <span
-                        className={`small d-inline-flex align-items-center gap-1 ${
-                          isAccountValid ? 'text-success' : 'text-danger'
-                        }`}
-                      >
-                        {isAccountValid ? (
-                          <>
-                            <BsCheckCircleFill /> Prawidłowy numer konta
-                          </>
-                        ) : (
-                          <>
-                            <BsExclamationCircleFill /> Nieprawidłowa suma
-                            kontrolna
-                          </>
-                        )}
-                      </span>
-                    )}
-                  </Form.Label>
-                  <Form.Control
-                    type='text'
-                    inputMode='numeric'
-                    value={data.bankAccountNumber ?? ''}
-                    placeholder='np. 12 3456 7890 1234 5678 9012 3456'
-                    onChange={(e) => {
-                      handleAccountNumberChange(e.target.value);
-                    }}
-                    maxLength={32}
-                    className='font-monospace'
-                    required
-                  />
-                  <Form.Text className='text-body-secondary'>
-                    {cleanedAccount.length > 0 && cleanedAccount.length < 26
-                      ? `Wpisano ${cleanedAccount.length} z 26 cyfr.`
-                      : 'Standardowy 26-cyfrowy polski numer konta. Odstępy formatowane są automatycznie.'}
-                  </Form.Text>
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row className='mb-3'>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Nazwa banku / instytucji</Form.Label>
-                  <Form.Control
-                    type='text'
-                    value={data.bankName ?? ''}
-                    placeholder='np. mBank, PKO BP, ZEN, Revolut'
-                    onChange={(e) => {
-                      updateField('bankName', e.target.value);
-                    }}
-                    maxLength={100}
-                    required
-                  />
-                  <Form.Text className='text-body-secondary'>
-                    Rozpoznawana automatycznie z numeru konta lub do wpisania
-                    własnego (np. ZEN, Revolut).
-                  </Form.Text>
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <div className='d-flex align-items-center justify-content-between'>
-                    <Form.Label className='mb-0'>
-                      Właściciel rachunku
-                    </Form.Label>
-                    {data.contractorName &&
-                      data.bankAccountHolder !== data.contractorName && (
-                        <button
-                          type='button'
-                          className='btn btn-link p-0 text-decoration-none small'
-                          style={{ fontSize: '0.8rem' }}
-                          onClick={() => {
-                            updateField(
-                              'bankAccountHolder',
-                              data.contractorName,
-                            );
-                          }}
-                        >
-                          Użyj zleceniobiorcy
-                        </button>
-                      )}
-                  </div>
-                  <Form.Control
-                    type='text'
-                    className='mt-1'
-                    value={data.bankAccountHolder ?? ''}
-                    placeholder='Imię i nazwisko posiadacza rachunku'
-                    onChange={(e) => {
-                      updateField('bankAccountHolder', e.target.value);
-                    }}
-                    maxLength={200}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            {signedIn ? (
-              <div className='pt-2 border-top border-secondary-subtle'>
-                <div className='d-flex flex-wrap align-items-center justify-content-between gap-2'>
-                  <div>
-                    <span className='fw-semibold small d-block'>
-                      Zapis w profilu
-                    </span>
-                    <span className='text-body-secondary small'>
-                      Zapisz ten numer rachunku w swoim profilu, aby był
-                      automatycznie dostępny przy kolejnych rachunkach.
-                    </span>
-                  </div>
-                  <Button
-                    type='button'
-                    variant='outline-primary'
-                    size='sm'
-                    disabled={
-                      isSavingAccount ||
-                      cleanedAccount.length !== 26 ||
-                      !isAccountValid
-                    }
-                    onClick={handleSaveAccountToProfile}
-                    className='d-inline-flex align-items-center gap-1'
-                  >
-                    {isSavingAccount ? (
-                      <>
-                        <Spinner animation='border' size='sm' />
-                        <span>Zapisywanie…</span>
-                      </>
-                    ) : (
-                      <>
-                        <BsBoxArrowInDown />
-                        <span>Zapisz ten rachunek w profilu</span>
-                      </>
-                    )}
-                  </Button>
-                </div>
-                {saveAccountFeedback && (
-                  <Alert
-                    variant={saveAccountFeedback.ok ? 'success' : 'danger'}
-                    className='mt-2 mb-0 py-2 px-3 small'
-                    dismissible
-                    onClose={() => {
-                      setSaveAccountFeedback(null);
-                    }}
-                  >
-                    {saveAccountFeedback.text}
-                  </Alert>
-                )}
-              </div>
-            ) : (
-              <div className='pt-2 border-top border-secondary-subtle'>
-                <div className='d-flex align-items-start gap-2 small text-body-secondary'>
-                  <BsInfoCircleFill className='text-primary mt-1 flex-shrink-0' />
-                  <div>
-                    Wskazówka: Wpisany numer rachunku znajdzie się na Twoim
-                    rachunku PDF.{' '}
-                    <Link href='/auth/sign-in' className='fw-semibold'>
-                      Zaloguj się
-                    </Link>{' '}
-                    lub{' '}
-                    <Link href='/auth/sign-up' className='fw-semibold'>
-                      załóż bezpłatne konto
-                    </Link>
-                    , aby trwale zapisać rachunek bankowy i nie musieć wpisywać
-                    go ponownie.
-                  </div>
-                </div>
-              </div>
-            )}
+            <BankAccountFields {...accountProps} />
+            <BankProfileActions {...accountProps} />
           </div>
         )}
+    </>
+  );
+}
 
+function BankAccountFields({
+  data,
+  updateField,
+  handleAccountNumberChange,
+  cleanedAccount,
+  isAccountValid,
+}: BankAccountSectionProps) {
+  return (
+    <>
+      <Row className='mb-3'>
+        <Col md={12}>
+          <Form.Group>
+            <Form.Label className='d-flex align-items-center justify-content-between'>
+              <span>Numer rachunku bankowego (NRB / IBAN)</span>
+              {cleanedAccount.length === 26 && (
+                <span
+                  className={`small d-inline-flex align-items-center gap-1 ${
+                    isAccountValid ? 'text-success' : 'text-danger'
+                  }`}
+                >
+                  {isAccountValid ? (
+                    <>
+                      <BsCheckCircleFill /> Prawidłowy numer konta
+                    </>
+                  ) : (
+                    <>
+                      <BsExclamationCircleFill /> Nieprawidłowa suma kontrolna
+                    </>
+                  )}
+                </span>
+              )}
+            </Form.Label>
+            <Form.Control
+              type='text'
+              inputMode='numeric'
+              value={data.bankAccountNumber ?? ''}
+              placeholder='np. 12 3456 7890 1234 5678 9012 3456'
+              onChange={(e) => {
+                handleAccountNumberChange(e.target.value);
+              }}
+              maxLength={32}
+              className='font-monospace'
+              required
+            />
+            <Form.Text className='text-body-secondary'>
+              {cleanedAccount.length > 0 && cleanedAccount.length < 26
+                ? `Wpisano ${cleanedAccount.length} z 26 cyfr.`
+                : 'Standardowy 26-cyfrowy polski numer konta. Odstępy formatowane są automatycznie.'}
+            </Form.Text>
+          </Form.Group>
+        </Col>
+      </Row>
+
+      <Row className='mb-3'>
+        <Col md={6}>
+          <Form.Group>
+            <Form.Label>Nazwa banku / instytucji</Form.Label>
+            <Form.Control
+              type='text'
+              value={data.bankName ?? ''}
+              placeholder='np. mBank, PKO BP, ZEN, Revolut'
+              onChange={(e) => {
+                updateField('bankName', e.target.value);
+              }}
+              maxLength={100}
+              required
+            />
+            <Form.Text className='text-body-secondary'>
+              Rozpoznawana automatycznie z numeru konta lub do wpisania własnego
+              (np. ZEN, Revolut).
+            </Form.Text>
+          </Form.Group>
+        </Col>
+        <Col md={6}>
+          <Form.Group>
+            <div className='d-flex align-items-center justify-content-between'>
+              <Form.Label className='mb-0'>Właściciel rachunku</Form.Label>
+              {data.contractorName &&
+                data.bankAccountHolder !== data.contractorName && (
+                  <button
+                    type='button'
+                    className='btn btn-link p-0 text-decoration-none small'
+                    style={{ fontSize: '0.8rem' }}
+                    onClick={() => {
+                      updateField('bankAccountHolder', data.contractorName);
+                    }}
+                  >
+                    Użyj zleceniobiorcy
+                  </button>
+                )}
+            </div>
+            <Form.Control
+              type='text'
+              className='mt-1'
+              value={data.bankAccountHolder ?? ''}
+              placeholder='Imię i nazwisko posiadacza rachunku'
+              onChange={(e) => {
+                updateField('bankAccountHolder', e.target.value);
+              }}
+              maxLength={200}
+              required
+            />
+          </Form.Group>
+        </Col>
+      </Row>
+    </>
+  );
+}
+
+function BankProfileActions({
+  signedIn,
+  isSavingAccount,
+  handleSaveAccountToProfile,
+  saveAccountFeedback,
+  clearSaveAccountFeedback,
+  cleanedAccount,
+  isAccountValid,
+}: BankAccountSectionProps) {
+  return (
+    <>
+      {signedIn ? (
+        <div className='pt-2 border-top border-secondary-subtle'>
+          <div className='d-flex flex-wrap align-items-center justify-content-between gap-2'>
+            <div>
+              <span className='fw-semibold small d-block'>Zapis w profilu</span>
+              <span className='text-body-secondary small'>
+                Zapisz ten numer rachunku w swoim profilu, aby był automatycznie
+                dostępny przy kolejnych rachunkach.
+              </span>
+            </div>
+            <Button
+              type='button'
+              variant='outline-primary'
+              size='sm'
+              disabled={
+                isSavingAccount ||
+                cleanedAccount.length !== 26 ||
+                !isAccountValid
+              }
+              onClick={handleSaveAccountToProfile}
+              className='d-inline-flex align-items-center gap-1'
+            >
+              {isSavingAccount ? (
+                <>
+                  <Spinner animation='border' size='sm' />
+                  <span>Zapisywanie…</span>
+                </>
+              ) : (
+                <>
+                  <BsBoxArrowInDown />
+                  <span>Zapisz ten rachunek w profilu</span>
+                </>
+              )}
+            </Button>
+          </div>
+          {saveAccountFeedback && (
+            <Alert
+              variant={saveAccountFeedback.ok ? 'success' : 'danger'}
+              className='mt-2 mb-0 py-2 px-3 small'
+              dismissible
+              onClose={() => {
+                clearSaveAccountFeedback();
+              }}
+            >
+              {saveAccountFeedback.text}
+            </Alert>
+          )}
+        </div>
+      ) : (
+        <div className='pt-2 border-top border-secondary-subtle'>
+          <div className='d-flex align-items-start gap-2 small text-body-secondary'>
+            <BsInfoCircleFill className='text-primary mt-1 flex-shrink-0' />
+            <div>
+              Wskazówka: Wpisany numer rachunku znajdzie się na Twoim rachunku
+              PDF.{' '}
+              <Link href='/auth/sign-in' className='fw-semibold'>
+                Zaloguj się
+              </Link>{' '}
+              lub{' '}
+              <Link href='/auth/sign-up' className='fw-semibold'>
+                załóż bezpłatne konto
+              </Link>
+              , aby trwale zapisać rachunek bankowy i nie musieć wpisywać go
+              ponownie.
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function PaymentNotices({ data }: FormSectionProps) {
+  return (
+    <>
       {/* Informacja dla przelewu oświadczeniem */}
       {data.paymentMethod === 'TRANSFER' &&
         data.transferTarget === 'DECLARATION' && (
@@ -1251,7 +1435,13 @@ export default function InvoiceForm({
           </span>
         </div>
       )}
+    </>
+  );
+}
 
+function NotesFields({ data, updateField }: FormSectionProps) {
+  return (
+    <>
       {/* Uwagi */}
       <h3 className='mb-3 mt-4'>Uwagi (opcjonalnie)</h3>
 
@@ -1271,6 +1461,6 @@ export default function InvoiceForm({
           </Form.Group>
         </Col>
       </Row>
-    </Form>
+    </>
   );
 }

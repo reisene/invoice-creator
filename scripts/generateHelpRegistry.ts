@@ -33,10 +33,68 @@ function readCategoryEntries(category: HelpCategory) {
   }
 }
 
+async function readArticle(
+  category: HelpCategory,
+  filename: string,
+): Promise<HelpArticleSource> {
+  const filePath = path.join(helpDirectory, category, filename);
+  // The filename comes from this category's directory, not from user input.
+  const { data } = matter(await readFile(filePath, 'utf8'));
+  const baseName = filename.slice(0, -'.mdx'.length);
+
+  if (typeof data.title !== 'string' || !data.title.trim()) {
+    throw new Error(`${filePath} must define a non-empty title.`);
+  }
+  if (typeof data.description !== 'string') {
+    throw new Error(`${filePath} must define a string description.`);
+  }
+  if (data.category !== category) {
+    throw new Error(`${filePath} must use its directory name as its category.`);
+  }
+  if (typeof data.order !== 'number' || !Number.isFinite(data.order)) {
+    throw new Error(`${filePath} must define a finite numeric order.`);
+  }
+  if (
+    !Array.isArray(data.tags) ||
+    !data.tags.every((tag: unknown) => typeof tag === 'string')
+  ) {
+    throw new Error(`${filePath} must define an array of string tags.`);
+  }
+
+  const slug = [category, baseName];
+  return {
+    slug,
+    slugPath: slug.join('/'),
+    title: data.title,
+    description: data.description,
+    category,
+    order: data.order,
+    tags: data.tags,
+    importPath: `./${category}/${filename}`,
+  };
+}
+
+async function readCategoryArticles(
+  category: HelpCategory,
+): Promise<HelpArticleSource[]> {
+  const files = await readCategoryEntries(category);
+  const articles: HelpArticleSource[] = [];
+  for (const file of files.sort((a, b) => a.name.localeCompare(b.name))) {
+    if (!file.isFile()) continue;
+    if (file.name.endsWith('.md')) {
+      throw new Error(
+        `${path.join(category, file.name)} must use the .mdx extension.`,
+      );
+    }
+    if (!file.name.endsWith('.mdx')) continue;
+    articles.push(await readArticle(category, file.name));
+  }
+  return articles;
+}
+
 async function readArticles(): Promise<RegisteredHelpArticle[]> {
   const entries = await readdir('content/help', { withFileTypes: true });
   const articles: HelpArticleSource[] = [];
-
   for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
     if (!entry.isDirectory()) continue;
     const categoryName: string = entry.name;
@@ -45,57 +103,7 @@ async function readArticles(): Promise<RegisteredHelpArticle[]> {
         `Unknown help-article category directory: ${categoryName}`,
       );
     }
-
-    const category = categoryName;
-    const files = await readCategoryEntries(category);
-
-    for (const file of files.sort((a, b) => a.name.localeCompare(b.name))) {
-      if (!file.isFile()) continue;
-      if (file.name.endsWith('.md')) {
-        throw new Error(
-          `${path.join(category, file.name)} must use the .mdx extension.`,
-        );
-      }
-      if (!file.name.endsWith('.mdx')) continue;
-
-      const filePath = path.join(helpDirectory, category, file.name);
-      // The filename comes from this category's directory, not from user input.
-      const { data } = matter(await readFile(filePath, 'utf8'));
-      const baseName = file.name.slice(0, -'.mdx'.length);
-
-      if (typeof data.title !== 'string' || !data.title.trim()) {
-        throw new Error(`${filePath} must define a non-empty title.`);
-      }
-      if (typeof data.description !== 'string') {
-        throw new Error(`${filePath} must define a string description.`);
-      }
-      if (data.category !== category) {
-        throw new Error(
-          `${filePath} must use its directory name as its category.`,
-        );
-      }
-      if (typeof data.order !== 'number' || !Number.isFinite(data.order)) {
-        throw new Error(`${filePath} must define a finite numeric order.`);
-      }
-      if (
-        !Array.isArray(data.tags) ||
-        !data.tags.every((tag: unknown) => typeof tag === 'string')
-      ) {
-        throw new Error(`${filePath} must define an array of string tags.`);
-      }
-
-      const slug = [category, baseName];
-      articles.push({
-        slug,
-        slugPath: slug.join('/'),
-        title: data.title,
-        description: data.description,
-        category,
-        order: data.order,
-        tags: data.tags,
-        importPath: `./${category}/${file.name}`,
-      });
-    }
+    articles.push(...(await readCategoryArticles(categoryName)));
   }
 
   if (articles.length === 0) {

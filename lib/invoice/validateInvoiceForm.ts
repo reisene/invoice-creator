@@ -108,25 +108,23 @@ export function isValidDate(value: string): boolean {
   );
 }
 
-export function validateInvoiceForm(
+function validateIssueDetails(
   data: InvoiceFormData,
-  params?: TaxParams,
-  options: { allowMissingIssueDetails?: boolean } = {},
-): string[] {
-  const errors: string[] = [];
-
-  if (!options.allowMissingIssueDetails) {
-    if (!data.issuePlace?.trim()) {
-      errors.push('Podaj miejscowość wystawienia rachunku.');
-    } else if (data.issuePlace.length > 100) {
-      errors.push('Miejscowość wystawienia może mieć maksymalnie 100 znaków.');
-    }
-
-    if (!data.issueDate || !isValidDate(data.issueDate)) {
-      errors.push('Podaj prawidłową datę wystawienia rachunku.');
-    }
+  errors: string[],
+  allowMissingIssueDetails?: boolean,
+): void {
+  if (allowMissingIssueDetails) return;
+  if (!data.issuePlace?.trim()) {
+    errors.push('Podaj miejscowość wystawienia rachunku.');
+  } else if (data.issuePlace.length > 100) {
+    errors.push('Miejscowość wystawienia może mieć maksymalnie 100 znaków.');
   }
+  if (!data.issueDate || !isValidDate(data.issueDate)) {
+    errors.push('Podaj prawidłową datę wystawienia rachunku.');
+  }
+}
 
+function validateClient(data: InvoiceFormData, errors: string[]): void {
   if (!data.clientName.trim()) errors.push('Podaj nazwę zleceniodawcy.');
   if (!data.clientAddress.trim()) errors.push('Podaj adres zleceniodawcy.');
 
@@ -139,7 +137,9 @@ export function validateInvoiceForm(
   } else if (data.clientPesel?.trim() && !isValidPesel(data.clientPesel)) {
     errors.push('PESEL zleceniodawcy jest nieprawidłowy.');
   }
+}
 
+function validateContractor(data: InvoiceFormData, errors: string[]): void {
   if (!data.contractorName.trim())
     errors.push('Podaj imię i nazwisko zleceniobiorcy.');
   if (!data.contractorAddress.trim())
@@ -154,7 +154,9 @@ export function validateInvoiceForm(
   if (data.contractorNip?.trim() && !isValidNip(data.contractorNip)) {
     errors.push('NIP zleceniobiorcy jest nieprawidłowy.');
   }
+}
 
+function validatePayment(data: InvoiceFormData, errors: string[]): void {
   if (!data.paymentMethod) {
     errors.push(
       'Wybierz formę wypłaty wynagrodzenia (gotówka lub przelew) — starsze rachunki jej nie zawierają.',
@@ -182,7 +184,25 @@ export function validateInvoiceForm(
   ) {
     errors.push('Numer rachunku bankowego jest nieprawidłowy.');
   }
+}
 
+export function validateInvoiceForm(
+  data: InvoiceFormData,
+  params?: TaxParams,
+  options: { allowMissingIssueDetails?: boolean } = {},
+): string[] {
+  const errors: string[] = [];
+
+  validateIssueDetails(data, errors, options.allowMissingIssueDetails);
+  validateClient(data, errors);
+  validateContractor(data, errors);
+  validatePayment(data, errors);
+  validateContract(data, errors);
+  validateReliefs(data, errors, params);
+  return errors;
+}
+
+function validateContract(data: InvoiceFormData, errors: string[]): void {
   const datesValid = [
     data.contractDate,
     data.periodStart,
@@ -215,7 +235,13 @@ export function validateInvoiceForm(
   if ((data.yearToDateEmploymentIncome ?? 0) < 0) {
     errors.push('Dochód z umowy o pracę nie może być ujemny.');
   }
+}
 
+function validateReliefs(
+  data: InvoiceFormData,
+  errors: string[],
+  params?: TaxParams,
+): void {
   if (data.contractorStatus === 'student_under_26') {
     const birthDate = birthDateFromPesel(data.contractorPesel);
     if (birthDate && isValidDate(data.periodEnd)) {
@@ -250,6 +276,4 @@ export function validateInvoiceForm(
       );
     }
   }
-
-  return errors;
 }

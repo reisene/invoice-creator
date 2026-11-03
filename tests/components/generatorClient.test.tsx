@@ -801,6 +801,7 @@ describe('draft states, conflicts and dialogs', () => {
         name: 'Wybierz wersję formularza',
       });
       expect(document.activeElement).toBe(heading);
+      expect(heading.tabIndex).toBe(-1);
       expect(heading.parentElement?.textContent).toContain('wybrany wzorzec');
       fireEvent.click(screen.getByRole('button', { name: choice }));
       await waitFor(() => expect(storedData().grossAmount).toBe(grossAmount));
@@ -833,6 +834,8 @@ describe('draft states, conflicts and dialogs', () => {
       const heading = await screen.findByRole('heading', {
         name: 'Wybierz wersję formularza',
       });
+      expect(document.activeElement).toBe(heading);
+      expect(heading.tabIndex).toBe(-1);
       expect(heading.parentElement?.textContent).toContain(
         'Istnieje zapisany rachunek',
       );

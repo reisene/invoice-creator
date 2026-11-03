@@ -46,14 +46,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-export async function importUserData(
-  raw: string,
-  commit: boolean,
-): Promise<ActionResult<ImportSummary>> {
-  const userId = await getCurrentUserIdWithTerms();
-  if (!userId) return { ok: false, error: 'Zaloguj się, aby importować dane.' };
-  const limit = await checkRateLimit('importData', userId);
-  if (!limit.ok) return { ok: false, error: limit.message };
+function parseImportPayload(raw: string): ActionResult<{
+  invoices: unknown[];
+  parties: unknown[];
+  bankAccount: unknown;
+}> {
   if (typeof raw !== 'string' || raw.length === 0) {
     return { ok: false, error: 'Plik jest pusty.' };
   }
@@ -84,7 +81,29 @@ export async function importUserData(
       error: `Plik zawiera zbyt wiele rekordów (maks. ${MAX_INVOICES} rachunków i ${MAX_PARTIES} stron).`,
     };
   }
+  return {
+    ok: true,
+    data: {
+      invoices: invoicesIn,
+      parties: partiesIn,
+      bankAccount: payload.bankAccount,
+    },
+  };
+}
 
+export async function importUserData(
+  raw: string,
+  commit: boolean,
+): Promise<ActionResult<ImportSummary>> {
+  const userId = await getCurrentUserIdWithTerms();
+  if (!userId) return { ok: false, error: 'Zaloguj się, aby importować dane.' };
+  const limit = await checkRateLimit('importData', userId);
+  if (!limit.ok) return { ok: false, error: limit.message };
+  const parsedPayload = parseImportPayload(raw);
+  if (!parsedPayload.ok) return parsedPayload;
+  const payload = parsedPayload.data;
+  const invoicesIn = payload.invoices;
+  const partiesIn = payload.parties;
   const scope = getInvoiceNumberScope(userId);
   const taxParams = (await getAllTaxParams()).reverse();
   const problems: string[] = [];
@@ -114,48 +133,17 @@ export async function importUserData(
 
   invoicesIn.forEach((item, index) => {
     const label = `Rachunek #${index + 1}`;
-    const form = isRecord(item) ? sanitizeInvoiceForm(item.data) : null;
-    const params = form
-      ? taxParams.find((p) => p.year <= Number(form.periodStart.slice(0, 4)))
-      : undefined;
-    if (!form || !params) {
+    const parsed = parseImportedInvoice(
+      item,
+      taxParams,
+      importStartedAt + index,
+    );
+    if (!parsed.ok) {
       summary.invoices.invalid++;
-      problems.push(`${label}: nieprawidłowe dane.`);
+      problems.push(`${label}: ${parsed.error}`);
       return;
     }
-    const isLegacyInvoice =
-      isRecord(item) &&
-      isRecord(item.data) &&
-      item.data.issuePlace === undefined &&
-      item.data.issueDate === undefined;
-    const errors = validateInvoiceForm(form, params, {
-      allowMissingIssueDetails: isLegacyInvoice,
-    });
-    if (errors.length > 0) {
-      summary.invoices.invalid++;
-      problems.push(`${label}: ${errors[0]}`);
-      return;
-    }
-
-    const rawCreatedAt = isRecord(item)
-      ? (item.createdAt ?? item.updatedAt)
-      : undefined;
-    const createdAt =
-      rawCreatedAt === undefined
-        ? new Date(importStartedAt + index)
-        : typeof rawCreatedAt === 'string'
-          ? new Date(rawCreatedAt)
-          : null;
-    if (
-      !createdAt ||
-      Number.isNaN(createdAt.getTime()) ||
-      createdAt.getUTCFullYear() < 1 ||
-      createdAt.getUTCFullYear() > 9999
-    ) {
-      summary.invoices.invalid++;
-      problems.push(`${label}: nieprawidłowa data zapisania.`);
-      return;
-    }
+    const { form, params, createdAt } = parsed.data;
 
     const rawUid =
       isRecord(item) && typeof item.uid === 'string' ? item.uid.trim() : '';
@@ -402,4 +390,53 @@ export async function importUserData(
 
   summary.problems = problems.slice(0, 10);
   return { ok: true, data: summary };
+}
+
+function parseImportedInvoice(
+  item: unknown,
+  taxParams: TaxParams[],
+  fallbackCreatedAt: number,
+): ActionResult<{ form: InvoiceFormData; params: TaxParams; createdAt: Date }> {
+  const form = isRecord(item) ? sanitizeInvoiceForm(item.data) : null;
+  const params = form
+    ? taxParams.find((p) => p.year <= Number(form.periodStart.slice(0, 4)))
+    : undefined;
+  if (!form || !params) {
+    return { ok: false, error: 'nieprawidłowe dane.' };
+  }
+  const isLegacyInvoice =
+    isRecord(item) &&
+    isRecord(item.data) &&
+    item.data.issuePlace === undefined &&
+    item.data.issueDate === undefined;
+  const errors = validateInvoiceForm(form, params, {
+    allowMissingIssueDetails: isLegacyInvoice,
+  });
+  if (errors.length > 0) return { ok: false, error: errors[0] };
+
+  const rawCreatedAt = isRecord(item)
+    ? (item.createdAt ?? item.updatedAt)
+    : undefined;
+  const createdAt = parseImportedDate(rawCreatedAt, fallbackCreatedAt);
+  if (!createdAt) {
+    return { ok: false, error: 'nieprawidłowa data zapisania.' };
+  }
+  return { ok: true, data: { form, params, createdAt } };
+}
+
+function parseImportedDate(value: unknown, fallback: number): Date | null {
+  const date =
+    value === undefined
+      ? new Date(fallback)
+      : typeof value === 'string'
+        ? new Date(value)
+        : null;
+  if (
+    !date ||
+    Number.isNaN(date.getTime()) ||
+    date.getUTCFullYear() < 1 ||
+    date.getUTCFullYear() > 9999
+  )
+    return null;
+  return date;
 }

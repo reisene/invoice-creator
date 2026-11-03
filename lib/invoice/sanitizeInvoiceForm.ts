@@ -27,6 +27,12 @@ const optionalNum = (
 ): number | undefined | null =>
   value === undefined || value === null ? undefined : num(value, limit);
 
+function hasNoNullFields<T extends object>(
+  value: T,
+): value is T & { [K in keyof T]: Exclude<T[K], null> } {
+  return Object.values(value).every((field) => field !== null);
+}
+
 /** Builds a trusted InvoiceFormData from untrusted input, or returns null. */
 export function sanitizeInvoiceForm(
   input: unknown,
@@ -91,37 +97,6 @@ export function sanitizeInvoiceForm(
   const bankAccountNumber = optionalText(v.bankAccountNumber, maxLength(34));
 
   if (
-    !clientType ||
-    !contractType ||
-    !contractorStatus ||
-    !costType ||
-    taxReductionAmount === null ||
-    paymentMethod === null ||
-    transferTarget === null ||
-    clientName === null ||
-    clientAddress === null ||
-    clientNip === null ||
-    clientPesel === null ||
-    contractorName === null ||
-    contractorAddress === null ||
-    contractorPesel === null ||
-    contractorNip === null ||
-    contractNumber === null ||
-    contractDate === null ||
-    issuePlace === null ||
-    issueDate === null ||
-    periodStart === null ||
-    periodEnd === null ||
-    grossAmount === null ||
-    hourlyRate === null ||
-    hoursWorked === null ||
-    yearToDateTaxableIncome === null ||
-    yearToDateEmploymentIncome === null ||
-    yearToDateYoungReliefIncome === null ||
-    notes === null ||
-    bankAccountHolder === null ||
-    bankName === null ||
-    bankAccountNumber === null ||
     typeof v.voluntarySickness !== 'boolean' ||
     typeof v.youngRelief !== 'boolean' ||
     typeof noTaxAdvanceRequest !== 'boolean' ||
@@ -130,7 +105,7 @@ export function sanitizeInvoiceForm(
     return null;
   }
 
-  return {
+  const result = {
     clientType,
     clientName,
     clientAddress,
@@ -167,4 +142,6 @@ export function sanitizeInvoiceForm(
     bankAccountNumber,
     notes,
   };
+
+  return hasNoNullFields(result) ? result : null;
 }

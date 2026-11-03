@@ -218,6 +218,7 @@ const article = {
   category: 'podstawy',
   categoryLabel: 'Podstawy',
   tags: ['rachunek'],
+  Content: () => 'Registered help article body',
 };
 const render = (node: ReactNode) => renderToStaticMarkup(node);
 beforeEach(() => {
@@ -668,17 +669,17 @@ describe('help articles', () => {
     });
     await expect(HelpArticle(params())).rejects.toThrow('NOT_FOUND');
   });
-  it('logs MDX loading failures before returning a 404', async () => {
+  it('propagates registered component failures instead of disguising them as a 404', async () => {
+    const error = new Error('Article rendering failed');
     mocks.article.mockReturnValue({
       ...article,
-      slug: ['missing'],
-      slugPath: 'missing',
+      Content: () => {
+        throw error;
+      },
     });
-    await expect(HelpArticle(params())).rejects.toThrow('NOT_FOUND');
-    expect(mocks.sentry).toHaveBeenCalled();
-    expect(mocks.context).toHaveBeenCalledWith('help_article', {
-      slug: 'missing',
-    });
+    const page = await HelpArticle(params());
+    expect(() => render(page)).toThrow(error);
+    expect(mocks.notFound).not.toHaveBeenCalled();
   });
   it.each([false, true])(
     'renders article content and optional navigation/related articles: %s',
@@ -691,9 +692,7 @@ describe('help articles', () => {
         withRelated ? { prev: other, next: other } : { prev: null, next: null },
       );
       const html = render(await HelpArticle(params()));
-      expect(html).toContain(
-        'Czym jest rachunek do umowy zlecenia i kiedy go wystawiać?',
-      );
+      expect(html).toContain('Registered help article body');
       expect(html).toContain('#rachunek');
       if (withRelated) {
         expect(html).toContain('Other article');

@@ -59,6 +59,35 @@ async function findDraftConflict(
   return null;
 }
 
+function parseStoredDraft(
+  rawDraft: string | null,
+  rawPreset: string | null,
+  formData: InvoiceFormData,
+  context: string,
+) {
+  let stored: GeneratorDraft | null = null;
+  let preset: InvoiceFormData | null = null;
+  try {
+    if (rawDraft) stored = parseGeneratorDraft(rawDraft);
+    if (rawPreset) preset = parseGeneratorPreset(rawPreset, formData);
+  } catch (error) {
+    captureDraftError(error);
+  }
+  let draftWarning: string | null = null;
+  if (rawDraft && !stored) {
+    draftWarning =
+      'Nie udało się odczytać wersji roboczej. Nie zostanie ona automatycznie nadpisana.';
+  } else if (
+    stored?.invoiceId &&
+    context.startsWith('invoice:') &&
+    stored.invoiceId !== context.slice('invoice:'.length)
+  ) {
+    draftWarning =
+      'Wersja robocza dotyczy innego rachunku. Nie zostanie ona automatycznie nadpisana.';
+  }
+  return { stored, preset, draftWarning };
+}
+
 export function useGeneratorDraft({
   scope,
   context,
@@ -130,6 +159,27 @@ export function useGeneratorDraft({
   useEffect(() => {
     let active = true;
 
+    async function restoreStoredDraft(stored: GeneratorDraft) {
+      try {
+        const found = await findDraftConflict(stored, initialSavedInvoice);
+        if (!active) return;
+        if (found) {
+          setConflict(found);
+          setStatus('conflict');
+        } else {
+          applyDraft(stored, false);
+          setStatus('ready');
+        }
+      } catch (error) {
+        if (!active) return;
+        captureDraftError(error);
+        setWarning(
+          'Nie udało się sprawdzić zapisanej wersji rachunku. Wersja robocza pozostaje w pamięci karty.',
+        );
+        setStatus('blocked');
+      }
+    }
+
     async function load() {
       let rawDraft: string | null;
       let rawPreset: string | null;
@@ -144,33 +194,15 @@ export function useGeneratorDraft({
         return;
       }
 
-      let stored: GeneratorDraft | null = null;
-      let preset: InvoiceFormData | null = null;
-      try {
-        if (rawDraft) stored = parseGeneratorDraft(rawDraft);
-        if (rawPreset)
-          preset = parseGeneratorPreset(rawPreset, initial.formData);
-      } catch (error) {
-        captureDraftError(error);
-      }
-      if (rawDraft && !stored) {
+      const { stored, preset, draftWarning } = parseStoredDraft(
+        rawDraft,
+        rawPreset,
+        initial.formData,
+        context,
+      );
+      if (draftWarning) {
         if (active) {
-          setWarning(
-            'Nie udało się odczytać wersji roboczej. Nie zostanie ona automatycznie nadpisana.',
-          );
-          setStatus('blocked');
-        }
-        return;
-      }
-      if (
-        stored?.invoiceId &&
-        context.startsWith('invoice:') &&
-        stored.invoiceId !== context.slice('invoice:'.length)
-      ) {
-        if (active) {
-          setWarning(
-            'Wersja robocza dotyczy innego rachunku. Nie zostanie ona automatycznie nadpisana.',
-          );
+          setWarning(draftWarning);
           setStatus('blocked');
         }
         return;
@@ -199,24 +231,7 @@ export function useGeneratorDraft({
         return;
       }
       if (stored) {
-        try {
-          const found = await findDraftConflict(stored, initialSavedInvoice);
-          if (!active) return;
-          if (found) {
-            setConflict(found);
-            setStatus('conflict');
-          } else {
-            applyDraft(stored, false);
-            setStatus('ready');
-          }
-        } catch (error) {
-          if (!active) return;
-          captureDraftError(error);
-          setWarning(
-            'Nie udało się sprawdzić zapisanej wersji rachunku. Wersja robocza pozostaje w pamięci karty.',
-          );
-          setStatus('blocked');
-        }
+        await restoreStoredDraft(stored);
         return;
       }
       if (active) setStatus('ready');

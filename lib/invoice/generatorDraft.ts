@@ -23,6 +23,43 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function isOptionalInvoiceId(value: unknown): value is string | undefined {
+  return (
+    value === undefined ||
+    (typeof value === 'string' && value.length > 0 && value.length <= 100)
+  );
+}
+
+function isOptionalInvoiceNumber(value: unknown): value is string | undefined {
+  return (
+    value === undefined || (typeof value === 'string' && value.length <= 100)
+  );
+}
+
+function isOptionalUpdatedAt(value: unknown): value is string | undefined {
+  return (
+    value === undefined ||
+    (typeof value === 'string' && !Number.isNaN(Date.parse(value)))
+  );
+}
+
+function isOptionalCreationUid(value: unknown): value is string | undefined {
+  return (
+    value === undefined ||
+    (typeof value === 'string' && INVOICE_UID_PATTERN.test(value))
+  );
+}
+
+function isNumberReservation(
+  value: unknown,
+): value is InvoiceNumberReservation {
+  return (
+    isRecord(value) &&
+    typeof value.number === 'string' &&
+    typeof value.token === 'string'
+  );
+}
+
 export function parseGeneratorDraft(raw: string): GeneratorDraft | null {
   const value: unknown = JSON.parse(raw);
   if (!isRecord(value) || value.version !== 1) return null;
@@ -37,22 +74,13 @@ export function parseGeneratorDraft(raw: string): GeneratorDraft | null {
     creationUid,
   } = value;
   if (
-    (invoiceId !== undefined &&
-      (typeof invoiceId !== 'string' ||
-        !invoiceId ||
-        invoiceId.length > 100)) ||
-    (invoiceNumber !== undefined &&
-      (typeof invoiceNumber !== 'string' || invoiceNumber.length > 100)) ||
-    (updatedAt !== undefined &&
-      (typeof updatedAt !== 'string' || Number.isNaN(Date.parse(updatedAt)))) ||
+    !isOptionalInvoiceId(invoiceId) ||
+    !isOptionalInvoiceNumber(invoiceNumber) ||
+    !isOptionalUpdatedAt(updatedAt) ||
     (invoiceId !== undefined && updatedAt === undefined) ||
-    (creationUid !== undefined &&
-      (typeof creationUid !== 'string' ||
-        !INVOICE_UID_PATTERN.test(creationUid))) ||
+    !isOptionalCreationUid(creationUid) ||
     (numberReservation !== undefined &&
-      (!isRecord(numberReservation) ||
-        typeof numberReservation.number !== 'string' ||
-        typeof numberReservation.token !== 'string' ||
+      (!isNumberReservation(numberReservation) ||
         numberReservation.number !== invoiceNumber))
   ) {
     return null;
@@ -65,12 +93,9 @@ export function parseGeneratorDraft(raw: string): GeneratorDraft | null {
     invoiceNumber,
     updatedAt,
     creationUid,
-    numberReservation:
-      isRecord(numberReservation) &&
-      typeof numberReservation.number === 'string' &&
-      typeof numberReservation.token === 'string'
-        ? { number: numberReservation.number, token: numberReservation.token }
-        : undefined,
+    numberReservation: isNumberReservation(numberReservation)
+      ? { number: numberReservation.number, token: numberReservation.token }
+      : undefined,
   };
 }
 

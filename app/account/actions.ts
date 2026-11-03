@@ -293,15 +293,14 @@ export async function requestAccountDeletionCode(): Promise<AccountFormState> {
   return { ok: true, message: 'Kod wysłano na adres e-mail Twojego konta.' };
 }
 
-export async function deleteAccount(
-  _prev: AccountFormState,
-  formData: FormData,
-): Promise<AccountFormState> {
-  const userId = await getCurrentUserId();
-  if (!userId) return { ok: false, message: NOT_SIGNED_IN };
-  const limit = await checkSensitiveAccountRateLimit(userId);
-  if (!limit.ok) return { ok: false, message: limit.message };
-
+function parseAccountDeletionConfirmation(formData: FormData):
+  | {
+      ok: true;
+      method: 'password' | 'email-code';
+      password: string;
+      otp: string;
+    }
+  | { ok: false; message: string } {
   if (formData.get('confirm') !== 'on') {
     return { ok: false, message: 'Potwierdź, że rozumiesz skutki usunięcia.' };
   }
@@ -317,6 +316,21 @@ export async function deleteAccount(
   if (method === 'email-code' && !/^\d{6}$/.test(otp)) {
     return { ok: false, message: 'Podaj sześciocyfrowy kod z wiadomości.' };
   }
+  return { ok: true, method, password, otp };
+}
+
+export async function deleteAccount(
+  _prev: AccountFormState,
+  formData: FormData,
+): Promise<AccountFormState> {
+  const userId = await getCurrentUserId();
+  if (!userId) return { ok: false, message: NOT_SIGNED_IN };
+  const limit = await checkSensitiveAccountRateLimit(userId);
+  if (!limit.ok) return { ok: false, message: limit.message };
+
+  const confirmation = parseAccountDeletionConfirmation(formData);
+  if (!confirmation.ok) return confirmation;
+  const { method, password, otp } = confirmation;
 
   const { data: session } = await auth.getSession();
   const email = session?.user?.email;

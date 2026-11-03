@@ -23,6 +23,7 @@ import { checkRateLimit } from '@/lib/rateLimit';
 import { getSavedInvoiceForUser } from '@/lib/savedDataAccess';
 import { encryptJson, encryptText } from '@/lib/savedDataCrypto';
 import { upsertUserBankAccount } from '@/lib/userBankAccount';
+import type { InvoiceFormData } from '@/types/invoiceForm';
 import type {
   ActionResult,
   InvoiceNumberReservation,
@@ -163,40 +164,14 @@ export async function saveInvoice(
   const limit = await checkRateLimit('saveInvoice', userId);
   if (!limit.ok) return { ok: false, error: limit.message };
 
-  if (
-    invoiceId !== undefined &&
-    (typeof invoiceId !== 'string' ||
-      invoiceId.length === 0 ||
-      invoiceId.length > 100)
-  ) {
-    return { ok: false, error: 'Nieprawidłowy identyfikator rachunku.' };
-  }
-  if (
-    !invoiceId &&
-    (typeof creationUid !== 'string' || !INVOICE_UID_PATTERN.test(creationUid))
-  ) {
-    return { ok: false, error: 'Brakuje identyfikatora tworzonego rachunku.' };
-  }
-  if (
-    invoiceId &&
-    (typeof expectedUpdatedAt !== 'string' ||
-      Number.isNaN(Date.parse(expectedUpdatedAt)))
-  ) {
-    return { ok: false, error: 'Brakuje wersji zapisanego rachunku.' };
-  }
-  if (
-    typeof expectedSavedInvoiceTaxableIncome !== 'number' ||
-    !Number.isSafeInteger(expectedSavedInvoiceTaxableIncome) ||
-    expectedSavedInvoiceTaxableIncome < 0
-  ) {
-    return { ok: false, error: 'Nieprawidłowa kwota dochodu z rachunków.' };
-  }
-  if (
-    saveAccountToProfile !== undefined &&
-    typeof saveAccountToProfile !== 'boolean'
-  ) {
-    return { ok: false, error: 'Nieprawidłowy wybór rachunku w profilu.' };
-  }
+  const optionsError = validateSaveOptions(
+    invoiceId,
+    creationUid,
+    expectedUpdatedAt,
+    expectedSavedInvoiceTaxableIncome,
+    saveAccountToProfile,
+  );
+  if (optionsError) return { ok: false, error: optionsError };
 
   const form = sanitizeInvoiceForm(input);
   if (!form) return { ok: false, error: 'Nieprawidłowe dane formularza.' };
@@ -215,23 +190,7 @@ export async function saveInvoice(
   const errors = validateInvoiceForm(form, params);
   if (errors.length > 0) return { ok: false, error: errors[0] };
 
-  const profileAccount =
-    saveAccountToProfile &&
-    form.paymentMethod === 'TRANSFER' &&
-    form.transferTarget === 'SAVED_ACCOUNT' &&
-    form.bankAccountNumber &&
-    form.bankName &&
-    form.bankAccountHolder &&
-    isValidPolishBankAccount(form.bankAccountNumber)
-      ? {
-          accountHolder: form.bankAccountHolder.trim(),
-          bankName: form.bankName.trim(),
-          accountNumber: form.bankAccountNumber
-            .replace(/[\s-]/g, '')
-            .toUpperCase()
-            .replace(/^PL/, ''),
-        }
-      : null;
+  const profileAccount = getProfileAccount(form, saveAccountToProfile);
   const scope = getInvoiceNumberScope(userId);
   const reservationNumber =
     typeof reservation === 'object' &&
@@ -301,19 +260,7 @@ export async function saveInvoice(
         },
         params,
       );
-      const values = {
-        title: encryptText(
-          form.contractNumber?.trim() || `Rachunek ${form.periodStart}`,
-        ),
-        contractNumber: form.contractNumber
-          ? encryptText(form.contractNumber)
-          : null,
-        issuePlace: form.issuePlace?.trim() || null,
-        issueDate: form.issueDate || null,
-        periodStart: form.periodStart,
-        net: calculations.net,
-        data: encryptJson(form),
-      };
+      const values = getInvoiceValues(form, calculations.net);
 
       let saved: { id: string; invoiceNumber: string; updatedAt: Date };
       if (current) {
@@ -394,6 +341,88 @@ export async function saveInvoice(
     if (profileAccount) revalidatePath('/account');
   }
   return result;
+}
+
+function validateSaveOptions(
+  invoiceId: string | undefined,
+  creationUid: string | undefined,
+  expectedUpdatedAt: string | undefined,
+  expectedSavedInvoiceTaxableIncome: number | undefined,
+  saveAccountToProfile: boolean | undefined,
+): string | null {
+  if (
+    invoiceId !== undefined &&
+    (typeof invoiceId !== 'string' ||
+      invoiceId.length === 0 ||
+      invoiceId.length > 100)
+  ) {
+    return 'Nieprawidłowy identyfikator rachunku.';
+  }
+  if (
+    !invoiceId &&
+    (typeof creationUid !== 'string' || !INVOICE_UID_PATTERN.test(creationUid))
+  ) {
+    return 'Brakuje identyfikatora tworzonego rachunku.';
+  }
+  if (
+    invoiceId &&
+    (typeof expectedUpdatedAt !== 'string' ||
+      Number.isNaN(Date.parse(expectedUpdatedAt)))
+  ) {
+    return 'Brakuje wersji zapisanego rachunku.';
+  }
+  if (
+    typeof expectedSavedInvoiceTaxableIncome !== 'number' ||
+    !Number.isSafeInteger(expectedSavedInvoiceTaxableIncome) ||
+    expectedSavedInvoiceTaxableIncome < 0
+  ) {
+    return 'Nieprawidłowa kwota dochodu z rachunków.';
+  }
+  if (
+    saveAccountToProfile !== undefined &&
+    typeof saveAccountToProfile !== 'boolean'
+  ) {
+    return 'Nieprawidłowy wybór rachunku w profilu.';
+  }
+  return null;
+}
+
+function getProfileAccount(
+  form: InvoiceFormData,
+  saveAccountToProfile?: boolean,
+): UserBankAccountDto | null {
+  return saveAccountToProfile &&
+    form.paymentMethod === 'TRANSFER' &&
+    form.transferTarget === 'SAVED_ACCOUNT' &&
+    form.bankAccountNumber &&
+    form.bankName &&
+    form.bankAccountHolder &&
+    isValidPolishBankAccount(form.bankAccountNumber)
+    ? {
+        accountHolder: form.bankAccountHolder.trim(),
+        bankName: form.bankName.trim(),
+        accountNumber: form.bankAccountNumber
+          .replace(/[\s-]/g, '')
+          .toUpperCase()
+          .replace(/^PL/, ''),
+      }
+    : null;
+}
+
+function getInvoiceValues(form: InvoiceFormData, net: number) {
+  return {
+    title: encryptText(
+      form.contractNumber?.trim() || `Rachunek ${form.periodStart}`,
+    ),
+    contractNumber: form.contractNumber
+      ? encryptText(form.contractNumber)
+      : null,
+    issuePlace: form.issuePlace?.trim() || null,
+    issueDate: form.issueDate || null,
+    periodStart: form.periodStart,
+    net,
+    data: encryptJson(form),
+  };
 }
 
 export async function deleteInvoice(

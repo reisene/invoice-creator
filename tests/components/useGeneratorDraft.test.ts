@@ -2,6 +2,7 @@
 import { useGeneratorDraft } from '@/components/generator/useGeneratorDraft';
 import {
   generatorDraftKey,
+  parseGeneratorDraft,
   type GeneratorDraft,
 } from '@/lib/invoice/generatorDraft';
 import type { SavedInvoiceSnapshot } from '@/types/savedData';
@@ -277,6 +278,52 @@ describe('generator server conflicts and save identity', () => {
     act(() => hook.result.current.retryLoad());
     await waitFor(() => expect(hook.result.current.status).toBe('ready'));
     expect(hook.result.current.draft.creationUid).toBe(uid);
+  });
+
+  it.each(['resolve', 'reject'] as const)(
+    'ignores a late restore %s after unmount without consuming stored data',
+    async (outcome) => {
+      const raw = JSON.stringify({ ...edited, creationUid: uid });
+      sessionStorage.setItem(key, raw);
+      let resolve!: (value: { ok: true; data: SavedInvoiceSnapshot }) => void;
+      let reject!: (reason: Error) => void;
+      mocks.snapshot.mockReturnValue(
+        new Promise((done, fail) => {
+          resolve = done;
+          reject = fail;
+        }),
+      );
+      const hook = mount();
+      await waitFor(() => expect(mocks.snapshot).toHaveBeenCalledOnce());
+      expect(hook.result.current.status).toBe('loading');
+      hook.unmount();
+      await act(async () => {
+        if (outcome === 'resolve') resolve({ ok: true, data: saved });
+        else reject(new Error('late failure'));
+      });
+      expect(sessionStorage.getItem(key)).toBe(raw);
+      expect(mocks.capture).not.toHaveBeenCalled();
+    },
+  );
+
+  it('ignores a previous restore response when a retry has already restored the draft', async () => {
+    const raw = JSON.stringify({ ...edited, creationUid: uid });
+    sessionStorage.setItem(key, raw);
+    let resolve!: (value: { ok: true; data: SavedInvoiceSnapshot }) => void;
+    mocks.snapshot.mockReturnValueOnce(
+      new Promise((done) => {
+        resolve = done;
+      }),
+    );
+    const hook = mount();
+    await waitFor(() => expect(mocks.snapshot).toHaveBeenCalledOnce());
+    act(() => hook.result.current.retryLoad());
+    await waitFor(() => expect(hook.result.current.status).toBe('ready'));
+    await act(async () => resolve({ ok: true, data: saved }));
+    expect(hook.result.current.status).toBe('ready');
+    expect(hook.result.current.conflict).toBeNull();
+    expect(hook.result.current.draft).toEqual(parseGeneratorDraft(raw));
+    expect(sessionStorage.getItem(key)).toBe(raw);
   });
 
   it('ignores a stale conflict response after a different saved version is adopted', async () => {

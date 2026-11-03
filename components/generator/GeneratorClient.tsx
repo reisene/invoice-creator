@@ -676,7 +676,9 @@ function GeneratorWorkspace({
         <Button
           variant='outline-secondary'
           size='sm'
-          onClick={() => setShowClearDraftConfirmation(true)}
+          onClick={() => {
+            setShowClearDraftConfirmation(true);
+          }}
         >
           Usuń wersję roboczą z tej karty
         </Button>

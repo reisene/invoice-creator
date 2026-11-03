@@ -248,7 +248,9 @@ export default function InvoiceForm({
         handleSaveAccountToProfile={handleSaveAccountToProfile}
         isSavingAccount={isSavingAccount}
         saveAccountFeedback={saveAccountFeedback}
-        clearSaveAccountFeedback={() => setSaveAccountFeedback(null)}
+        clearSaveAccountFeedback={() => {
+          setSaveAccountFeedback(null);
+        }}
       />
       <PaymentNotices {...sectionProps} />
       <NotesFields {...sectionProps} />

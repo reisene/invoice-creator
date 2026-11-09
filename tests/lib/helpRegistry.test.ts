@@ -44,7 +44,7 @@ function article(category = 'podstawy', metadata = {}) {
 
 const initialExitCode = process.exitCode;
 beforeAll(async () => {
-  await import('gray-matter');
+  await import('front-matter');
 });
 beforeEach(() => {
   vi.resetModules();

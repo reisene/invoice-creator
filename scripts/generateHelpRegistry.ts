@@ -1,5 +1,5 @@
 import { HELP_CATEGORIES, type HelpArticleMeta } from '@/types/help';
-import matter from 'gray-matter';
+import matter from 'front-matter';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -39,7 +39,9 @@ async function readArticle(
 ): Promise<HelpArticleSource> {
   const filePath = path.join(helpDirectory, category, filename);
   // The filename comes from this category's directory, not from user input.
-  const { data } = matter(await readFile(filePath, 'utf8'));
+  const { attributes: data } = matter<Record<string, unknown>>(
+    await readFile(filePath, 'utf8'),
+  );
   const baseName = filename.slice(0, -'.mdx'.length);
 
   if (typeof data.title !== 'string' || !data.title.trim()) {

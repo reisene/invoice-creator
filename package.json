@@ -92,7 +92,7 @@
     "bootstrap": "^5.3.8",
     "botid": "^1.5.12",
     "dotenv": "^18.0.10",
-    "gray-matter": "^4.0.3",
+    "front-matter": "^4.0.2",
     "next": "16.4.5",
     "react": "19.3.1",
     "react-bootstrap": "^2.10.10",
@@ -135,7 +135,8 @@
     "vitest": "^5.1.0"
   },
   "overrides": {
-    "path-to-regexp": "6.3.0"
+    "path-to-regexp": "6.3.0",
+    "fast-uri": "3.1.9"
   },
   "allowScripts": {
     "@prisma/engines@7.10.1": true,

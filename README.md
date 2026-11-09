@@ -59,6 +59,7 @@ Obliczenia mają charakter pomocniczy. Przed wykorzystaniem rachunku sprawdź da
 ## Technologie
 
 - Next.js 16 (App Router), React 19 i TypeScript.
+- Uwaga o kompatybilności TypeScript: w tym repo narzędzia lintsowe i kompilator mogą być zintegrowane z różnymi wersjami TypeScript, aby zachować stabilność `eslint`/`typescript-eslint` i jednocześnie umożliwić poprawne uruchamianie `tsc` w docelowym środowisku. Jeśli zmieniasz wersję TypeScript, zawsze testuj osobno `npm run lint` i `npm run typecheck`, zamiast zakładać, że jedna wersja będzie działać w obu miejscach.
 - PostgreSQL na Neon, Prisma 7 i Neon Auth.
 - Upstash Redis do opcjonalnego limitowania żądań oraz Resend do wiadomości e-mail.
 - Vercel BotID do ochrony formularza kontaktowego.

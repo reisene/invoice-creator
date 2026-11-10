@@ -49,6 +49,7 @@ function mount(
   const changed = vi.fn();
   function Harness() {
     const [data, setData] = useState(formData(overrides));
+    const [account, setAccount] = useState(props.bankAccount ?? null);
     return (
       <InvoiceForm
         data={data}
@@ -56,9 +57,13 @@ function mount(
           changed(next);
           setData(next);
         }}
-        bankAccount={null}
         taxParams={DEFAULT_TAX_PARAMS}
         {...props}
+        bankAccount={account}
+        onBankAccountSaved={(saved) => {
+          setAccount(saved);
+          props.onBankAccountSaved?.(saved);
+        }}
       />
     );
   }
@@ -261,16 +266,14 @@ describe('invoice form data binding', () => {
     expect(
       screen.getByRole('option', { name: '20% (standard)' }),
     ).toBeDefined();
-    rerender(
-      <InvoiceForm
-        {...props}
-        savedInvoiceTaxableIncome={1234}
-        savedIncomeError='Income failed'
-      />,
-    );
+    rerender(<InvoiceForm {...props} savedInvoiceTaxableIncome={1234} />);
     expect(
-      screen.getByText(/Podstawa z zapisanych rachunków/).textContent,
+      screen.getByText(/Podstawa z wcześniejszych rachunków/).textContent,
     ).toContain('1');
+    rerender(<InvoiceForm {...props} savedIncomeError='Income failed' />);
+    expect(
+      screen.queryByText(/Podstawa z wcześniejszych rachunków/),
+    ).toBeNull();
     expect(screen.getByRole('alert').textContent).toBe('Income failed');
   });
 });

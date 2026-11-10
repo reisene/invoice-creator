@@ -329,7 +329,7 @@ describe('saved party input', () => {
     {},
     ...[
       { kind: 'INVALID' },
-      { clientType: null },
+      { clientType: 'invalid' },
       { name: 1 },
       { name: 'a'.repeat(201) },
       { address: 1 },

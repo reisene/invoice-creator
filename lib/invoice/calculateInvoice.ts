@@ -18,17 +18,11 @@ function calculateAnnualTax(income: number, P: TaxParams): number {
   );
 }
 
-export function calculateInvoice(
+function calculateSocialContributions(
   data: InvoiceFormData,
   P: TaxParams,
-): InvoiceData {
-  // 1. Brutto
-  const gross = round2(
-    data.contractType === 'monthly'
-      ? (data.grossAmount ?? 0)
-      : (data.hourlyRate ?? 0) * (data.hoursWorked ?? 0),
-  );
-
+  gross: number,
+) {
   // 2. Składki społeczne (obowiązkowe tylko dla statusu standard; zwolnieni: uczeń/student do 26 lat oraz zbieg z etatem z min. wynagrodzeniem)
   const hasSocialContributions = data.contractorStatus === 'standard';
 
@@ -49,6 +43,20 @@ export function calculateInvoice(
     pensionContribution + rentContribution + sicknessContribution,
   );
 
+  return {
+    pensionContribution,
+    rentContribution,
+    sicknessContribution,
+    totalSocialContributions,
+  };
+}
+
+function calculateHealthContribution(
+  data: InvoiceFormData,
+  P: TaxParams,
+  gross: number,
+  totalSocialContributions: number,
+) {
   // 3. Podstawa składki zdrowotnej (uczniowie i studenci do 26 lat zwolnieni na podstawie art. 66 ust. 1 pkt 1 lit. e ustawy o świadczeniach opieki zdrowotnej)
   const hasHealthContribution = data.contractorStatus !== 'student_under_26';
   const healthContributionBase = hasHealthContribution
@@ -74,6 +82,27 @@ export function calculateInvoice(
 
     healthContribution = Math.min(rawHealthContribution, hypotheticalTax2021);
   }
+  return { healthContributionBase, healthContribution };
+}
+
+export function calculateInvoice(
+  data: InvoiceFormData,
+  P: TaxParams,
+): InvoiceData {
+  // 1. Brutto
+  const gross = round2(
+    data.contractType === 'monthly'
+      ? (data.grossAmount ?? 0)
+      : (data.hourlyRate ?? 0) * (data.hoursWorked ?? 0),
+  );
+  const {
+    pensionContribution,
+    rentContribution,
+    sicknessContribution,
+    totalSocialContributions,
+  } = calculateSocialContributions(data, P, gross);
+  const { healthContributionBase, healthContribution } =
+    calculateHealthContribution(data, P, gross, totalSocialContributions);
 
   // 5. Apply the annual young-relief exemption to qualifying gross revenue.
   const remainingYoungReliefLimit = Math.max(

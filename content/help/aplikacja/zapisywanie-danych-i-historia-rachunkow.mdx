@@ -38,6 +38,8 @@ W aplikacji możesz w prosty sposób zarządzać numerem konta do wypłaty:
 - **Zapis w profilu:** Będąc zalogowanym, możesz kliknąć _Zapisz ten rachunek w profilu_ bezpośrednio w generatorze lub
   uzupełnić dane w zakładce **Moje konto → Rachunek bankowy**. Zapisane konto będzie automatycznie podstawiane do
   każdego nowego rachunku.
+- **Potwierdzenie zmiany:** Jeśli konto na zapisywanym rachunku różni się od konta w profilu, wybierasz, czy zmienić
+  również profil, czy zapisać tylko rachunek. Bez potwierdzenia profil nie jest zmieniany.
 
 ---
 
@@ -49,6 +51,15 @@ Każdy rachunek utworzony przez zalogowanego użytkownika może zostać zapisany
   wygenerować nowy plik PDF.
 - **Edycja i aktualizacja:** Możesz poprawić dane w zapisanym rachunku bez konieczności ponownego wpisywania wszystkich
   informacji.
+- **Dochód z wcześniejszych rachunków:** Po zalogowaniu do podstawy dochodu są dodawane wcześniejsze rachunki tego
+  samego zleceniobiorcy z danego roku, rozpoznawanego po PESEL-u. Rachunki z późniejszych okresów nie są doliczane; przy
+  kilku rachunkach za ten sam okres liczy się kolejność zapisania. Dochód z innych źródeł wpisz osobno, bez ponownego
+  doliczania tych rachunków.
+- **Kwoty netto w historii:** Lista przelicza netto według aktualnie zapisanych wcześniejszych rachunków, tak jak
+  generator. Dodanie lub zmiana wcześniejszego rachunku może zmienić wyświetlaną kwotę; wcześniej pobrane pliki PDF nie
+  są zmieniane, a historyczne dane nie są masowo nadpisywane.
+- **Wersja robocza:** Po odświeżeniu formularz jest odtwarzany z pamięci bieżącej karty. Jeśli w międzyczasie zmienił
+  się zapisany rachunek, wybierasz między zapisaną wersją a wersją roboczą.
 - **Duplikowanie (nowy okres):** Przycisk _Duplikuj_ tworzy kopię rachunku z zachowaniem danych stron, stawek i formy
   płatności, ułatwiając wystawienie kolejnego rachunku za nowy miesiąc.
 
@@ -61,6 +72,7 @@ Szanujemy Twoją niezależność – nie blokujemy Twoich danych w naszej bazie:
 - **Eksport do pliku JSON:** W sekcji _Eksport danych_ możesz w dowolnym momencie pobrać kopię zapasową wszystkich
   swoich rachunków, kontrahentów oraz ustawień bankowych w jednym czytelnym pliku `.json`.
 - **Import danych:** W razie potrzeby możesz przywrócić swoje dane z wcześniej pobranego pliku JSON lub przenieść je
-  między kontami.
+  między kontami. Nowe kopie zachowują datę utworzenia rachunku potrzebną do ustalenia kolejności. W starszych kopiach
+  bez tej daty używana jest data ostatniej zmiany, więc kolejność rachunków za ten sam okres może się różnić.
 - **Usuwanie konta:** W ustawieniach profilu masz pełną kontrolę nad usunięciem historii rachunków lub całkowitym
   skasowaniem konta zgodnie z zasadami RODO.

@@ -128,7 +128,9 @@ export default function CookieConsentBanner({
                       label='Analityka i wydajność'
                       checked={analytics}
                       disabled={isPending}
-                      onChange={(event) => setAnalytics(event.target.checked)}
+                      onChange={(event) => {
+                        setAnalytics(event.target.checked);
+                      }}
                       aria-describedby='consent-analytics-description'
                     />
                     <p
@@ -148,7 +150,9 @@ export default function CookieConsentBanner({
                       label='Odtwarzanie sesji'
                       checked={replay}
                       disabled={isPending}
-                      onChange={(event) => setReplay(event.target.checked)}
+                      onChange={(event) => {
+                        setReplay(event.target.checked);
+                      }}
                       aria-describedby='consent-replay-description'
                     />
                     <p
@@ -164,9 +168,9 @@ export default function CookieConsentBanner({
                   </div>
                   <Button
                     disabled={isPending}
-                    onClick={() =>
-                      choose(getCookieConsentChoice(analytics, replay))
-                    }
+                    onClick={() => {
+                      choose(getCookieConsentChoice(analytics, replay));
+                    }}
                     variant='outline-secondary'
                   >
                     Zapisz wybrane ustawienia

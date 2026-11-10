@@ -396,7 +396,7 @@ describe('metadata and utility routes', () => {
       rules: {
         userAgent: '*',
         allow: '/',
-        disallow: ['/account', '/auth', '/api'],
+        disallow: ['/account', '/admin', '/auth', '/api'],
       },
       sitemap: 'https://example.com/sitemap.xml',
     });

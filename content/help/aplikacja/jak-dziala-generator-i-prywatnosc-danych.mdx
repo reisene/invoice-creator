@@ -20,10 +20,11 @@ numery rachunków bankowych) na serwer, gdzie dokument jest przetwarzany.
 
 W **Invoice Creator** przyjęliśmy inną, bezpieczniejszą filozofię:
 
-1. **Generowanie PDF w przeglądarce:** Cały proces kalkulacji podatków, składek ZUS oraz generowania pliku PDF odbywa
-   się bezpośrednio na Twoim urządzeniu (przy użyciu technologii Web Workers i biblioteki `@react-pdf/renderer`).
-2. **Brak przesyłania danych:** Żadne wrażliwe dane wpisane w generatorze nie opuszczają Twojej przeglądarki, chyba że
-   jesteś zalogowany i świadomie klikniesz opcję zapisu rachunku w chmurze na swoim profilu.
+1. **Generowanie PDF w przeglądarce:** Kalkulacje podatków i składek ZUS oraz generowanie pliku PDF odbywają się na
+   Twoim urządzeniu przy użyciu biblioteki `@react-pdf/renderer`.
+2. **Przesyłanie danych:** Po zalogowaniu generator wysyła na serwer PESEL zleceniobiorcy oraz początek okresu, aby
+   odnaleźć wcześniejsze rachunki tej osoby. Dane całego formularza są wysyłane, gdy zapisujesz rachunek; dane stron i
+   konta bankowego — gdy wybierzesz ich zapis w profilu.
 3. **Brak trackerów i profilowania:** Nie śledzimy Twojej aktywności, nie sprzedajemy danych ani nie integrujemy
    zewnętrznych skryptów śledzących reklamodawców.
 
@@ -31,12 +32,18 @@ W **Invoice Creator** przyjęliśmy inną, bezpieczniejszą filozofię:
 
 ## Przechowywanie danych w przeglądarce
 
-Podczas pracy z formularzem, generator korzysta z lokalnej pamięci Twojej przeglądarki (`sessionStorage` oraz
-`localStorage`):
+Generator zapisuje wersję roboczą w pamięci bieżącej karty (`sessionStorage`), aby odtworzyć formularz po odświeżeniu
+lub zmianie ustawień cookies. Obejmuje ona również PESEL, numer konta, numer rachunku i jego identyfikator. Dane nie są
+szyfrowane w pamięci przeglądarki, więc osoba mająca dostęp do tej karty lub profilu przeglądarki może je odczytać.
 
-- Pozwala to zapobiec utracie wprowadzonych danych w razie przypadkowego odświeżenia strony.
-- Umożliwia wygodne przenoszenie gotowych wzorców ze strony `/preview` wprost do edytora `/generator`.
-- Możesz w każdej chwili wyczyścić te dane w ustawieniach przeglądarki lub klikając przycisk resetowania formularza.
+- Wersje robocze są rozdzielone według konta użytkownika i rachunku; bez logowania mają osobny zakres.
+- Zwykle znikają po zamknięciu karty, ale przeglądarka może je przywrócić wraz z sesją.
+- Możesz usunąć bieżącą wersję przyciskiem **Usuń wersję roboczą z tej karty**. Następna zmiana formularza ponownie
+  rozpocznie jej zapisywanie.
+- Ta sama pamięć służy do przenoszenia wybranego wzorca do generatora. Jeśli istnieje już wersja robocza, generator
+  zapyta, którą z nich zachować.
+- Gdy pamięć przeglądarki jest niedostępna lub pełna, generator wyświetli ostrzeżenie; odtworzenie danych po odświeżeniu
+  nie jest wtedy gwarantowane.
 
 ---
 

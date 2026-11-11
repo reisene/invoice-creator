@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.7.0](https://github.com-reisene/reisene/invoice-creator/compare/0.5.0...0.7.0) (2026-11-11)
+
+### Features
+
+- add admin panel components and tax parameters management ([5e40878](https://github.com-reisene/reisene/invoice-creator/commit/5e4087871ab0ca45c51db1c5217d979ce8942796))
+- add file header state and pristine config options to project settings ([a9826ba](https://github.com-reisene/reisene/invoice-creator/commit/a9826ba6723b65ca35501342a3d8ac93df5f6ff0))
+- add file header state and pristine config options to project settings ([9d9786f](https://github.com-reisene/reisene/invoice-creator/commit/9d9786f95b8e9d2005b76b26d40f5a1a1d39cf3a))
+- add user password reset functionality and update ban modal state management ([0848007](https://github.com-reisene/reisene/invoice-creator/commit/08480075130a35b30f9d85a54cd6d03c11cb9fb0))
+- **cli:** add script for downloading and managing Codacy CLI v2 ([4ef3eec](https://github.com-reisene/reisene/invoice-creator/commit/4ef3eec45f0bb6de48590cfd134c06bb157e3120))
+- **generator:** enhance draft handling and conflict resolution ([99ac329](https://github.com-reisene/reisene/invoice-creator/commit/99ac32999f47784a759224e897c8232356a4064e))
+- **help:** generate help article registry and update related components ([74a5b8e](https://github.com-reisene/reisene/invoice-creator/commit/74a5b8e4ed41d5b1d1b8813e8ba52722aefc8a5a))
+- **help:** refactor help article reading logic to support category-specific directories ([b46364f](https://github.com-reisene/reisene/invoice-creator/commit/b46364f61b7ea5b8c3208afc97e0b1a4054f19f8))
+- implement admin role management and access control for admin routes ([cb2ec5c](https://github.com-reisene/reisene/invoice-creator/commit/cb2ec5c7cec0331bfb04d5ef397d48f249e01a4c))
+- implement generator draft and invoice income handling ([f69847c](https://github.com-reisene/reisene/invoice-creator/commit/f69847c794b9c4c9d358760c196795afc85430d8))
+- implement user bank account management and refactor related functions ([126cb9a](https://github.com-reisene/reisene/invoice-creator/commit/126cb9ac4f58dec3efb1f1f351d9100de1f2eb9e))
+- update Content Security Policy to allow 'wasm-unsafe-eval' for PDF export functionality ([ed7478c](https://github.com-reisene/reisene/invoice-creator/commit/ed7478cbe238c0c2870b85caf718e55d36eb377e))
+
+### Bug Fixes
+
+- **eslint:** naprawić błędy ESLint w AdminNavigation i UserList ([32926a8](https://github.com-reisene/reisene/invoice-creator/commit/32926a85e859a61e7ca5ab3f46b969584ef8ffac))
+- **proxy:** streamline admin session validation and ban handling ([74d5c27](https://github.com-reisene/reisene/invoice-creator/commit/74d5c27a6a55d79c3009f9c2dd5b878c4e003012))
+- update loading message in UserList component for better user experience ([a52781e](https://github.com-reisene/reisene/invoice-creator/commit/a52781e4eaba04696e244cc9296fa4c44cb0a7dd))
+
 ## [0.6.0](https://github.com-reisene/reisene/invoice-creator/compare/0.5.0...0.6.0) (2026-11-11)
 
 ### Features

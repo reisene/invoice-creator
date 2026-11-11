@@ -33,11 +33,16 @@ export default function UserList() {
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // Modal stanu
-  const [showModal, setShowModal] = useState(false);
+  // Modal banu
+  const [showBanModal, setShowBanModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
   const [banReason, setBanReason] = useState('');
   const [banPending, setBanPending] = useState(false);
+
+  // Modal resetu hasła
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordPending, setPasswordPending] = useState(false);
 
   const refreshUsers = useCallback(async () => {
     try {
@@ -57,7 +62,7 @@ export default function UserList() {
   const openBanModal = (user: UserWithRole) => {
     setSelectedUser(user);
     setBanReason('');
-    setShowModal(true);
+    setShowBanModal(true);
   };
 
   const handleBanConfirm = async () => {
@@ -91,7 +96,7 @@ export default function UserList() {
       });
 
       await refreshUsers();
-      setShowModal(false);
+      setShowBanModal(false);
       setBanReason('');
       setSelectedUser(null);
     } catch {
@@ -109,6 +114,49 @@ export default function UserList() {
       setError('Nie udało się odblokować użytkownika.');
     } else {
       await refreshUsers();
+    }
+  };
+
+  const handleRevokeSessions = async (userId: string) => {
+    setActionLoading(userId);
+    const { error: revokeError } = await authClient.admin.revokeUserSessions({
+      userId,
+    });
+    setActionLoading(null);
+    if (revokeError) {
+      setError('Nie udało się wylogować użytkownika.');
+    } else {
+      await refreshUsers();
+    }
+  };
+
+  const openPasswordModal = (user: UserWithRole) => {
+    setSelectedUser(user);
+    setNewPassword('');
+    setShowPasswordModal(true);
+  };
+
+  const handlePasswordReset = async () => {
+    if (!selectedUser || newPassword.length < 6) return;
+    setPasswordPending(true);
+
+    try {
+      const { error: passwordError } = await authClient.admin.setUserPassword({
+        userId: selectedUser.id,
+        newPassword,
+      });
+
+      if (passwordError) {
+        setError('Nie udało się zresetować hasła.');
+      } else {
+        setShowPasswordModal(false);
+        setNewPassword('');
+        setSelectedUser(null);
+      }
+    } catch {
+      setError('Wystąpił błąd podczas resetowania hasła.');
+    } finally {
+      setPasswordPending(false);
     }
   };
 
@@ -149,7 +197,7 @@ export default function UserList() {
                 )}
               </td>
               <td>{new Date(user.createdAt).toLocaleDateString('pl-PL')}</td>
-              <td>
+              <td className='d-flex flex-column gap-1 align-items-start'>
                 {user.banned ? (
                   <Button
                     variant='outline-success'
@@ -162,13 +210,32 @@ export default function UserList() {
                       : 'Odblokuj'}
                   </Button>
                 ) : (
-                  <Button
-                    variant='outline-danger'
-                    size='sm'
-                    onClick={() => openBanModal(user)}
-                  >
-                    Zbanuj
-                  </Button>
+                  <>
+                    <Button
+                      variant='outline-danger'
+                      size='sm'
+                      onClick={() => openBanModal(user)}
+                    >
+                      Zbanuj
+                    </Button>
+                    <Button
+                      variant='outline-warning'
+                      size='sm'
+                      onClick={() => openPasswordModal(user)}
+                    >
+                      Resetuj hasło
+                    </Button>
+                    <Button
+                      variant='outline-secondary'
+                      size='sm'
+                      onClick={() => handleRevokeSessions(user.id)}
+                      disabled={actionLoading === user.id}
+                    >
+                      {actionLoading === user.id
+                        ? 'Wylogywanie...'
+                        : 'Wyloguj wszędzie'}
+                    </Button>
+                  </>
                 )}
               </td>
             </tr>
@@ -184,7 +251,7 @@ export default function UserList() {
       </Table>
 
       {/* Modal potwierdzenia banu */}
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
+      <Modal show={showBanModal} onHide={() => setShowBanModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Zbanuj użytkownika</Modal.Title>
         </Modal.Header>
@@ -216,7 +283,7 @@ export default function UserList() {
         <Modal.Footer>
           <Button
             variant='secondary'
-            onClick={() => setShowModal(false)}
+            onClick={() => setShowBanModal(false)}
             disabled={banPending}
           >
             Anuluj
@@ -227,6 +294,56 @@ export default function UserList() {
             disabled={banPending || !banReason.trim()}
           >
             {banPending ? 'Banowanie...' : 'Zbanuj i wyślij powiadomienie'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal resetu hasła */}
+      <Modal
+        show={showPasswordModal}
+        onHide={() => setShowPasswordModal(false)}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Resetuj hasło</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedUser && (
+            <div className='mb-3'>
+              <strong>{selectedUser.name || selectedUser.email}</strong>
+              <br />
+              <small className='text-body-secondary'>
+                {selectedUser.email}
+              </small>
+            </div>
+          )}
+          <Form.Group className='mb-3' controlId='newPassword'>
+            <Form.Label>Nowe hasło</Form.Label>
+            <Form.Control
+              type='password'
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder='Wpisz nowe hasło (min. 6 znaków)...'
+            />
+            <Form.Text className='text-body-secondary'>
+              Hasło musi mieć co najmniej 6 znaków. Użytkownik zostanie
+              powiadomiony e-mailem o zmianie hasła.
+            </Form.Text>
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant='secondary'
+            onClick={() => setShowPasswordModal(false)}
+            disabled={passwordPending}
+          >
+            Anuluj
+          </Button>
+          <Button
+            variant='warning'
+            onClick={handlePasswordReset}
+            disabled={passwordPending || newPassword.length < 6}
+          >
+            {passwordPending ? 'Resetowanie...' : 'Zresetuj hasło'}
           </Button>
         </Modal.Footer>
       </Modal>

@@ -49,6 +49,8 @@ Polskojęzyczny generator rachunków do umowy zlecenia. Oblicza składki i zalic
 - Obliczenia ZUS i PIT z uwzględnieniem wybranego statusu zleceniobiorcy, kosztów uzyskania przychodu 20% lub 50%, PIT-2 oraz ulgi dla młodych. Generator korzysta z parametrów podatkowych zapisanych w bazie, a gdy nie są dostępne — z wartości domyślnych w kodzie.
 - Podgląd rachunku, przykładowe dokumenty i eksport do PDF.
 - Opcjonalne konto z możliwością zapisywania rachunków, kontrahentów i rachunku bankowego, a także importu i eksportu danych.
+- Menu „Konto” prowadzi do edycji konta oraz zapisanych rachunków i danych stron. Użytkownicy z rolą `admin` widzą dodatkowo odnośnik do `/admin`; sam panel administratora nie jest jeszcze dostępny.
+- `/admin` i jego podstrony wymagają sesji Neon Auth oraz roli `admin`: niezalogowani są przekierowywani do logowania, a pozostali użytkownicy otrzymują HTTP 403. Ścieżki te są wykluczone w `robots.txt` i mają nagłówek `X-Robots-Tag: noindex, nofollow`; odpowiedzi nie powinny być przechowywane w pamięci podręcznej. Roboty nie zastępują kontroli dostępu. Przyszłe akcje serwerowe i endpointy panelu muszą dodatkowo sprawdzać sesję i rolę przed dostępem do danych.
 - Rejestracja i logowanie przez Neon Auth; formularz kontaktowy z ochroną antyspamową.
 - Strony pomocy, Regulamin, Polityka prywatności i ustawienia cookies.
 
@@ -57,6 +59,7 @@ Obliczenia mają charakter pomocniczy. Przed wykorzystaniem rachunku sprawdź da
 ## Technologie
 
 - Next.js 16 (App Router), React 19 i TypeScript.
+- Uwaga o kompatybilności TypeScript: w tym repo narzędzia lintsowe i kompilator mogą być zintegrowane z różnymi wersjami TypeScript, aby zachować stabilność `eslint`/`typescript-eslint` i jednocześnie umożliwić poprawne uruchamianie `tsc` w docelowym środowisku. Jeśli zmieniasz wersję TypeScript, zawsze testuj osobno `npm run lint` i `npm run typecheck`, zamiast zakładać, że jedna wersja będzie działać w obu miejscach.
 - PostgreSQL na Neon, Prisma 7 i Neon Auth.
 - Upstash Redis do opcjonalnego limitowania żądań oraz Resend do wiadomości e-mail.
 - Vercel BotID do ochrony formularza kontaktowego.
@@ -254,6 +257,7 @@ Instalacja na Vercelu i w workflow korzysta z `npm ci`, bez aktualizowania lockf
 - Identyfikatory używane przez Upstash do limitowania są pseudonimizowane przez HMAC-SHA-256; surowy identyfikator nie jest używany jako klucz limitu.
 - Analityka i wydajność (Vercel Web Analytics i Speed Insights) oraz odtwarzanie sesji (Sentry Replay) wymagają dwóch niezależnych zgód. Domyślnie obie kategorie są wyłączone. Replay maskuje tekst i wartości pól oraz blokuje multimedia; nie jest to gwarancja anonimowości. Raporty błędów i tracing Sentry są odrębną diagnostyką, niezależną od tych zgód.
 - Wydruk rachunku i jego obliczenia wykonywane są w przeglądarce; zapis na koncie i usługi serwerowe wymagają przesłania danych do aplikacji.
+- CSP w `next.config.ts` dopuszcza `'wasm-unsafe-eval'` w `script-src`, ponieważ eksport PDF korzysta z WebAssembly. Produkcja nadal nie dopuszcza ogólnego `'unsafe-eval'`; jest ono włączone tylko podczas developmentu.
 - Więcej informacji o danych, retencji i prawach użytkownika znajduje się w [Polityce prywatności](https://invoice-creator.draugskoll.dev/privacy). Zasady korzystania z usługi określa [Regulamin](https://invoice-creator.draugskoll.dev/terms).
 
 ### Wdrożenie rozdzielonych zgód i dokumentów

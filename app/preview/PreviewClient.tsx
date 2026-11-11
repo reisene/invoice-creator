@@ -17,6 +17,8 @@ import {
   Badge,
   Button,
   Card,
+  CardBody,
+  CardHeader,
   Col,
   Container,
   Form,
@@ -150,7 +152,7 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                     : 'border-secondary-subtle bg-body'
                 }`}
               >
-                <Card.Body className='p-3 d-flex flex-column justify-content-between'>
+                <CardBody className='p-3 d-flex flex-column justify-content-between'>
                   <div>
                     <Badge bg={preset.badgeVariant} className='mb-2'>
                       {preset.badge}
@@ -162,7 +164,7 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                       {preset.shortDescription}
                     </p>
                   </div>
-                </Card.Body>
+                </CardBody>
               </Card>
             </Col>
           );
@@ -174,7 +176,7 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
         <Col lg={5}>
           {/* Informacja prawna o danym typie zlecenia */}
           <Card className='mb-3 border-info-subtle bg-info-subtle rounded-4 shadow-sm'>
-            <Card.Body className='p-3'>
+            <CardBody className='p-3'>
               <div className='d-flex align-items-center gap-2 mb-2'>
                 <BsInfoCircleFill className='text-info' size={18} />
                 <h3 className='h6 fw-bold mb-0'>Zasady tego rozliczenia</h3>
@@ -182,12 +184,12 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
               <p className='small text-body-secondary mb-0'>
                 {selectedPreset.legalNote}
               </p>
-            </Card.Body>
+            </CardBody>
           </Card>
 
           {/* Szybka edycja kwot i parametrów */}
           <Card className='mb-3 border-secondary-subtle rounded-4 shadow-sm overflow-hidden'>
-            <Card.Header className='bg-body-tertiary d-flex justify-content-between align-items-center'>
+            <CardHeader className='bg-body-tertiary d-flex justify-content-between align-items-center'>
               <span className='fw-bold small'>Własne stawki i parametry</span>
               <Button
                 variant='link'
@@ -198,8 +200,8 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                 <BsArrowCounterclockwise className='me-1' />
                 Domyślne kwoty
               </Button>
-            </Card.Header>
-            <Card.Body className='p-3'>
+            </CardHeader>
+            <CardBody className='p-3'>
               {formData.contractType === 'monthly' ? (
                 <Form.Group className='mb-3'>
                   <Form.Label className='small fw-semibold'>
@@ -370,7 +372,7 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
                   }}
                 />
               </div>
-            </Card.Body>
+            </CardBody>
           </Card>
 
           {/* Przyciski akcji */}

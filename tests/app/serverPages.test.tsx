@@ -30,8 +30,10 @@ import PreviewPage from '@/app/preview/page';
 import PrivacyPage from '@/app/privacy/page';
 import AcceptTermsPage from '@/app/terms/accept/page';
 import TermsPage from '@/app/terms/page';
+import { calculateInvoice } from '@/lib/invoice/calculateInvoice';
 import { DEFAULT_TAX_PARAMS } from '@/lib/invoice/taxConstants';
 import { SAMPLE_INVOICE_PRESETS } from '@/lib/sampleInvoices';
+import { createHash } from 'node:crypto';
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -89,6 +91,9 @@ vi.mock('@/lib/savedDataAccess', () => ({
   getSavedPartiesForUser: mocks.parties,
 }));
 vi.mock('@/lib/invoice/taxParams', () => ({ getAllTaxParams: mocks.tax }));
+vi.mock('@/lib/savedDataCrypto', () => ({
+  decryptJson: (data: unknown) => ({ data }),
+}));
 vi.mock('@/lib/serverLogger', () => ({ logServerError: mocks.log }));
 vi.mock('@/lib/db', () => ({
   prisma: { cookieConsent: { findMany: mocks.history } },
@@ -213,6 +218,7 @@ const article = {
   category: 'podstawy',
   categoryLabel: 'Podstawy',
   tags: ['rachunek'],
+  Content: () => 'Registered help article body',
 };
 const render = (node: ReactNode) => renderToStaticMarkup(node);
 beforeEach(() => {
@@ -361,18 +367,21 @@ describe('layouts and public pages', () => {
 });
 
 describe('generator page data flow', () => {
+  const userScope = createHash('sha256').update(user.id).digest('hex');
   it.each([null, user.id])('loads initial data for %s', async (id) => {
     mocks.user.mockResolvedValue(id);
     const element = await GeneratorPage({ searchParams: Promise.resolve({}) });
     expect(element.props).toEqual({
       taxParams: [DEFAULT_TAX_PARAMS],
       signedIn: Boolean(id),
+      draftScope: id ? userScope : 'anonymous',
+      draftContext: 'new',
       initialParties: [],
       bankAccount: null,
       initialInvoice: undefined,
       duplicateData: undefined,
     });
-    expect(element.key).toBe('new');
+    expect(element.key).toBe(`${id ? userScope : 'anonymous'}:new`);
     if (!id) expect(mocks.bank).not.toHaveBeenCalled();
   });
   it('opens a saved invoice scoped to the current owner', async () => {
@@ -380,6 +389,7 @@ describe('generator page data flow', () => {
     mocks.invoice.mockResolvedValue({
       id: 'invoice-1',
       invoiceNumber: '1/2026',
+      updatedAt: '2026-10-21T00:00:00.000Z',
       data,
     });
     const element = await GeneratorPage({
@@ -388,9 +398,11 @@ describe('generator page data flow', () => {
     expect(element.props.initialInvoice).toEqual({
       id: 'invoice-1',
       invoiceNumber: '1/2026',
+      updatedAt: '2026-10-21T00:00:00.000Z',
       data,
     });
-    expect(element.key).toBe('invoice-1');
+    expect(element.key).toBe(`${userScope}:invoice:invoice-1`);
+    expect(element.props.draftContext).toBe('invoice:invoice-1');
     expect(mocks.invoice).toHaveBeenCalledWith(user.id, 'invoice-1');
   });
   it.each([null, { data: null }])(
@@ -416,7 +428,8 @@ describe('generator page data flow', () => {
       });
       expect(element.props.duplicateData).toEqual(exists ? data : undefined);
       expect(element.props.initialInvoice).toBeUndefined();
-      expect(element.key).toBe('dup-copy');
+      expect(element.key).toBe(`${userScope}:duplicate:copy`);
+      expect(element.props.draftContext).toBe('duplicate:copy');
       expect(mocks.invoice).toHaveBeenCalledWith(user.id, 'copy');
     },
   );
@@ -479,12 +492,16 @@ describe('account pages', () => {
     expect(html).toContain('Brak zapisanych danych');
   });
   it('renders invoice amounts, dates, owner links and both party roles', async () => {
+    const data = SAMPLE_INVOICE_PRESETS[0].formData;
     mocks.invoices.mockResolvedValue([
       {
         id: 'invoice-1',
         title: 'Rachunek',
         invoiceNumber: '1/2026',
-        periodStart: '2026-01-01',
+        periodStart: data.periodStart,
+        uid: null,
+        createdAt: new Date('2026-01-01'),
+        data,
         net: 1234.5,
         updatedAt: new Date('2026-01-02'),
       },
@@ -495,7 +512,7 @@ describe('account pages', () => {
     ]);
     const html = render(await InvoicesPage());
     for (const text of [
-      '1234,50 zł',
+      `${calculateInvoice(data, DEFAULT_TAX_PARAMS).calculations.net.toFixed(2).replace('.', ',')} zł`,
       '1/2026',
       '?invoice=invoice-1',
       '?duplicate=invoice-1',
@@ -652,17 +669,17 @@ describe('help articles', () => {
     });
     await expect(HelpArticle(params())).rejects.toThrow('NOT_FOUND');
   });
-  it('logs MDX loading failures before returning a 404', async () => {
+  it('propagates registered component failures instead of disguising them as a 404', async () => {
+    const error = new Error('Article rendering failed');
     mocks.article.mockReturnValue({
       ...article,
-      slug: ['missing'],
-      slugPath: 'missing',
+      Content: () => {
+        throw error;
+      },
     });
-    await expect(HelpArticle(params())).rejects.toThrow('NOT_FOUND');
-    expect(mocks.sentry).toHaveBeenCalled();
-    expect(mocks.context).toHaveBeenCalledWith('help_article', {
-      slug: 'missing',
-    });
+    const page = await HelpArticle(params());
+    expect(() => render(page)).toThrow(error);
+    expect(mocks.notFound).not.toHaveBeenCalled();
   });
   it.each([false, true])(
     'renders article content and optional navigation/related articles: %s',
@@ -675,9 +692,7 @@ describe('help articles', () => {
         withRelated ? { prev: other, next: other } : { prev: null, next: null },
       );
       const html = render(await HelpArticle(params()));
-      expect(html).toContain(
-        'Czym jest rachunek do umowy zlecenia i kiedy go wystawiać?',
-      );
+      expect(html).toContain('Registered help article body');
       expect(html).toContain('#rachunek');
       if (withRelated) {
         expect(html).toContain('Other article');

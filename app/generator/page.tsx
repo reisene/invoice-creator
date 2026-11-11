@@ -9,6 +9,7 @@ import {
 import type { InvoiceFormData } from '@/types/invoiceForm';
 import type { SavedPartyDto } from '@/types/savedData';
 import type { Metadata } from 'next';
+import { createHash } from 'node:crypto';
 
 export const metadata: Metadata = { title: 'Generator rachunku' };
 
@@ -36,7 +37,13 @@ export default async function GeneratorPage({
   let bankAccount = null;
   let duplicateData: InvoiceFormData | undefined;
   let initialInvoice:
-    { id: string; invoiceNumber: string; data: InvoiceFormData } | undefined;
+    | {
+        id: string;
+        invoiceNumber: string;
+        updatedAt: string;
+        data: InvoiceFormData;
+      }
+    | undefined;
 
   if (userId) {
     [parties, bankAccount] = await Promise.all([
@@ -53,17 +60,30 @@ export default async function GeneratorPage({
         initialInvoice = {
           id: saved.id,
           invoiceNumber: saved.invoiceNumber,
+          updatedAt: saved.updatedAt,
           data: saved.data,
         };
       }
     }
   }
 
+  const draftScope = userId
+    ? createHash('sha256').update(userId).digest('hex')
+    : 'anonymous';
+  const draftContext =
+    typeof duplicateId === 'string' && duplicateId.length <= 100
+      ? `duplicate:${duplicateId}`
+      : typeof invoiceId === 'string' && invoiceId.length <= 100
+        ? `invoice:${invoiceId}`
+        : 'new';
+
   return (
     <GeneratorClient
-      key={initialInvoice?.id ?? (duplicateId ? `dup-${duplicateId}` : 'new')}
+      key={`${draftScope}:${draftContext}`}
       taxParams={taxParams}
       signedIn={Boolean(userId)}
+      draftScope={draftScope}
+      draftContext={draftContext}
       initialParties={parties}
       bankAccount={bankAccount}
       initialInvoice={initialInvoice}

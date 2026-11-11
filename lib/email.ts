@@ -124,6 +124,85 @@ export async function sendAdminContactNotification(
 }
 
 /**
+ * Wysyła powiadomienie o zbanowaniu konta do użytkownika
+ */
+export async function sendBanNotification({
+  userName,
+  userEmail,
+  banReason,
+}: {
+  userName: string;
+  userEmail: string;
+  banReason: string;
+}) {
+  if (!resend) {
+    console.warn(
+      '[email] RESEND_API_KEY nie jest skonfigurowany. Pomijam wysyłkę powiadomienia o banie.',
+    );
+    return { ok: false, skipped: true };
+  }
+
+  const escapedName = escapeHtml(userName);
+  const escapedReason = escapeHtml(banReason).replace(/\n/g, '<br />');
+
+  try {
+    const result = await resend.emails.send({
+      from: getFromEmail(),
+      to: [`${userName} <${userEmail}>`],
+      subject: 'Twoje konto zostało zablokowane',
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #212529; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e9ecef; border-radius: 12px; background-color: #ffffff;">
+          <div style="margin-bottom: 20px;">
+            <span style="display: inline-block; padding: 6px 12px; background-color: #f8d7da; color: #842029; border-radius: 20px; font-size: 13px; font-weight: 600;">Invoice Creator</span>
+          </div>
+
+          <h2 style="color: #dc3545; margin-top: 0; font-size: 20px;">Twoje konto zostało zablokowane</h2>
+          
+          <p style="font-size: 15px; color: #495057;">
+            Cześć ${escapedName},
+          </p>
+          
+          <p style="font-size: 15px; color: #495057;">
+            Niniejszym informujemy, że Twoje konto w serwisie <strong>Invoice Creator</strong> zostało zablokowane przez administratora.
+          </p>
+
+          <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 16px; border-radius: 4px; margin: 24px 0;">
+            <div style="font-weight: 600; font-size: 13px; color: #6c757d; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Powód zablokowania:</div>
+            <div style="font-size: 15px; color: #212529; white-space: pre-wrap;">${escapedReason}</div>
+          </div>
+
+          <p style="font-size: 15px; color: #495057;">
+            Jeśli uważasz, że zablokowanie nastąpiło przez pomyłkę, skontaktuj się z administratorem serwisu.
+          </p>
+
+          <hr style="border: none; border-top: 1px solid #e9ecef; margin: 24px 0;" />
+
+          <p style="font-size: 13px; color: #6c757d; margin-bottom: 4px;">
+            Pozdrawiamy,<br />
+            <strong>Zespół Invoice Creator</strong>
+          </p>
+          <p style="font-size: 12px; color: #adb5bd; margin-top: 12px; margin-bottom: 0;">
+            To jest wiadomość automatyczna — prosimy nie odpowiadać na nią.
+          </p>
+        </div>
+      `,
+    });
+
+    if (result.error) {
+      logServerError('[email] Ban notification rejected.', result.error);
+      return { ok: false };
+    }
+    return { ok: true, id: result.data?.id };
+  } catch (error) {
+    logServerError(
+      '[email] Błąd wysyłania powiadomienia o banie przez Resend:',
+      error,
+    );
+    return { ok: false };
+  }
+}
+
+/**
  * Wysyła potwierdzenie przyjęcia wiadomości do użytkownika
  */
 export async function sendUserContactConfirmation(

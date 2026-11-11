@@ -12,8 +12,8 @@
       }
     },
     "neon": {
-      "type": "http",
-      "url": "https://mcp.neon.tech/mcp"
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.neon.tech/mcp"]
     }
   }
 }

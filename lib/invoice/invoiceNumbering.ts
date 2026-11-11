@@ -1,3 +1,4 @@
+import type { Prisma } from '@/generated/prisma';
 import { prisma } from '@/lib/db';
 import {
   signInvoiceNumberReservation,
@@ -13,8 +14,9 @@ export function getInvoiceNumberScope(userId: string | null): string {
 export async function reserveInvoiceNumberForScope(
   scope: string,
   year: number,
+  db: Pick<Prisma.TransactionClient, 'invoiceSequence'> = prisma,
 ): Promise<InvoiceNumberReservation> {
-  const sequence = await prisma.invoiceSequence.upsert({
+  const sequence = await db.invoiceSequence.upsert({
     where: { scope_year: { scope, year } },
     create: { scope, year, value: 1 },
     update: { value: { increment: 1 } },

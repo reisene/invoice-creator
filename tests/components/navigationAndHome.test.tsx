@@ -93,9 +93,22 @@ describe('authentication controls', () => {
       isPending: false,
     });
     render(<AuthButtons />);
+    const toggle = screen.getByRole('button', { name: 'Konto' });
+    expect(toggle.getAttribute('href')).toBeNull();
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
     expect(
-      screen.getByRole('button', { name: 'Konto' }).getAttribute('href'),
+      screen.getByRole('link', { name: 'Edytuj konto' }).getAttribute('href'),
     ).toBe('/account');
+    expect(
+      screen
+        .getByRole('link', { name: 'Rachunki i dane stron' })
+        .getAttribute('href'),
+    ).toBe('/account/invoices');
+    expect(
+      screen.queryByRole('link', { name: 'Panel administratora' }),
+    ).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Wyloguj' }));
     expect(mocks.push).not.toHaveBeenCalled();
     await act(async () => {
@@ -104,6 +117,45 @@ describe('authentication controls', () => {
     expect(mocks.push).toHaveBeenCalledWith('/');
     expect(mocks.refresh).toHaveBeenCalledOnce();
   });
+  it.each(['admin', 'user, admin'])(
+    'shows the admin destination for role %s and closes on Escape',
+    async (role) => {
+      mocks.session.mockReturnValue({
+        data: { user: { id: 'u1', role } },
+        isPending: false,
+      });
+      render(<AuthButtons />);
+      const toggle = screen.getByRole('button', { name: 'Konto' });
+      fireEvent.click(toggle);
+      const adminLink = screen.getByRole('link', {
+        name: 'Panel administratora',
+      });
+      expect(adminLink.getAttribute('href')).toBe('/admin');
+      adminLink.focus();
+      fireEvent.keyDown(adminLink, { key: 'Escape' });
+      await waitFor(() => {
+        expect(toggle.getAttribute('aria-expanded')).toBe('false');
+        expect(document.activeElement).toBe(toggle);
+      });
+    },
+  );
+  it.each([undefined, null, '', 'user', 'superadmin'])(
+    'hides the admin destination for role %s',
+    (role) => {
+      mocks.session.mockReturnValue({
+        data: { user: { id: 'u1', role } },
+        isPending: false,
+      });
+      render(<AuthButtons />);
+      fireEvent.click(screen.getByRole('button', { name: 'Konto' }));
+      expect(
+        screen.getByRole('link', { name: 'Rachunki i dane stron' }),
+      ).toBeDefined();
+      expect(
+        screen.queryByRole('link', { name: 'Panel administratora' }),
+      ).toBeNull();
+    },
+  );
   it('keeps Google sign-in pending on successful redirect initiation', async () => {
     mocks.social.mockResolvedValue({ error: null });
     render(<GoogleSignInButton />);

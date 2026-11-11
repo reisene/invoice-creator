@@ -1,11 +1,22 @@
 'use client';
 
 import { authClient } from '@/lib/auth/client';
-import { Button, ButtonToolbar, Placeholder } from 'react-bootstrap';
+import { hasAdminRole } from '@/lib/auth/roles';
+import Link from 'next/link';
+import {
+  Button,
+  ButtonGroup,
+  ButtonToolbar,
+  Dropdown,
+  Placeholder,
+} from 'react-bootstrap';
 import {
   BsBoxArrowInRight,
   BsPersonCircle,
+  BsPersonGear,
   BsPersonPlus,
+  BsReceipt,
+  BsShieldLock,
 } from 'react-icons/bs';
 import SignOutButton from './SignOutButton';
 
@@ -32,14 +43,48 @@ export default function AuthButtons() {
   if (session?.user) {
     return (
       <ButtonToolbar className='gap-2'>
-        <Button
-          href={'/account'}
-          variant={'primary'}
-          className='d-inline-flex align-items-center gap-2'
-        >
-          <BsPersonCircle aria-hidden />
-          Konto
-        </Button>
+        <Dropdown as={ButtonGroup} align='end'>
+          <Dropdown.Toggle
+            id='account-menu-toggle'
+            variant={'primary'}
+            className='d-inline-flex align-items-center gap-2'
+          >
+            <BsPersonCircle aria-hidden />
+            Konto
+          </Dropdown.Toggle>
+          <Dropdown.Menu>
+            <Dropdown.Item
+              as={Link}
+              href={'/account'}
+              className='d-flex align-items-center gap-2'
+            >
+              <BsPersonGear aria-hidden />
+              Edytuj konto
+            </Dropdown.Item>
+            <Dropdown.Item
+              as={Link}
+              href={'/account/invoices'}
+              className='d-flex align-items-center gap-2'
+            >
+              <BsReceipt aria-hidden />
+              Rachunki i dane stron
+            </Dropdown.Item>
+            {hasAdminRole(session.user.role) && (
+              <>
+                <Dropdown.Divider />
+                <Dropdown.Item
+                  as={Link}
+                  href={'/admin'}
+                  prefetch={false}
+                  className='d-flex align-items-center gap-2'
+                >
+                  <BsShieldLock aria-hidden />
+                  Panel administratora
+                </Dropdown.Item>
+              </>
+            )}
+          </Dropdown.Menu>
+        </Dropdown>
         <SignOutButton />
       </ButtonToolbar>
     );

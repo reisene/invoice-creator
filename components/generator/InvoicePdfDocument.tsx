@@ -230,8 +230,6 @@ export default function createInvoicePdfDocument(
   data: InvoiceData,
   invoiceNumber: string,
 ) {
-  const { client, contractor, contract, remuneration, calculations } = data;
-
   return (
     <Document
       title={`Rachunek nr ${invoiceNumber}`}
@@ -239,172 +237,9 @@ export default function createInvoicePdfDocument(
       language='pl-PL'
     >
       <Page size='A4' style={styles.page} wrap>
-        <Text style={styles.title}>RACHUNEK DO UMOWY ZLECENIA</Text>
-        <Text style={[styles.line, { textAlign: 'center', marginBottom: 16 }]}>
-          Numer rachunku: {invoiceNumber}
-        </Text>
-        {data.issuePlace && data.issueDate ? (
-          <Text
-            style={[styles.line, { textAlign: 'center', marginBottom: 16 }]}
-          >
-            {data.issuePlace}, {formatIssueDate(data.issueDate)}
-          </Text>
-        ) : null}
-
-        <View style={styles.columns}>
-          <View style={styles.column}>
-            <Text style={styles.sectionTitle}>Zleceniodawca</Text>
-            <Text style={styles.line}>{client.name}</Text>
-            <Text style={styles.line}>{client.address}</Text>
-            {client.type === 'company' && client.nip ? (
-              <Text style={styles.line}>NIP: {client.nip}</Text>
-            ) : null}
-            {client.type === 'private' && client.pesel ? (
-              <Text style={styles.line}>PESEL: {client.pesel}</Text>
-            ) : null}
-          </View>
-
-          <View style={styles.column}>
-            <Text style={styles.sectionTitle}>Zleceniobiorca</Text>
-            <Text style={styles.line}>{contractor.name}</Text>
-            <Text style={styles.line}>{contractor.address}</Text>
-            <Text style={styles.line}>PESEL: {contractor.pesel}</Text>
-            {contractor.nip ? (
-              <Text style={styles.line}>NIP: {contractor.nip}</Text>
-            ) : null}
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Dane umowy</Text>
-          {contract.number ? (
-            <Text style={styles.line}>Numer umowy: {contract.number}</Text>
-          ) : null}
-          <Text style={styles.line}>Data zawarcia: {contract.date}</Text>
-          <Text style={styles.line}>
-            Okres rozliczeniowy: {contract.periodStart} – {contract.periodEnd}
-          </Text>
-          <Text style={styles.line}>
-            Typ umowy:{' '}
-            {contract.type === 'monthly' ? 'miesięczna' : 'godzinowa'}
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Wynagrodzenie i rozliczenie</Text>
-          <PdfRow
-            label='Wynagrodzenie brutto'
-            value={formatCurrency(remuneration.gross)}
-          />
-          {remuneration.hourlyRate !== undefined &&
-          remuneration.hoursWorked !== undefined ? (
-            <PdfRow
-              label={`Stawka godzinowa (${remuneration.hoursWorked} h)`}
-              value={formatCurrency(remuneration.hourlyRate)}
-            />
-          ) : null}
-          <PdfRow
-            label='Składka emerytalna'
-            value={formatCurrency(calculations.pensionContribution)}
-          />
-          <PdfRow
-            label='Składka rentowa'
-            value={formatCurrency(calculations.rentContribution)}
-          />
-          <PdfRow
-            label='Składka chorobowa'
-            value={formatCurrency(calculations.sicknessContribution)}
-          />
-          <PdfRow
-            label='Razem składki społeczne'
-            value={formatCurrency(calculations.totalSocialContributions)}
-          />
-          <PdfRow
-            label='Podstawa składki zdrowotnej'
-            value={formatCurrency(calculations.healthContributionBase)}
-          />
-          <PdfRow
-            label='Składka zdrowotna'
-            value={formatCurrency(calculations.healthContribution)}
-          />
-          {calculations.youngReliefIncomeApplied > 0 ? (
-            <PdfRow
-              label='Przychód zwolniony (ulga dla młodych)'
-              value={formatCurrency(calculations.youngReliefIncomeApplied)}
-            />
-          ) : null}
-          <PdfRow
-            label='Koszty uzyskania przychodu'
-            value={formatCurrency(calculations.taxDeductibleCosts)}
-          />
-          <PdfRow
-            label='Podstawa opodatkowania'
-            value={formatCurrency(calculations.taxableBase)}
-          />
-          {data.noTaxAdvanceRequest ? (
-            <PdfRow
-              label='Podstawa opodatkowana powyżej 30 000 zł'
-              value={formatCurrency(
-                calculations.taxableIncomeAboveTaxFreeAmount,
-              )}
-            />
-          ) : null}
-          {data.taxReduction && !data.noTaxAdvanceRequest ? (
-            <>
-              <PdfRow
-                label='Zaliczka na PIT przed zmniejszeniem'
-                value={formatCurrency(calculations.taxBeforeReduction)}
-              />
-              <PdfRow
-                label='Kwota zmniejszająca podatek'
-                value={formatCurrency(calculations.taxReductionAmountApplied)}
-              />
-            </>
-          ) : null}
-          <PdfRow
-            label='Zaliczka na PIT'
-            value={formatCurrency(calculations.tax)}
-          />
-          <PdfRow
-            label='Kwota netto do wypłaty'
-            value={formatCurrency(calculations.net)}
-            bold
-          />
-          <PdfRow label='Słownie' value={numberToWords(calculations.net)} />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Forma wypłaty</Text>
-          {data.payment.method === 'CASH' ? (
-            <Text>Gotówka</Text>
-          ) : data.payment.method === 'TRANSFER' &&
-            data.payment.transferTarget === 'DECLARATION' ? (
-            <Text>
-              Przelew na rachunek bankowy zgodnie ze złożonym oświadczeniem.
-            </Text>
-          ) : data.payment.method === 'TRANSFER' ? (
-            <>
-              <Text style={styles.line}>Przelew na rachunek bankowy</Text>
-              {data.payment.accountHolder ? (
-                <Text style={styles.line}>
-                  Właściciel: {data.payment.accountHolder}
-                </Text>
-              ) : null}
-              {data.payment.bankName ? (
-                <Text style={styles.line}>Bank: {data.payment.bankName}</Text>
-              ) : null}
-              {data.payment.accountNumber ? (
-                <Text style={styles.line}>
-                  Numer rachunku:{' '}
-                  {formatPolishBankAccount(data.payment.accountNumber)}
-                </Text>
-              ) : null}
-            </>
-          ) : (
-            <Text>Nie wybrano formy wypłaty.</Text>
-          )}
-        </View>
-
+        <PdfInvoiceDetails data={data} invoiceNumber={invoiceNumber} />
+        <PdfSettlement data={data} />
+        <PdfPayment data={data} />
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Uwagi</Text>
           <Text>{data.notes || '—'}</Text>
@@ -433,5 +268,188 @@ export default function createInvoicePdfDocument(
         </View>
       </Page>
     </Document>
+  );
+}
+
+function PdfInvoiceDetails({
+  data,
+  invoiceNumber,
+}: {
+  data: InvoiceData;
+  invoiceNumber: string;
+}) {
+  const { client, contractor, contract } = data;
+  return (
+    <>
+      <Text style={styles.title}>RACHUNEK DO UMOWY ZLECENIA</Text>
+      <Text style={[styles.line, { textAlign: 'center', marginBottom: 16 }]}>
+        Numer rachunku: {invoiceNumber}
+      </Text>
+      {data.issuePlace && data.issueDate ? (
+        <Text style={[styles.line, { textAlign: 'center', marginBottom: 16 }]}>
+          {data.issuePlace}, {formatIssueDate(data.issueDate)}
+        </Text>
+      ) : null}
+
+      <View style={styles.columns}>
+        <View style={styles.column}>
+          <Text style={styles.sectionTitle}>Zleceniodawca</Text>
+          <Text style={styles.line}>{client.name}</Text>
+          <Text style={styles.line}>{client.address}</Text>
+          {client.type === 'company' && client.nip ? (
+            <Text style={styles.line}>NIP: {client.nip}</Text>
+          ) : null}
+          {client.type === 'private' && client.pesel ? (
+            <Text style={styles.line}>PESEL: {client.pesel}</Text>
+          ) : null}
+        </View>
+
+        <View style={styles.column}>
+          <Text style={styles.sectionTitle}>Zleceniobiorca</Text>
+          <Text style={styles.line}>{contractor.name}</Text>
+          <Text style={styles.line}>{contractor.address}</Text>
+          <Text style={styles.line}>PESEL: {contractor.pesel}</Text>
+          {contractor.nip ? (
+            <Text style={styles.line}>NIP: {contractor.nip}</Text>
+          ) : null}
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Dane umowy</Text>
+        {contract.number ? (
+          <Text style={styles.line}>Numer umowy: {contract.number}</Text>
+        ) : null}
+        <Text style={styles.line}>Data zawarcia: {contract.date}</Text>
+        <Text style={styles.line}>
+          Okres rozliczeniowy: {contract.periodStart} – {contract.periodEnd}
+        </Text>
+        <Text style={styles.line}>
+          Typ umowy: {contract.type === 'monthly' ? 'miesięczna' : 'godzinowa'}
+        </Text>
+      </View>
+    </>
+  );
+}
+
+function PdfSettlement({ data }: { data: InvoiceData }) {
+  const { remuneration, calculations } = data;
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Wynagrodzenie i rozliczenie</Text>
+      <PdfRow
+        label='Wynagrodzenie brutto'
+        value={formatCurrency(remuneration.gross)}
+      />
+      {remuneration.hourlyRate !== undefined &&
+      remuneration.hoursWorked !== undefined ? (
+        <PdfRow
+          label={`Stawka godzinowa (${remuneration.hoursWorked} h)`}
+          value={formatCurrency(remuneration.hourlyRate)}
+        />
+      ) : null}
+      <PdfRow
+        label='Składka emerytalna'
+        value={formatCurrency(calculations.pensionContribution)}
+      />
+      <PdfRow
+        label='Składka rentowa'
+        value={formatCurrency(calculations.rentContribution)}
+      />
+      <PdfRow
+        label='Składka chorobowa'
+        value={formatCurrency(calculations.sicknessContribution)}
+      />
+      <PdfRow
+        label='Razem składki społeczne'
+        value={formatCurrency(calculations.totalSocialContributions)}
+      />
+      <PdfRow
+        label='Podstawa składki zdrowotnej'
+        value={formatCurrency(calculations.healthContributionBase)}
+      />
+      <PdfRow
+        label='Składka zdrowotna'
+        value={formatCurrency(calculations.healthContribution)}
+      />
+      {calculations.youngReliefIncomeApplied > 0 ? (
+        <PdfRow
+          label='Przychód zwolniony (ulga dla młodych)'
+          value={formatCurrency(calculations.youngReliefIncomeApplied)}
+        />
+      ) : null}
+      <PdfRow
+        label='Koszty uzyskania przychodu'
+        value={formatCurrency(calculations.taxDeductibleCosts)}
+      />
+      <PdfRow
+        label='Podstawa opodatkowania'
+        value={formatCurrency(calculations.taxableBase)}
+      />
+      {data.noTaxAdvanceRequest ? (
+        <PdfRow
+          label='Podstawa opodatkowana powyżej 30 000 zł'
+          value={formatCurrency(calculations.taxableIncomeAboveTaxFreeAmount)}
+        />
+      ) : null}
+      {data.taxReduction && !data.noTaxAdvanceRequest ? (
+        <>
+          <PdfRow
+            label='Zaliczka na PIT przed zmniejszeniem'
+            value={formatCurrency(calculations.taxBeforeReduction)}
+          />
+          <PdfRow
+            label='Kwota zmniejszająca podatek'
+            value={formatCurrency(calculations.taxReductionAmountApplied)}
+          />
+        </>
+      ) : null}
+      <PdfRow
+        label='Zaliczka na PIT'
+        value={formatCurrency(calculations.tax)}
+      />
+      <PdfRow
+        label='Kwota netto do wypłaty'
+        value={formatCurrency(calculations.net)}
+        bold
+      />
+      <PdfRow label='Słownie' value={numberToWords(calculations.net)} />
+    </View>
+  );
+}
+
+function PdfPayment({ data }: { data: InvoiceData }) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Forma wypłaty</Text>
+      {data.payment.method === 'CASH' ? (
+        <Text>Gotówka</Text>
+      ) : data.payment.method === 'TRANSFER' &&
+        data.payment.transferTarget === 'DECLARATION' ? (
+        <Text>
+          Przelew na rachunek bankowy zgodnie ze złożonym oświadczeniem.
+        </Text>
+      ) : data.payment.method === 'TRANSFER' ? (
+        <>
+          <Text style={styles.line}>Przelew na rachunek bankowy</Text>
+          {data.payment.accountHolder ? (
+            <Text style={styles.line}>
+              Właściciel: {data.payment.accountHolder}
+            </Text>
+          ) : null}
+          {data.payment.bankName ? (
+            <Text style={styles.line}>Bank: {data.payment.bankName}</Text>
+          ) : null}
+          {data.payment.accountNumber ? (
+            <Text style={styles.line}>
+              Numer rachunku:{' '}
+              {formatPolishBankAccount(data.payment.accountNumber)}
+            </Text>
+          ) : null}
+        </>
+      ) : (
+        <Text>Nie wybrano formy wypłaty.</Text>
+      )}
+    </View>
   );
 }

@@ -19,6 +19,48 @@ export type ContactFormState = {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function validateContactMessage(
+  name: string,
+  email: string,
+  subject: string,
+  message: string,
+): ContactFormState {
+  if (!name || name.length < 2) {
+    return {
+      ok: false,
+      message: 'Podaj imię i nazwisko (lub nazwę) o długości min. 2 znaków.',
+    };
+  }
+  if (name.length > 100) {
+    return {
+      ok: false,
+      message: 'Imię i nazwisko nie może przekraczać 100 znaków.',
+    };
+  }
+  if (!email || !EMAIL_REGEX.test(email) || email.length > 150) {
+    return { ok: false, message: 'Podaj prawidłowy adres e-mail do kontaktu.' };
+  }
+  if (subject.length > 200) {
+    return {
+      ok: false,
+      message: 'Temat wiadomości nie może przekraczać 200 znaków.',
+    };
+  }
+  if (!message || message.length < 10) {
+    return {
+      ok: false,
+      message: 'Wiadomość jest zbyt krótka (wymagane minimum 10 znaków).',
+    };
+  }
+  if (message.length > 5000) {
+    return {
+      ok: false,
+      message: 'Wiadomość przekracza dozwolony limit 5000 znaków.',
+    };
+  }
+  return null;
+}
+
 export async function submitContactForm(
   _prevState: ContactFormState,
   formData: FormData,
@@ -77,46 +119,9 @@ export async function submitContactForm(
   const customSubject = String(formData.get('subject') ?? '').trim();
   const message = String(formData.get('message') ?? '').trim();
 
-  if (!name || name.length < 2) {
-    return {
-      ok: false,
-      message: 'Podaj imię i nazwisko (lub nazwę) o długości min. 2 znaków.',
-    };
-  }
-  if (name.length > 100) {
-    return {
-      ok: false,
-      message: 'Imię i nazwisko nie może przekraczać 100 znaków.',
-    };
-  }
-
-  if (!email || !EMAIL_REGEX.test(email) || email.length > 150) {
-    return {
-      ok: false,
-      message: 'Podaj prawidłowy adres e-mail do kontaktu.',
-    };
-  }
-
   const subject = customSubject || category || 'Wiadomość z formularza';
-  if (subject.length > 200) {
-    return {
-      ok: false,
-      message: 'Temat wiadomości nie może przekraczać 200 znaków.',
-    };
-  }
-
-  if (!message || message.length < 10) {
-    return {
-      ok: false,
-      message: 'Wiadomość jest zbyt krótka (wymagane minimum 10 znaków).',
-    };
-  }
-  if (message.length > 5000) {
-    return {
-      ok: false,
-      message: 'Wiadomość przekracza dozwolony limit 5000 znaków.',
-    };
-  }
+  const validationError = validateContactMessage(name, email, subject, message);
+  if (validationError) return validationError;
 
   try {
     await prisma.contactMessage.create({

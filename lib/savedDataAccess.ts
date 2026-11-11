@@ -86,7 +86,7 @@ export async function getSavedPartiesForUser(
 }
 
 export async function getSavedInvoiceForUser(userId: string, id: string) {
-  const row = await prisma.invoice.findFirst({
+  let row = await prisma.invoice.findFirst({
     where: { id, userId },
     select: { id: true, data: true, updatedAt: true, invoiceNumber: true },
   });
@@ -115,10 +115,19 @@ export async function getSavedInvoiceForUser(userId: string, id: string) {
     });
   }
 
+  if (decrypted.needsEncryption || !row.invoiceNumber) {
+    row = await prisma.invoice.findFirst({
+      where: { id, userId },
+      select: { id: true, data: true, updatedAt: true, invoiceNumber: true },
+    });
+    if (!row) return null;
+  }
+
   return {
     id: row.id,
-    invoiceNumber,
-    data: sanitizeInvoiceForm(decrypted.data),
+    invoiceNumber: row.invoiceNumber ?? invoiceNumber,
+    updatedAt: row.updatedAt.toISOString(),
+    data: sanitizeInvoiceForm(decryptJson(row.data).data),
   };
 }
 

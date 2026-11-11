@@ -7,14 +7,41 @@ import {
   HELP_ARTICLES,
 } from '@/lib/helpArticles';
 import { getCurrentLegalDocument } from '@/lib/legal/legalDocuments';
-import path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  exists: vi.fn(),
-  read: vi.fn(),
-  list: vi.fn(),
-  stat: vi.fn(),
+  articles: [
+    {
+      slug: ['podstawy', 'first'],
+      slugPath: 'podstawy/first',
+      title: 'First',
+      description: 'First description',
+      category: 'podstawy',
+      order: 2,
+      tags: ['one', 'two'],
+      Content: () => null,
+    },
+    {
+      slug: ['zus', 'second'],
+      slugPath: 'zus/second',
+      title: 'Second',
+      description: '',
+      category: 'zus',
+      order: 1,
+      tags: [],
+      Content: () => null,
+    },
+    {
+      slug: ['podstawy', 'another'],
+      slugPath: 'podstawy/another',
+      title: 'Another',
+      description: '',
+      category: 'podstawy',
+      order: 2,
+      tags: [],
+      Content: () => null,
+    },
+  ],
   terms: [
     { version: 'old', effectiveDate: '2026-01-01', Content: () => null },
     { version: 'new', effectiveDate: '2026-05-01', Content: () => null },
@@ -23,116 +50,64 @@ const mocks = vi.hoisted(() => ({
     { version: 'privacy-v1', effectiveDate: '2026-01-01', Content: () => null },
   ],
 }));
-vi.mock('fs', () => ({
-  default: {
-    existsSync: mocks.exists,
-    readFileSync: mocks.read,
-    readdirSync: mocks.list,
-    statSync: mocks.stat,
-  },
+vi.mock('@/content/help/registry.generated', () => ({
+  helpArticleRegistry: mocks.articles,
 }));
 vi.mock('@/content/legal/registry.generated', () => ({
   legalDocumentRegistry: { terms: mocks.terms, privacy: mocks.privacy },
 }));
-beforeEach(() => {
-  vi.resetAllMocks();
-  mocks.exists.mockReturnValue(true);
-  mocks.list.mockImplementation((directory: string) => {
-    if (directory === path.join(process.cwd(), 'content', 'help'))
-      return ['README.txt', 'podstawy', 'zus', 'custom'];
-    if (directory.endsWith('podstawy')) return ['first.mdx', 'ignored.png'];
-    if (directory.endsWith('zus')) return ['second.md'];
-    return ['fallback.mdx'];
-  });
-  mocks.stat.mockImplementation((directory: string) => ({
-    isDirectory: () => !directory.endsWith('README.txt'),
-  }));
-  mocks.read.mockImplementation((filename: string) => {
-    if (filename.endsWith('first.mdx'))
-      return '---\ntitle: First\ndescription: First description\norder: 2\ntags: [one, two]\n---\nContent';
-    if (filename.endsWith('second.md'))
-      return '---\ntitle: Second\norder: 1\n---\nContent';
-    return '---\norder: not-a-number\ntags: not-an-array\n---\nContent';
-  });
-});
 afterEach(() => {
   vi.restoreAllMocks();
   vi.useRealTimers();
 });
 
 describe('help content inventory', () => {
-  it('handles missing directories, including the eagerly initialized article constant', () => {
-    expect(HELP_ARTICLES).toEqual([]);
-    mocks.exists.mockReturnValue(false);
-    expect(getAllHelpArticles()).toEqual([]);
-    expect(getAdjacentArticles('missing')).toEqual({});
+  it('uses the eagerly initialized registry without rebuilding the catalog', () => {
+    expect(getAllHelpArticles()).toBe(HELP_ARTICLES);
+    expect(getAllHelpArticles()).toBe(getAllHelpArticles());
+    expect(HELP_ARTICLES).toHaveLength(mocks.articles.length);
   });
-  it('reads Markdown and MDX frontmatter, skips other entries and sorts by order', () => {
-    expect(getAllHelpArticles()).toEqual([
-      {
-        slug: ['zus', 'second'],
-        slugPath: 'zus/second',
-        title: 'Second',
-        description: '',
-        category: 'zus',
-        categoryLabel: 'Składki ZUS',
-        order: 1,
-        tags: [],
-      },
-      {
-        slug: ['podstawy', 'first'],
-        slugPath: 'podstawy/first',
-        title: 'First',
-        description: 'First description',
-        category: 'podstawy',
-        categoryLabel: 'Podstawy i prawo',
-        order: 2,
-        tags: ['one', 'two'],
-      },
-      {
-        slug: ['custom', 'fallback'],
-        slugPath: 'custom/fallback',
-        title: 'fallback',
-        description: '',
-        category: 'custom',
-        categoryLabel: 'custom',
-        order: 99,
-        tags: [],
-      },
+  it('preserves generated metadata and components and adds category labels', () => {
+    expect(HELP_ARTICLES).toEqual([
+      { ...mocks.articles[1], categoryLabel: 'Składki ZUS' },
+      { ...mocks.articles[2], categoryLabel: 'Podstawy i prawo' },
+      { ...mocks.articles[0], categoryLabel: 'Podstawy i prawo' },
     ]);
-    expect(mocks.read).toHaveBeenCalledTimes(3);
+    expect(getArticleBySlug(['podstawy', 'first'])?.Content).toBe(
+      mocks.articles[0].Content,
+    );
   });
   it('looks up articles and previous/next boundaries by exact slug', () => {
     expect(getArticleBySlug(['podstawy', 'first'])?.title).toBe('First');
-    expect(getArticleBySlug(['missing'])).toBeUndefined();
-    expect(getAdjacentArticles('podstawy/first')).toMatchObject({
+    expect(getArticleBySlug(['podstawy', 'first', 'extra'])).toBeUndefined();
+    expect(getAdjacentArticles('podstawy/another')).toMatchObject({
       prev: { title: 'Second' },
-      next: { title: 'fallback' },
+      next: { title: 'First' },
     });
     expect(getAdjacentArticles('zus/second').prev).toBeUndefined();
-    expect(getAdjacentArticles('custom/fallback').next).toBeUndefined();
+    expect(getAdjacentArticles('podstawy/first').next).toBeUndefined();
     expect(getAdjacentArticles('missing')).toEqual({});
     expect(
       getCategoryArticles('podstawy').map((article) => article.title),
-    ).toEqual(['First']);
+    ).toEqual(['Another', 'First']);
     expect(getCategoryArticles('aplikacja')).toEqual([]);
   });
-  it('propagates file read failures rather than reporting an empty successful catalog', () => {
-    const error = new Error('unreadable');
-    mocks.read.mockImplementation(() => {
-      throw error;
-    });
-    expect(() => getAllHelpArticles()).toThrow(error);
+  it('does not reorder or add category labels to the generated source entries', () => {
+    expect(mocks.articles.map((article) => article.slugPath)).toEqual([
+      'podstawy/first',
+      'zus/second',
+      'podstawy/another',
+    ]);
+    for (const article of mocks.articles) {
+      expect(article).not.toHaveProperty('categoryLabel');
+    }
   });
-  it('sorts multiple articles within one category by their numeric order', () => {
-    mocks.list.mockImplementation((directory: string) =>
-      directory === path.join(process.cwd(), 'content', 'help')
-        ? ['podstawy']
-        : ['first.mdx', 'second.md'],
-    );
-    expect(
-      getCategoryArticles('podstawy').map((article) => article.title),
-    ).toEqual(['Second', 'First']);
+  it('sorts by numeric order with deterministic slug ordering for ties', () => {
+    expect(getAllHelpArticles().map((article) => article.slugPath)).toEqual([
+      'zus/second',
+      'podstawy/another',
+      'podstawy/first',
+    ]);
   });
 });
 

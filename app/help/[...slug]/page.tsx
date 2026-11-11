@@ -5,11 +5,9 @@ import {
   getCategoryArticles,
 } from '@/lib/helpArticles';
 import { socialImage } from '@/lib/socialImage';
-import * as Sentry from '@sentry/nextjs';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import type { ComponentType } from 'react';
 import {
   BsArrowLeft,
   BsArrowRight,
@@ -72,21 +70,7 @@ export default async function HelpSlugPage({ params }: HelpSlugPageProps) {
     notFound();
   }
 
-  // Dynamiczny import komponentu MDX
-  let MDXContent: ComponentType;
-  try {
-    const imported = await import(
-      `@/content/help/${article.slug.join('/')}.mdx`
-    );
-    MDXContent = imported.default;
-  } catch (error) {
-    Sentry.withScope((scope) => {
-      scope.setTag('error.area', 'help.article.load');
-      scope.setContext('help_article', { slug: article.slugPath });
-      Sentry.captureException(error);
-    });
-    notFound();
-  }
+  const MDXContent = article.Content;
 
   const { prev, next } = getAdjacentArticles(article.slugPath);
   const categoryArticles = getCategoryArticles(article.category).filter(

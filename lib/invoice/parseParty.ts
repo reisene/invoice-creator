@@ -9,6 +9,35 @@ export type ValidParty = {
   pesel: string | null;
 };
 
+type PartyInput = {
+  kind: ValidParty['kind'];
+  clientType?: 'company' | 'private' | null;
+  name: string;
+  address: string;
+  nip?: string | null;
+  pesel?: string | null;
+};
+
+function isOptionalText(value: unknown): value is string | null | undefined {
+  return value === undefined || value === null || typeof value === 'string';
+}
+
+function isPartyInput(value: Record<string, unknown>): value is PartyInput {
+  return (
+    (value.kind === 'CLIENT' || value.kind === 'CONTRACTOR') &&
+    (value.clientType === undefined ||
+      value.clientType === null ||
+      value.clientType === 'company' ||
+      value.clientType === 'private') &&
+    typeof value.name === 'string' &&
+    value.name.length <= 200 &&
+    typeof value.address === 'string' &&
+    value.address.length <= 300 &&
+    isOptionalText(value.nip) &&
+    isOptionalText(value.pesel)
+  );
+}
+
 export function parseParty(
   input: unknown,
 ): { ok: true; party: ValidParty } | { ok: false; error: string } {
@@ -17,18 +46,7 @@ export function parseParty(
   }
 
   const value = input as Record<string, unknown>;
-  if (
-    (value.kind !== 'CLIENT' && value.kind !== 'CONTRACTOR') ||
-    (value.clientType !== undefined &&
-      value.clientType !== 'company' &&
-      value.clientType !== 'private') ||
-    typeof value.name !== 'string' ||
-    value.name.length > 200 ||
-    typeof value.address !== 'string' ||
-    value.address.length > 300 ||
-    (value.nip !== undefined && typeof value.nip !== 'string') ||
-    (value.pesel !== undefined && typeof value.pesel !== 'string')
-  ) {
+  if (!isPartyInput(value)) {
     return { ok: false as const, error: 'Nieprawidłowe dane strony.' };
   }
 

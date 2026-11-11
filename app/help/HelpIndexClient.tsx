@@ -8,6 +8,7 @@ import {
   Badge,
   Button,
   Card,
+  CardBody,
   Col,
   Container,
   Form,
@@ -153,7 +154,7 @@ function HelpIndexInner({ articles }: HelpIndexClientProps) {
       {/* Lista artykułów */}
       {filteredArticles.length === 0 ? (
         <Card className='text-center py-5 shadow-sm border border-secondary-subtle bg-body-tertiary my-4 rounded-4'>
-          <Card.Body>
+          <CardBody>
             <p className='fs-5 text-muted mb-3'>
               Nie znaleziono artykułów pasujących do wpisanego hasła.
             </p>
@@ -167,7 +168,7 @@ function HelpIndexInner({ articles }: HelpIndexClientProps) {
             >
               Wyczyść filtry
             </Button>
-          </Card.Body>
+          </CardBody>
         </Card>
       ) : (
         <Row className='g-4'>

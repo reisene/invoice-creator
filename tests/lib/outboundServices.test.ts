@@ -48,13 +48,24 @@ describe('transactional contact email', () => {
     'explicitly skips %s without Resend configuration',
     async (method) => {
       vi.stubEnv('RESEND_API_KEY', undefined);
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const email = await import('@/lib/email');
       expect(email.resend).toBeNull();
-      expect(await email[method](payload)).toEqual({
+      const result =
+        method === 'sendAdminContactNotification'
+          ? await email.sendAdminContactNotification(payload)
+          : await email.sendUserContactConfirmation(payload);
+      expect(result).toEqual({
         ok: false,
         skipped: true,
       });
-      expect(console.warn).toHaveBeenCalledOnce();
+      const expectedWarning =
+        method === 'sendAdminContactNotification'
+          ? '[email] RESEND_API_KEY nie jest skonfigurowany. Pomijam wysyłkę powiadomienia admina.'
+          : '[email] RESEND_API_KEY nie jest skonfigurowany. Pomijam wysyłkę potwierdzenia do użytkownika.';
+      expect(
+        warn.mock.calls.filter(([message]) => message === expectedWarning),
+      ).toHaveLength(1);
       expect(mocks.send).not.toHaveBeenCalled();
     },
   );

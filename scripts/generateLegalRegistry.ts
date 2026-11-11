@@ -1,4 +1,4 @@
-import matter from 'gray-matter';
+import matter from 'front-matter';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -61,7 +61,7 @@ async function readDocuments(kind: DocumentKind): Promise<LegalDocument[]> {
 
     const filePath = path.join(directory, entry.name);
     const source = await readFile(filePath, 'utf8');
-    const { data } = matter(source);
+    const { attributes: data } = matter<Record<string, unknown>>(source);
     const fileVersion = entry.name.slice(0, -'.mdx'.length);
     const version = data.version;
 

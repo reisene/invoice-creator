@@ -1,3 +1,7 @@
 ---
+engines:
+  tsqllint:
+    exclude_paths:
+      - 'prisma/migrations/**/*.sql'
 exclude_paths:
   - '.agents/**'

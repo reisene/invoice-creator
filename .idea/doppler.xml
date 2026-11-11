@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DopplerSettings">
-    <option name="cliPath" value="C:\Users\katar\AppData\Local\Microsoft\WinGet\Links\doppler.exe" />
+    <option name="cliPath" value="C:\Users\katar\AppData\Local\Microsoft\WinGet\Packages\Doppler.doppler_Microsoft.Winget.Source_8wekyb3d8bbwe\doppler.exe" />
     <option name="dopplerConfig" value="dev" />
     <option name="dopplerProject" value="invoice-creator" />
   </component>

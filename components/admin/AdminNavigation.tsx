@@ -1,31 +1,26 @@
 import Link from 'next/link';
 
-const adminNavigationsLinks = [
-  {
-    href: '/admin' as const,
-    label: 'Dashboard',
-  },
-  {
-    href: '/admin/tax-params' as const,
-    label: 'Parametry podatkowe',
-  },
-];
-
 export default function AdminNavigation() {
   return (
     <nav
       aria-label={'Nawigacja panelu admina'}
       className={'flex-wrap gap-2 mb-4 d-flex'}
     >
-      {adminNavigationsLinks.map((link) => (
-        <Link
-          key={link.href}
-          href={link.href}
-          className={'btn btn-outline-secondary'}
-        >
-          {link.label}
-        </Link>
-      ))}
+      <Link href={'/admin' as const} className={'btn btn-outline-secondary'}>
+        Dashboard
+      </Link>
+      <Link
+        href={'/admin/users' as const}
+        className={'btn btn-outline-secondary'}
+      >
+        Użytkownicy
+      </Link>
+      <Link
+        href={'/admin/tax-params' as const}
+        className={'btn btn-outline-secondary'}
+      >
+        Parametry podatkowe
+      </Link>
     </nav>
   );
 }

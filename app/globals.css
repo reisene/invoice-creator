@@ -448,3 +448,64 @@ a:not(.btn):not(.nav-link):not(.navbar-brand) {
     transform: none;
   }
 }
+
+/* ==========================================================================
+   Admin FAB (Floating Action Button)
+   ========================================================================== */
+.admin-fab {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 1050;
+  width: 3.5rem;
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  padding: 0;
+  transition: transform 0.2s ease;
+}
+
+.admin-fab:hover {
+  transform: scale(1.1);
+}
+
+.admin-fab:active {
+  transform: scale(0.95);
+}
+
+.admin-fab-menu {
+  position: fixed;
+  bottom: 6.5rem;
+  right: 2rem;
+  z-index: 1050;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.admin-fab-menu.open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.admin-fab-menu.closed {
+  opacity: 0;
+  transform: translateY(1rem);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-fab,
+  .admin-fab-menu {
+    transition: none;
+  }
+
+  .admin-fab:hover {
+    transform: none;
+  }
+}

@@ -161,7 +161,11 @@ export default function UserList() {
   };
 
   if (users.length === 0 && !error) {
-    return <div className='text-center py-4'>Ładowanie...</div>;
+    return (
+      <div className='text-center py-4 text-body-secondary'>
+        Brak użytkowników do wyświetlenia
+      </div>
+    );
   }
 
   return (

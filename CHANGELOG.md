@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com-reisene/reisene/invoice-creator/compare/0.7.0...0.8.0) (2026-11-12)
+
+### Features
+
+- **admin:** implement floating action button for admin navigation ([5ddff38](https://github.com-reisene/reisene/invoice-creator/commit/5ddff388692f99458d2fa2838f1119c63de7e5f5))
+- **tests:** add comprehensive tests for admin components and user management ([43d2044](https://github.com-reisene/reisene/invoice-creator/commit/43d2044e72d477abe2999b51e79cfbd42f8d41ee))
+
 ## [0.7.0](https://github.com-reisene/reisene/invoice-creator/compare/0.5.0...0.7.0) (2026-11-11)
 
 ### Features

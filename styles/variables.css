@@ -3,7 +3,6 @@
    ========================================================================== */
 
 :root {
-  --bs-body-font-family: var(--font-geist-sans), system-ui, sans-serif;
   --bs-font-monospace: var(--font-geist-mono), monospace;
 }
 

@@ -1,6 +1,5 @@
 'use client';
 
-import { Fira_Mono } from 'next/font/google';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { type ReactNode, useState } from 'react';
@@ -13,11 +12,6 @@ import {
   BsFillHousesFill,
   BsQuestionCircleFill,
 } from 'react-icons/bs';
-
-const mono = Fira_Mono({
-  weight: ['400', '500', '700'],
-  subsets: ['latin'],
-});
 
 const navLinks: {
   href: string;
@@ -51,7 +45,13 @@ const navLinks: {
   },
 ];
 
-export default function AppNavbar({ authButtons }: { authButtons: ReactNode }) {
+export default function AppNavbar({
+  authButtons,
+  fontClassName,
+}: {
+  authButtons: ReactNode;
+  fontClassName: string;
+}) {
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
   const isLinkActive = (href: string) => {
@@ -70,7 +70,7 @@ export default function AppNavbar({ authButtons }: { authButtons: ReactNode }) {
       onToggle={setExpanded}
       sticky={'top'}
       bg={'body-tertiary'}
-      className={mono.className}
+      className={fontClassName}
     >
       <Container>
         <Navbar.Brand

@@ -6,10 +6,10 @@ import ConsentedSentryReplay from '@/components/telemetry/ConsentedSentryReplay'
 import ConsentedTelemetry from '@/components/telemetry/ConsentedTelemetry';
 import { siteUrl } from '@/lib/siteUrl';
 import { socialImage } from '@/lib/socialImage';
-import '@/styles/globals';
+import '@/styles/globals.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Fira_Mono, Geist, Geist_Mono } from 'next/font/google';
 import { IconType } from 'react-icons';
 import { BsGithub } from 'react-icons/bs';
 
@@ -27,6 +27,12 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
+});
+
+const firaMono = Fira_Mono({
+  weight: ['400', '500', '700'],
+  subsets: ['latin'],
+  variable: '--font-fira-mono',
 });
 
 const siteName = 'Invoice Creator';
@@ -85,11 +91,19 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html
       lang='pl'
-      className={`${geistSans.variable} ${geistMono.variable}`}
+      className={`${geistSans.variable} ${geistMono.variable} ${firaMono.variable}`}
       data-bs-theme='dark'
     >
-      <body className='min-vh-100 d-flex flex-column'>
-        <AppNavbar authButtons={<AuthButtons />} />
+      <body
+        className='min-vh-100 d-flex flex-column'
+        style={{
+          fontFamily: `${geistSans.style.fontFamily}`,
+        }}
+      >
+        <AppNavbar
+          authButtons={<AuthButtons />}
+          fontClassName={firaMono.className}
+        />
         <main className='py-5 flex-grow-1'>{children}</main>
         <CookieConsent />
         <ConsentedTelemetry />

@@ -107,8 +107,12 @@ vi.mock('next/navigation', () => ({
   notFound: mocks.notFound,
 }));
 vi.mock('next/font/google', () => ({
-  Geist: () => ({ variable: 'sans-font' }),
+  Geist: () => ({
+    variable: 'sans-font',
+    style: { fontFamily: 'Geist Sans' },
+  }),
   Geist_Mono: () => ({ variable: 'mono-font' }),
+  Fira_Mono: () => ({ variable: 'fira-font', className: 'fira-font' }),
 }));
 vi.mock('@/lib/siteUrl', () => ({ siteUrl: 'https://example.com' }));
 vi.mock('@/lib/legal/legalDocuments', () => ({
@@ -174,9 +178,12 @@ vi.mock('@/components/consent/ClearCookieConsentButton', () => ({
   default: () => 'Clear consent',
 }));
 vi.mock('@/components/AppNavbar', () => ({
-  default: ({ authButtons }: { authButtons: ReactNode }) => (
-    <nav>{authButtons}</nav>
-  ),
+  default: ({
+    authButtons,
+  }: {
+    authButtons: ReactNode;
+    fontClassName: string;
+  }) => <nav>{authButtons}</nav>,
 }));
 vi.mock('@/components/AuthButtons', () => ({ default: () => 'Auth buttons' }));
 vi.mock('@/components/consent/CookieConsent', () => ({

@@ -1,6 +1,10 @@
 /* ==========================================================================
-   Global Styles Entry Point
-   ========================================================================== */
+  Global CSS Entry Point
+  Imports all CSS modules in the correct order:
+  1. Bootstrap CSS variables and dark mode overrides
+  2. Utility styles (body, navbar, card, page widths, hover, forms)
+  3. Component styles (cookie consent, help article, FAB, etc.)
+  ========================================================================== */
 
 @import './variables.css';
 @import './utilities.css';

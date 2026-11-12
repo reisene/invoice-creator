@@ -202,7 +202,9 @@ describe('navigation and footer', () => {
     (pathname) => {
       vi.useFakeTimers();
       mocks.pathname = pathname;
-      render(<AppNavbar authButtons={<span>Auth slot</span>} />);
+      render(
+        <AppNavbar authButtons={<span>Auth slot</span>} fontClassName='' />,
+      );
       const expected =
         pathname === '/'
           ? 'Start'

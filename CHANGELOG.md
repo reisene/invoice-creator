@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.8.1](https://github.com-reisene/reisene/invoice-creator/compare/0.8.0...0.8.1) (2026-11-12)
+
+### Bug Fixes
+
+- **admin:** adjust floating action button position to the left ([e3743a7](https://github.com-reisene/reisene/invoice-creator/commit/e3743a7a93b5bbd2caae0bed1f5dfd46c678d7f5))
+
 ## [0.8.0](https://github.com-reisene/reisene/invoice-creator/compare/0.7.0...0.8.0) (2026-11-12)
 
 ### Features

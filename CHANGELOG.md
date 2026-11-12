@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.9.0](https://github.com-reisene/reisene/invoice-creator/compare/0.8.1...0.9.0) (2026-11-12)
+
+### Features
+
+- **navbar:** add fontClassName prop to AppNavbar and update global styles import ([0506ef8](https://github.com-reisene/reisene/invoice-creator/commit/0506ef8ab4e2114301c5d31c84377e931aa14926))
+
 ## [0.8.1](https://github.com-reisene/reisene/invoice-creator/compare/0.8.0...0.8.1) (2026-11-12)
 
 ### Bug Fixes

@@ -1,0 +1,101 @@
+/* ==========================================================================
+   Utility Styles
+   ========================================================================== */
+
+/* Body background */
+body {
+  background:
+    radial-gradient(
+      ellipse at 12% 0%,
+      rgba(37, 99, 235, 0.2),
+      transparent 32rem
+    ),
+    radial-gradient(
+      ellipse at 94% 8%,
+      rgba(124, 58, 237, 0.14),
+      transparent 28rem
+    ),
+    var(--bs-body-bg);
+}
+
+/* Navbar & Footer dark mode */
+:root[data-bs-theme='dark'] .navbar,
+:root[data-bs-theme='dark'] footer {
+  background-color: rgba(12, 20, 36, 0.92) !important;
+  backdrop-filter: blur(14px);
+}
+
+/* Card dark mode */
+:root[data-bs-theme='dark'] .card {
+  box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.24);
+}
+
+/* Links */
+a:not(.btn):not(.nav-link):not(.navbar-brand) {
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 0.08em;
+}
+
+/* Focus visible */
+:focus-visible {
+  outline: 3px solid #fff !important;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px #0b1724 !important;
+}
+
+/* Page widths */
+.page-narrow {
+  max-width: 440px;
+}
+
+.page-medium {
+  max-width: 720px;
+}
+
+.page-wide {
+  max-width: 800px;
+}
+
+/* Account page scroll margin */
+.account-page > section {
+  scroll-margin-top: 6rem;
+}
+
+/* Invoice preview */
+.invoice-preview {
+  min-height: 800px;
+  background-color: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+}
+
+/* Hover elevate */
+.hover-elevate {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.hover-elevate:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.3) !important;
+  border-color: var(--bs-primary-border-subtle) !important;
+}
+
+/* Form placeholders dark mode */
+[data-bs-theme='dark'] .form-control::placeholder,
+[data-bs-theme='dark'] .form-select::placeholder {
+  color: var(--bs-tertiary-color);
+  opacity: 1;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .hover-elevate {
+    transition: none;
+  }
+
+  .hover-elevate:hover {
+    transform: none;
+  }
+}

@@ -1,10 +1,10 @@
 'use client';
 
+import '@/styles/globals';
 import * as Sentry from '@sentry/nextjs';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Error from 'next/error';
 import { useEffect } from 'react';
-import './globals.css';
 
 export default function GlobalError({
   error,

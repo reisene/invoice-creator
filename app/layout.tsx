@@ -6,12 +6,12 @@ import ConsentedSentryReplay from '@/components/telemetry/ConsentedSentryReplay'
 import ConsentedTelemetry from '@/components/telemetry/ConsentedTelemetry';
 import { siteUrl } from '@/lib/siteUrl';
 import { socialImage } from '@/lib/socialImage';
+import '@/styles/globals';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { IconType } from 'react-icons';
 import { BsGithub } from 'react-icons/bs';
-import './globals.css';
 
 const author: { name: string; url: string; ico: IconType } = {
   name: 'DraugSköll',

@@ -253,7 +253,7 @@
 .admin-fab {
   position: fixed;
   bottom: 2rem;
-  right: 2rem;
+  left: 2rem;
   z-index: 1050;
   width: 3.5rem;
   height: 3.5rem;
@@ -276,7 +276,7 @@
 .admin-fab-menu {
   position: fixed;
   bottom: 6.5rem;
-  right: 2rem;
+  left: 2rem;
   z-index: 1050;
   display: flex;
   flex-direction: column;

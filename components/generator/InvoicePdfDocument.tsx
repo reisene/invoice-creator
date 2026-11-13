@@ -140,13 +140,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   section: {
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
     marginBottom: 6,
   },
@@ -194,6 +194,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 0.75,
     borderTopColor: '#212529',
     paddingTop: 6,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
   footer: {
     position: 'absolute',

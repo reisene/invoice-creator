@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.10.1](https://github.com-reisene/reisene/invoice-creator/compare/0.10.0...0.10.1) (2026-11-13)
+
+### Bug Fixes
+
+- **invoice:** adjust font sizes and styles for improved document readability ([54912eb](https://github.com-reisene/reisene/invoice-creator/commit/54912eb718b03a11683ff2cdd8c99f3538da09f0))
+
 ## [0.10.0](https://github.com-reisene/reisene/invoice-creator/compare/0.9.0...0.10.0) (2026-11-13)
 
 ### Features

@@ -1,4 +1,5 @@
-import type { InvoiceFormData } from '@/types/invoiceForm';
+import { isValidTimesheetDays } from '@/lib/invoice/timesheet';
+import type { InvoiceFormData, TimesheetDay } from '@/types/invoiceForm';
 
 const oneOf = <T extends string | number>(
   value: unknown,
@@ -26,6 +27,24 @@ const optionalNum = (
   limit: number,
 ): number | undefined | null =>
   value === undefined || value === null ? undefined : num(value, limit);
+
+const MAX_TIMESHEET_DAYS = 366;
+
+const optionalTimesheet = (
+  value: unknown,
+): TimesheetDay[] | undefined | null => {
+  if (value === undefined || value === null) return undefined;
+  if (!Array.isArray(value) || value.length > MAX_TIMESHEET_DAYS) return null;
+  const days: TimesheetDay[] = [];
+  for (const item of value) {
+    if (typeof item !== 'object' || item === null) return null;
+    const { date, type, hours } = item as Record<string, unknown>;
+    const day = { date, type, hours } as TimesheetDay;
+    if (!isValidTimesheetDays([day])) return null;
+    days.push({ date: day.date, type: day.type, hours: day.hours });
+  }
+  return days;
+};
 
 function hasNoNullFields<T extends object>(
   value: T,
@@ -82,6 +101,7 @@ export function sanitizeInvoiceForm(
   const grossAmount = optionalNum(v.grossAmount, numberLimit);
   const hourlyRate = optionalNum(v.hourlyRate, numberLimit);
   const hoursWorked = optionalNum(v.hoursWorked, numberLimit);
+  const timesheet = optionalTimesheet(v.timesheet);
   const yearToDateTaxableIncome = num(v.yearToDateTaxableIncome, numberLimit);
   const yearToDateEmploymentIncome =
     v.yearToDateEmploymentIncome === undefined
@@ -125,6 +145,7 @@ export function sanitizeInvoiceForm(
     grossAmount,
     hourlyRate,
     hoursWorked,
+    timesheet,
     contractorStatus,
     voluntarySickness: v.voluntarySickness,
     costType,

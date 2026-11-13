@@ -1,4 +1,5 @@
 import { formatPolishBankAccount } from '@/lib/invoice/bankUtils';
+import { DAY_TYPE_LABELS, sumTimesheetHours } from '@/lib/invoice/timesheet';
 import { getSiteDisplayUrl } from '@/lib/siteUrl';
 import { numberToWords } from '@/lib/toWords';
 import type { InvoiceData } from '@/types/invoice';
@@ -146,6 +147,42 @@ function InvoiceDetails({
             </p>
           )}
       </div>
+
+      {data.timesheet && data.timesheet.length > 0 && (
+        <div className='mb-4'>
+          <h4 className='fw-bold mb-2'>Wykaz godzin</h4>
+          <Table size='sm' bordered>
+            <thead>
+              <tr>
+                <th scope='col'>Data</th>
+                <th scope='col'>Rodzaj dnia</th>
+                <th scope='col' className='text-end'>
+                  Godziny
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.timesheet.map((day) => (
+                <tr key={day.date}>
+                  <td>{formatIssueDate(day.date)}</td>
+                  <td>{DAY_TYPE_LABELS[day.type]}</td>
+                  <td className='text-end'>{day.hours} h</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className='fw-bold'>
+                <th scope='row' colSpan={2}>
+                  Razem
+                </th>
+                <td className='text-end'>
+                  {sumTimesheetHours(data.timesheet)} h
+                </td>
+              </tr>
+            </tfoot>
+          </Table>
+        </div>
+      )}
     </>
   );
 }

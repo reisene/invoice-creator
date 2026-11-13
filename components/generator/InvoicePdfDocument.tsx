@@ -1,4 +1,5 @@
 import { formatPolishBankAccount } from '@/lib/invoice/bankUtils';
+import { DAY_TYPE_LABELS, sumTimesheetHours } from '@/lib/invoice/timesheet';
 import { getSiteDisplayUrl } from '@/lib/siteUrl';
 import { numberToWords } from '@/lib/toWords';
 import type { InvoiceData } from '@/types/invoice';
@@ -267,6 +268,27 @@ export default function createInvoicePdfDocument(
           />
         </View>
       </Page>
+      {data.timesheet && data.timesheet.length > 0 && (
+        <Page size='A4' style={styles.page} wrap>
+          <Text style={styles.sectionTitle}>
+            Wykaz godzin do rachunku nr {invoiceNumber}
+          </Text>
+          {data.timesheet.map((day) => (
+            <View key={day.date} style={styles.tableRow} wrap={false}>
+              <Text style={styles.tableLabel}>{formatIssueDate(day.date)}</Text>
+              <Text style={styles.tableLabel}>{DAY_TYPE_LABELS[day.type]}</Text>
+              <Text style={styles.tableValue}>
+                {day.hours.toString().replace('.', ',')} h
+              </Text>
+            </View>
+          ))}
+          <PdfRow
+            label='Razem godzin pracy'
+            value={`${sumTimesheetHours(data.timesheet)} h`.replace('.', ',')}
+            bold
+          />
+        </Page>
+      )}
     </Document>
   );
 }

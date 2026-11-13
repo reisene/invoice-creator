@@ -1,3 +1,4 @@
+import { generateTimesheetDays } from '@/lib/invoice/timesheet';
 import type { InvoiceFormData } from '@/types/invoiceForm';
 
 export interface SampleInvoicePreset {
@@ -194,6 +195,17 @@ export const SAMPLE_INVOICE_PRESETS: SampleInvoicePreset[] = [
       contractType: 'hourly',
       hourlyRate: 45,
       hoursWorked: 80,
+      timesheet: generateTimesheetDays('2026-03-01', '2026-03-31').map(
+        (day, i, all) => {
+          if (day.type !== 'work') return day;
+          const workIndex = all
+            .slice(0, i + 1)
+            .filter((d) => d.type === 'work').length;
+          return workIndex <= 10
+            ? { ...day, hours: 8 }
+            : { ...day, type: 'off' as const };
+        },
+      ),
       contractorStatus: 'standard',
       voluntarySickness: false,
       costType: '20',

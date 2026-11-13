@@ -46,6 +46,7 @@ Polskojęzyczny generator rachunków do umowy zlecenia. Oblicza składki i zalic
 ## Funkcje
 
 - Rozliczenia miesięczne i godzinowe.
+- Opcjonalny wykaz godzin (umowa zlecenie z rachunkiem, stawka godzinowa): lista dni okresu rozliczeniowego z typem dnia (praca / L4 / urlop / wolne), suma godzin pracy trafia do liczby godzin, a wykaz jest drugą stroną PDF i częścią podglądu.
 - Obliczenia ZUS i PIT z uwzględnieniem wybranego statusu zleceniobiorcy, kosztów uzyskania przychodu 20% lub 50%, PIT-2 oraz ulgi dla młodych. Generator korzysta z parametrów podatkowych zapisanych w bazie, a gdy nie są dostępne — z wartości domyślnych w kodzie.
 - Podgląd rachunku, przykładowe dokumenty i eksport do PDF.
 - Opcjonalne konto z możliwością zapisywania rachunków, kontrahentów i rachunku bankowego, a także importu i eksportu danych.

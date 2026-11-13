@@ -29,11 +29,16 @@ function buildPresetFormData(
   gross: number,
   status: ContractorStatus,
 ): InvoiceFormData {
-  const today = new Date().toISOString().slice(0, 10);
-  const monthStart = new Date();
-  monthStart.setDate(1);
-  const monthEnd = new Date();
-  monthEnd.setMonth(monthEnd.getMonth() + 1, 0);
+  const now = new Date();
+  const toLocalIso = (d: Date) =>
+    [
+      d.getFullYear(),
+      String(d.getMonth() + 1).padStart(2, '0'),
+      String(d.getDate()).padStart(2, '0'),
+    ].join('-');
+  const today = toLocalIso(now);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
   return {
     clientType: 'company',
@@ -43,8 +48,8 @@ function buildPresetFormData(
     contractorAddress: '',
     contractorPesel: '',
     contractDate: today,
-    periodStart: monthStart.toISOString().slice(0, 10),
-    periodEnd: monthEnd.toISOString().slice(0, 10),
+    periodStart: toLocalIso(monthStart),
+    periodEnd: toLocalIso(monthEnd),
     contractType: 'monthly',
     grossAmount: gross,
     contractorStatus: status,

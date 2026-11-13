@@ -57,7 +57,10 @@ vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...(actual as object),
-    use: mocks.useImpl,
+    use: (promise: Promise<unknown>) => {
+      promise?.catch?.(() => {});
+      return mocks.useImpl(promise);
+    },
     useActionState: mocks.useActionState,
   };
 });
@@ -377,6 +380,126 @@ describe('UserList', () => {
     render(<UserList />);
 
     expect(screen.queryByText('anon@test.pl')).not.toBeNull();
+  });
+
+  const openBanModal = () => {
+    mocks.useImpl.mockImplementationOnce(() => sampleUsers);
+    render(<UserList />);
+    fireEvent.click(screen.getByRole('button', { name: 'Zbanuj' }));
+    fireEvent.change(screen.getByLabelText('Powód zablokowania'), {
+      target: { value: 'Spam' },
+    });
+    const buttons = screen.getAllByText('Zbanuj i wyślij powiadomienie');
+    return buttons[buttons.length - 1].closest('button') as HTMLButtonElement;
+  };
+
+  const openResetModal = () => {
+    mocks.useImpl.mockImplementationOnce(() => sampleUsers);
+    render(<UserList />);
+    fireEvent.click(screen.getByRole('button', { name: 'Resetuj hasło' }));
+    fireEvent.change(screen.getByLabelText('Nowe hasło'), {
+      target: { value: 'longenoughpass' },
+    });
+    const buttons = screen.getAllByText('Zresetuj hasło');
+    return buttons[buttons.length - 1].closest('button') as HTMLButtonElement;
+  };
+
+  it('bans a user, sends notification and refreshes', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({});
+    vi.stubGlobal('fetch', fetchMock);
+    const confirm = openBanModal();
+    fireEvent.click(confirm);
+    await waitFor(() => expect(mocks.banUser).toHaveBeenCalled());
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    await waitFor(() => expect(mocks.listUsers).toHaveBeenCalled());
+    vi.unstubAllGlobals();
+  });
+
+  it('ignores notification fetch failure after ban', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('x')));
+    fireEvent.click(openBanModal());
+    await waitFor(() => expect(mocks.listUsers).toHaveBeenCalled());
+    vi.unstubAllGlobals();
+  });
+
+  it('shows error when ban returns an error', async () => {
+    mocks.banUser.mockResolvedValue({ error: { message: 'no' } });
+    fireEvent.click(openBanModal());
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Nie udało się zbanować użytkownika.'),
+      ).not.toBeNull(),
+    );
+  });
+
+  it('shows error when ban throws', async () => {
+    mocks.banUser.mockRejectedValue(new Error('boom'));
+    fireEvent.click(openBanModal());
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Wystąpił błąd podczas banowania użytkownika.'),
+      ).not.toBeNull(),
+    );
+  });
+
+  it('resets a password and refreshes', async () => {
+    fireEvent.click(openResetModal());
+    await waitFor(() =>
+      expect(mocks.setUserPassword).toHaveBeenCalledWith({
+        userId: 'u1',
+        newPassword: 'longenoughpass',
+      }),
+    );
+    await waitFor(() => expect(mocks.listUsers).toHaveBeenCalled());
+  });
+
+  it('shows error when password reset returns an error', async () => {
+    mocks.setUserPassword.mockResolvedValue({ error: { message: 'no' } });
+    fireEvent.click(openResetModal());
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Nie udało się zresetować hasła.'),
+      ).not.toBeNull(),
+    );
+  });
+
+  it('shows error when password reset throws', async () => {
+    mocks.setUserPassword.mockRejectedValue(new Error('boom'));
+    fireEvent.click(openResetModal());
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Wystąpił błąd podczas resetowania hasła.'),
+      ).not.toBeNull(),
+    );
+  });
+
+  it('shows error when refreshing the list fails', async () => {
+    mocks.useImpl.mockImplementation(() => sampleUsers);
+    render(<UserList />);
+    await waitFor(() => expect(mocks.listUsers).toHaveBeenCalled());
+    mocks.listUsers.mockResolvedValue({
+      data: null,
+      error: { message: 'x' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Wyloguj wszędzie' }));
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Nie udało się pobrać listy użytkowników.'),
+      ).not.toBeNull(),
+    );
+  });
+
+  it('shows error when refreshing the list throws', async () => {
+    mocks.useImpl.mockImplementation(() => sampleUsers);
+    render(<UserList />);
+    await waitFor(() => expect(mocks.listUsers).toHaveBeenCalled());
+    mocks.listUsers.mockRejectedValue(new Error('boom'));
+    fireEvent.click(screen.getByRole('button', { name: 'Wyloguj wszędzie' }));
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Wystąpił błąd podczas pobierania użytkowników.'),
+      ).not.toBeNull(),
+    );
   });
 });
 

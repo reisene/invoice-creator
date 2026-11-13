@@ -190,6 +190,26 @@ describe.each(['preview', 'PDF'] as const)('%s invoice content', (kind) => {
           family: 'Noto Sans Latin Ext',
           fontWeight: 700,
         }),
+        expect.objectContaining({
+          family: 'Noto Sans Latin',
+          fontWeight: 400,
+          fontStyle: 'italic',
+        }),
+        expect.objectContaining({
+          family: 'Noto Sans Latin',
+          fontWeight: 700,
+          fontStyle: 'italic',
+        }),
+        expect.objectContaining({
+          family: 'Noto Sans Latin Ext',
+          fontWeight: 400,
+          fontStyle: 'italic',
+        }),
+        expect.objectContaining({
+          family: 'Noto Sans Latin Ext',
+          fontWeight: 700,
+          fontStyle: 'italic',
+        }),
       ]);
       expect(
         container.querySelector('[data-font="Noto Sans Latin Ext"]'),

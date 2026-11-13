@@ -4,7 +4,7 @@ import { saveParty } from '@/app/actions/savedData';
 import type { InvoiceFormData } from '@/types/invoiceForm';
 import type { SavedPartyDto } from '@/types/savedData';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Alert, Button, Col, Form, Row } from 'react-bootstrap';
 import { BsQuestionCircle } from 'react-icons/bs';
 
@@ -26,6 +26,7 @@ export default function SavedPartiesPanel({
     text: string;
   } | null>(null);
   const [pending, setPending] = useState(false);
+  const selectId = useId();
 
   const clients = parties.filter((p) => p.kind === 'CLIENT');
   const contractors = parties.filter((p) => p.kind === 'CONTRACTOR');
@@ -92,7 +93,7 @@ export default function SavedPartiesPanel({
     list: SavedPartyDto[],
   ) => (
     <Col md={6}>
-      <Form.Group>
+      <Form.Group controlId={selectId}>
         <Form.Label>{title}</Form.Label>
         <Form.Select
           value=''

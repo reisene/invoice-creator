@@ -17,7 +17,7 @@ import type { UserBankAccountDto } from '@/types/savedData';
 import type { TaxParams } from '@/types/taxParams';
 import * as Sentry from '@sentry/nextjs';
 import Link from 'next/link';
-import { useState } from 'react';
+import { type ComponentProps, useId, useState } from 'react';
 import { Alert, Button, Col, Form, Row, Spinner } from 'react-bootstrap';
 import {
   BsBoxArrowInDown,
@@ -65,6 +65,11 @@ interface BankAccountSectionProps extends BankDetailsProps {
   isAccountValid: boolean;
 }
 
+function LabeledGroup(props: ComponentProps<typeof Form.Group>) {
+  const id = useId();
+  return <Form.Group controlId={id} {...props} />;
+}
+
 interface InvoiceFieldProps {
   label: string;
   value: string;
@@ -83,7 +88,7 @@ function InvoiceField({
   required,
 }: InvoiceFieldProps) {
   return (
-    <Form.Group>
+    <LabeledGroup>
       <Form.Label>{label}</Form.Label>
       <Form.Control
         type={type}
@@ -94,7 +99,7 @@ function InvoiceField({
         }}
         required={required}
       />
-    </Form.Group>
+    </LabeledGroup>
   );
 }
 
@@ -262,7 +267,7 @@ export default function InvoiceForm({
 function IssueFields({ data, updateField }: FormSectionProps) {
   return (
     <>
-      <h3 className='mb-3'>Miejsce i data wystawienia</h3>
+      <h2 className='h3 mb-3'>Miejsce i data wystawienia</h2>
 
       <Row className='mb-3'>
         <Col md={6}>
@@ -296,11 +301,11 @@ function ClientFields({ data, updateField, taxParams }: FormSectionProps) {
   return (
     <>
       {/* Zleceniodawca */}
-      <h3 className='mb-3'>Dane zleceniodawcy</h3>
+      <h2 className='h3 mb-3'>Dane zleceniodawcy</h2>
 
       <Row className='mb-3'>
         <Col md={6}>
-          <Form.Group>
+          <LabeledGroup>
             <Form.Label>Typ zleceniodawcy</Form.Label>
             <Form.Select
               value={data.clientType}
@@ -311,14 +316,14 @@ function ClientFields({ data, updateField, taxParams }: FormSectionProps) {
               <option value='company'>Firma</option>
               <option value='private'>Osoba prywatna</option>
             </Form.Select>
-          </Form.Group>
+          </LabeledGroup>
         </Col>
       </Row>
 
       {data.youngRelief ? (
         <Row className='mb-3'>
           <Col md={6}>
-            <Form.Group>
+            <LabeledGroup>
               <Form.Label>
                 Przychód objęty ulgą dla młodych od początku roku
               </Form.Label>
@@ -340,7 +345,7 @@ function ClientFields({ data, updateField, taxParams }: FormSectionProps) {
                 Wpisz przychód z tego roku, który wcześniej wykorzystał limit
                 ulgi. Bieżący rachunek zostanie doliczony automatycznie.
               </Form.Text>
-            </Form.Group>
+            </LabeledGroup>
           </Col>
         </Row>
       ) : null}
@@ -357,7 +362,7 @@ function ClientFields({ data, updateField, taxParams }: FormSectionProps) {
           />
         </Col>
         <Col md={6}>
-          <Form.Group>
+          <LabeledGroup>
             <Form.Label>Adres</Form.Label>
             <Form.Control
               as='textarea'
@@ -368,7 +373,7 @@ function ClientFields({ data, updateField, taxParams }: FormSectionProps) {
               }}
               required
             />
-          </Form.Group>
+          </LabeledGroup>
         </Col>
       </Row>
 
@@ -405,7 +410,7 @@ function ContractorFields({ data, updateField }: FormSectionProps) {
   return (
     <>
       {/* Zleceniobiorca */}
-      <h3 className='mb-3 mt-4'>Dane zleceniobiorcy</h3>
+      <h2 className='h3 mb-3 mt-4'>Dane zleceniobiorcy</h2>
 
       <Row className='mb-3'>
         <Col md={6}>
@@ -419,7 +424,7 @@ function ContractorFields({ data, updateField }: FormSectionProps) {
           />
         </Col>
         <Col md={6}>
-          <Form.Group>
+          <LabeledGroup>
             <Form.Label>Adres</Form.Label>
             <Form.Control
               as='textarea'
@@ -430,7 +435,7 @@ function ContractorFields({ data, updateField }: FormSectionProps) {
               }}
               required
             />
-          </Form.Group>
+          </LabeledGroup>
         </Col>
       </Row>
 
@@ -463,7 +468,7 @@ function ContractFields({ data, updateField }: FormSectionProps) {
   return (
     <>
       {/* Dane umowy */}
-      <h3 className='mb-3 mt-4'>Dane umowy</h3>
+      <h2 className='h3 mb-3 mt-4'>Dane umowy</h2>
 
       <Row className='mb-3'>
         <Col md={6}>
@@ -515,7 +520,7 @@ function ContractFields({ data, updateField }: FormSectionProps) {
 
       <Row className='mb-3'>
         <Col md={6}>
-          <Form.Group>
+          <LabeledGroup>
             <Form.Label>Typ umowy</Form.Label>
             <Form.Select
               value={data.contractType}
@@ -527,7 +532,7 @@ function ContractFields({ data, updateField }: FormSectionProps) {
               <option value='monthly'>Miesięczna</option>
               <option value='hourly'>Godzinowa</option>
             </Form.Select>
-          </Form.Group>
+          </LabeledGroup>
         </Col>
       </Row>
     </>
@@ -538,12 +543,12 @@ function RemunerationFields({ data, onChange, updateField }: FormSectionProps) {
   return (
     <>
       {/* Wynagrodzenie */}
-      <h3 className='mb-3 mt-4'>Wynagrodzenie</h3>
+      <h2 className='h3 mb-3 mt-4'>Wynagrodzenie</h2>
 
       {data.contractType === 'monthly' ? (
         <Row className='mb-3'>
           <Col md={6}>
-            <Form.Group>
+            <LabeledGroup>
               <Form.Label>Kwota brutto (miesięcznie)</Form.Label>
               <Form.Control
                 type='number'
@@ -558,13 +563,13 @@ function RemunerationFields({ data, onChange, updateField }: FormSectionProps) {
                 }}
                 required={data.contractType === 'monthly'}
               />
-            </Form.Group>
+            </LabeledGroup>
           </Col>
         </Row>
       ) : (
         <Row className='mb-3'>
           <Col md={6}>
-            <Form.Group>
+            <LabeledGroup>
               <Form.Label className='d-flex align-items-center justify-content-between'>
                 <span>Stawka za godzinę (brutto)</span>
                 <Link
@@ -591,10 +596,10 @@ function RemunerationFields({ data, onChange, updateField }: FormSectionProps) {
                 }}
                 required={data.contractType === 'hourly'}
               />
-            </Form.Group>
+            </LabeledGroup>
           </Col>
           <Col md={6}>
-            <Form.Group>
+            <LabeledGroup>
               <Form.Label>Liczba godzin</Form.Label>
               <Form.Control
                 type='number'
@@ -612,7 +617,7 @@ function RemunerationFields({ data, onChange, updateField }: FormSectionProps) {
                   data.contractType === 'hourly' && !data.timesheet?.length
                 }
               />
-            </Form.Group>
+            </LabeledGroup>
           </Col>
         </Row>
       )}
@@ -631,10 +636,10 @@ function PaymentMethodFields({
 }: FormSectionProps) {
   return (
     <>
-      <h3 className='mb-3 mt-4'>Forma wypłaty</h3>
+      <h2 className='h3 mb-3 mt-4'>Forma wypłaty</h2>
       <Row className='mb-3'>
         <Col md={8}>
-          <Form.Group>
+          <LabeledGroup>
             <Form.Label>Sposób wypłaty wynagrodzenia</Form.Label>
             <Form.Select
               value={data.paymentMethod}
@@ -667,14 +672,14 @@ function PaymentMethodFields({
                 zmiany.
               </Form.Text>
             )}
-          </Form.Group>
+          </LabeledGroup>
         </Col>
       </Row>
 
       {data.paymentMethod === 'TRANSFER' && (
         <Row className='mb-3'>
           <Col md={8}>
-            <Form.Group>
+            <LabeledGroup>
               <Form.Label>Rachunek do przelewu</Form.Label>
               <Form.Select
                 value={data.transferTarget}
@@ -715,7 +720,7 @@ function PaymentMethodFields({
                   Możesz dodać rachunek bankowy w ustawieniach konta.
                 </Form.Text>
               )}
-            </Form.Group>
+            </LabeledGroup>
           </Col>
         </Row>
       )}
@@ -724,22 +729,22 @@ function PaymentMethodFields({
         bankAccount && (
           <Row className='mb-3'>
             <Col md={4}>
-              <Form.Group>
+              <LabeledGroup>
                 <Form.Label>Właściciel rachunku</Form.Label>
                 <Form.Control value={bankAccount.accountHolder} readOnly />
-              </Form.Group>
+              </LabeledGroup>
             </Col>
             <Col md={4}>
-              <Form.Group>
+              <LabeledGroup>
                 <Form.Label>Bank</Form.Label>
                 <Form.Control value={bankAccount.bankName} readOnly />
-              </Form.Group>
+              </LabeledGroup>
             </Col>
             <Col md={4}>
-              <Form.Group>
+              <LabeledGroup>
                 <Form.Label>Numer rachunku</Form.Label>
                 <Form.Control value={bankAccount.accountNumber} readOnly />
-              </Form.Group>
+              </LabeledGroup>
             </Col>
           </Row>
         )}
@@ -756,11 +761,11 @@ function StatusFields({
   return (
     <>
       {/* Opcje */}
-      <h3 className='mb-3 mt-4'>Status i opcje</h3>
+      <h2 className='h3 mb-3 mt-4'>Status i opcje</h2>
 
       <Row className='mb-3'>
         <Col md={6}>
-          <Form.Group>
+          <LabeledGroup>
             <Form.Label className='d-flex align-items-center justify-content-between'>
               <span>Status zleceniobiorcy</span>
               <Link
@@ -807,10 +812,10 @@ function StatusFields({
               <option value='student_under_26'>Student do 26 lat</option>
               <option value='with_employment'>Zbieg z etatem</option>
             </Form.Select>
-          </Form.Group>
+          </LabeledGroup>
         </Col>
         <Col md={6}>
-          <Form.Group>
+          <LabeledGroup>
             <Form.Label className='d-flex align-items-center justify-content-between'>
               <span>Koszty uzyskania przychodu</span>
               <Link
@@ -838,7 +843,7 @@ function StatusFields({
                 {percent(taxParams?.costRateArtistic ?? 0.5)} (prawa autorskie)
               </option>
             </Form.Select>
-          </Form.Group>
+          </LabeledGroup>
         </Col>
       </Row>
     </>
@@ -857,7 +862,7 @@ function AnnualIncomeFields({
     <>
       <Row className='mb-3'>
         <Col md={6}>
-          <Form.Group>
+          <LabeledGroup>
             <Form.Label>
               Dochód do opodatkowania z innych źródeł od początku roku
             </Form.Label>
@@ -892,14 +897,14 @@ function AnnualIncomeFields({
                 {savedIncomeError}
               </div>
             ) : null}
-          </Form.Group>
+          </LabeledGroup>
         </Col>
       </Row>
 
       {data.contractorStatus === 'with_employment' ? (
         <Row className='mb-3'>
           <Col md={6}>
-            <Form.Group>
+            <LabeledGroup>
               <Form.Label>
                 Dochód do opodatkowania z umowy o pracę od początku roku
               </Form.Label>
@@ -921,7 +926,7 @@ function AnnualIncomeFields({
                 społecznych i kosztach uzyskania, przed PIT), nie kwotę brutto
                 ani netto. Uwzględnij ją tylko raz.
               </Form.Text>
-            </Form.Group>
+            </LabeledGroup>
           </Col>
         </Row>
       ) : null}
@@ -934,7 +939,7 @@ function InsuranceFields({ data, updateField }: FormSectionProps) {
     <>
       <Row className='mb-3'>
         <Col md={6}>
-          <Form.Group>
+          <LabeledGroup>
             <div className='d-flex align-items-center justify-content-between'>
               <Form.Check
                 type='checkbox'
@@ -966,10 +971,10 @@ function InsuranceFields({ data, updateField }: FormSectionProps) {
                   : 'Przy zbiegu z etatem opłacana jest wyłącznie składka zdrowotna.'}
               </Form.Text>
             )}
-          </Form.Group>
+          </LabeledGroup>
         </Col>
         <Col md={6}>
-          <Form.Group>
+          <LabeledGroup>
             <div className='d-flex align-items-center justify-content-between'>
               <Form.Check
                 type='checkbox'
@@ -995,7 +1000,7 @@ function InsuranceFields({ data, updateField }: FormSectionProps) {
               Dla osób poniżej 26 lat. Wymaga złożenia zleceniodawcy
               oświadczenia o zastosowaniu ulgi.
             </Form.Text>
-          </Form.Group>
+          </LabeledGroup>
         </Col>
       </Row>
     </>
@@ -1013,7 +1018,7 @@ function TaxAdvanceFields({
     <>
       <Row className='mb-3'>
         <Col md={6}>
-          <Form.Group>
+          <LabeledGroup>
             <div className='d-flex align-items-center justify-content-between'>
               <Form.Check
                 type='checkbox'
@@ -1045,13 +1050,13 @@ function TaxAdvanceFields({
               Możesz podzielić kwotę zmniejszającą między maksymalnie 3
               płatników.
             </Form.Text>
-          </Form.Group>
+          </LabeledGroup>
         </Col>
       </Row>
 
       <Row className='mb-3'>
         <Col md={8}>
-          <Form.Group>
+          <LabeledGroup>
             <Form.Check
               type='checkbox'
               id='noTaxAdvanceRequest'
@@ -1072,14 +1077,14 @@ function TaxAdvanceFields({
               podatek jest liczony od nadwyżki. Ta opcja zastępuje miesięczną
               kwotę PIT-2.
             </Form.Text>
-          </Form.Group>
+          </LabeledGroup>
         </Col>
       </Row>
 
       {data.taxReduction && !data.noTaxAdvanceRequest && (
         <Row className='mb-3'>
           <Col md={6}>
-            <Form.Group>
+            <LabeledGroup>
               <Form.Label>Wysokość kwoty zmniejszającej</Form.Label>
               <Form.Select
                 value={data.taxReductionAmount}
@@ -1102,7 +1107,7 @@ function TaxAdvanceFields({
                 </option>
                 <option value={0}>0 zł</option>
               </Form.Select>
-            </Form.Group>
+            </LabeledGroup>
           </Col>
         </Row>
       )}
@@ -1118,11 +1123,11 @@ function PaymentAccountFields({
   return (
     <>
       {/* Forma wypłaty wynagrodzenia */}
-      <h3 className='mb-3 mt-4'>Wypłata wynagrodzenia</h3>
+      <h2 className='h3 mb-3 mt-4'>Wypłata wynagrodzenia</h2>
 
       <Row className='mb-3'>
         <Col md={6}>
-          <Form.Group>
+          <LabeledGroup>
             <Form.Label>Sposób wypłaty</Form.Label>
             <Form.Select
               value={
@@ -1174,7 +1179,7 @@ function PaymentAccountFields({
               </option>
               <option value='CASH'>Gotówka do rąk zleceniobiorcy</option>
             </Form.Select>
-          </Form.Group>
+          </LabeledGroup>
         </Col>
       </Row>
     </>
@@ -1235,7 +1240,7 @@ function BankAccountFields({
     <>
       <Row className='mb-3'>
         <Col md={12}>
-          <Form.Group>
+          <LabeledGroup>
             <Form.Label className='d-flex align-items-center justify-content-between'>
               <span>Numer rachunku bankowego (NRB / IBAN)</span>
               {cleanedAccount.length === 26 && (
@@ -1273,13 +1278,13 @@ function BankAccountFields({
                 ? `Wpisano ${cleanedAccount.length} z 26 cyfr.`
                 : 'Standardowy 26-cyfrowy polski numer konta. Odstępy formatowane są automatycznie.'}
             </Form.Text>
-          </Form.Group>
+          </LabeledGroup>
         </Col>
       </Row>
 
       <Row className='mb-3'>
         <Col md={6}>
-          <Form.Group>
+          <LabeledGroup>
             <Form.Label>Nazwa banku / instytucji</Form.Label>
             <Form.Control
               type='text'
@@ -1295,10 +1300,10 @@ function BankAccountFields({
               Rozpoznawana automatycznie z numeru konta lub do wpisania własnego
               (np. ZEN, Revolut).
             </Form.Text>
-          </Form.Group>
+          </LabeledGroup>
         </Col>
         <Col md={6}>
-          <Form.Group>
+          <LabeledGroup>
             <div className='d-flex align-items-center justify-content-between'>
               <Form.Label className='mb-0'>Właściciel rachunku</Form.Label>
               {data.contractorName &&
@@ -1326,7 +1331,7 @@ function BankAccountFields({
               maxLength={200}
               required
             />
-          </Form.Group>
+          </LabeledGroup>
         </Col>
       </Row>
     </>
@@ -1452,11 +1457,11 @@ function NotesFields({ data, updateField }: FormSectionProps) {
   return (
     <>
       {/* Uwagi */}
-      <h3 className='mb-3 mt-4'>Uwagi (opcjonalnie)</h3>
+      <h2 className='h3 mb-3 mt-4'>Uwagi (opcjonalnie)</h2>
 
       <Row className='mb-3'>
         <Col md={12}>
-          <Form.Group>
+          <LabeledGroup>
             <Form.Label>Uwagi do rachunku</Form.Label>
             <Form.Control
               as='textarea'
@@ -1467,7 +1472,7 @@ function NotesFields({ data, updateField }: FormSectionProps) {
               }}
               placeholder='Np. dodatkowe informacje dla zleceniodawcy'
             />
-          </Form.Group>
+          </LabeledGroup>
         </Col>
       </Row>
     </>

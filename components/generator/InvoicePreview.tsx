@@ -41,7 +41,7 @@ export default function InvoicePreview({
         <InvoiceSettlement data={data} taxParams={taxParams} />
         <PaymentDetails data={data} />
         <div className='mb-4'>
-          <h4 className='fw-bold mb-2'>Uwagi</h4>
+          <h3 className='h4 fw-bold mb-2'>Uwagi</h3>
           <p className='mb-0'>{data.notes ?? '–'}</p>
         </div>
 
@@ -98,7 +98,7 @@ function InvoiceDetails({
       {/* Dane stron */}
       <div className='row mb-4'>
         <div className='col-md-6'>
-          <h4 className='fw-bold mb-2'>Zleceniodawca</h4>
+          <h3 className='h4 fw-bold mb-2'>Zleceniodawca</h3>
           <p className='mb-0'>{client.name}</p>
           <p className='mb-0'>{client.address}</p>
           {client.type === 'company' && client.nip && (
@@ -110,7 +110,7 @@ function InvoiceDetails({
         </div>
 
         <div className='col-md-6'>
-          <h4 className='fw-bold mb-2'>Zleceniobiorca</h4>
+          <h3 className='h4 fw-bold mb-2'>Zleceniobiorca</h3>
           <p className='mb-0'>{contractor.name}</p>
           <p className='mb-0'>{contractor.address}</p>
           <p className='mb-0'>PESEL: {contractor.pesel}</p>
@@ -120,7 +120,7 @@ function InvoiceDetails({
 
       {/* Dane umowy */}
       <div className='mb-4'>
-        <h4 className='fw-bold mb-2'>Dane umowy</h4>
+        <h3 className='h4 fw-bold mb-2'>Dane umowy</h3>
         {contract.number ? (
           <p className='mb-0'>Numer umowy: {contract.number}</p>
         ) : null}
@@ -135,7 +135,7 @@ function InvoiceDetails({
 
       {/* Wynagrodzenie */}
       <div className='mb-4'>
-        <h4 className='fw-bold mb-2'>Wynagrodzenie</h4>
+        <h3 className='h4 fw-bold mb-2'>Wynagrodzenie</h3>
         <p className='mb-0'>
           Kwota brutto: {formatCurrency(remuneration.gross)}
         </p>
@@ -150,7 +150,7 @@ function InvoiceDetails({
 
       {data.timesheet && data.timesheet.length > 0 && (
         <div className='mb-4'>
-          <h4 className='fw-bold mb-2'>Wykaz godzin</h4>
+          <h3 className='h4 fw-bold mb-2'>Wykaz godzin</h3>
           <Table size='sm' bordered>
             <thead>
               <tr>
@@ -190,7 +190,7 @@ function InvoiceDetails({
 function PaymentSummary({ data }: Pick<InvoicePreviewProps, 'data'>) {
   return (
     <div className='mb-4'>
-      <h4 className='fw-bold mb-2'>Forma wypłaty</h4>
+      <h3 className='h4 fw-bold mb-2'>Forma wypłaty</h3>
       {data.payment.method === 'CASH' ? (
         <p className='mb-0'>Gotówka</p>
       ) : data.payment.method === 'TRANSFER' &&
@@ -227,7 +227,7 @@ function InvoiceSettlement({
     <>
       {/* Rozliczenie */}
       <div className='mb-4'>
-        <h4 className='fw-bold mb-2'>Rozliczenie</h4>
+        <h3 className='h4 fw-bold mb-2'>Rozliczenie</h3>
         <Table striped borderless size='sm'>
           <tbody>
             <tr>
@@ -366,7 +366,7 @@ function InvoiceSettlement({
 function PaymentDetails({ data }: Pick<InvoicePreviewProps, 'data'>) {
   return (
     <div className='mb-4'>
-      <h4 className='fw-bold mb-2'>Forma wypłaty</h4>
+      <h3 className='h4 fw-bold mb-2'>Forma wypłaty</h3>
       {data.payment.method === 'CASH' ? (
         <p className='mb-0'>Gotówka</p>
       ) : data.payment.method === 'TRANSFER' &&

@@ -3,9 +3,13 @@ import { DAY_TYPE_LABELS, sumTimesheetHours } from '@/lib/invoice/timesheet';
 import { getSiteDisplayUrl } from '@/lib/siteUrl';
 import { numberToWords } from '@/lib/toWords';
 import type { InvoiceData } from '@/types/invoice';
+import notoSansLatinItalic from '@fontsource/noto-sans/files/noto-sans-latin-400-italic.woff';
 import notoSansLatin from '@fontsource/noto-sans/files/noto-sans-latin-400-normal.woff';
+import notoSansLatinBoldItalic from '@fontsource/noto-sans/files/noto-sans-latin-700-italic.woff';
 import notoSansLatinBold from '@fontsource/noto-sans/files/noto-sans-latin-700-normal.woff';
+import notoSansLatinExtItalic from '@fontsource/noto-sans/files/noto-sans-latin-ext-400-italic.woff';
 import notoSansLatinExt from '@fontsource/noto-sans/files/noto-sans-latin-ext-400-normal.woff';
+import notoSansLatinExtBoldItalic from '@fontsource/noto-sans/files/noto-sans-latin-ext-700-italic.woff';
 import notoSansLatinExtBold from '@fontsource/noto-sans/files/noto-sans-latin-ext-700-normal.woff';
 import {
   Document,
@@ -36,6 +40,30 @@ Font.register({
   family: 'Noto Sans Latin Ext',
   src: notoSansLatinExtBold,
   fontWeight: 700,
+});
+Font.register({
+  family: 'Noto Sans Latin',
+  src: notoSansLatinItalic,
+  fontWeight: 400,
+  fontStyle: 'italic',
+});
+Font.register({
+  family: 'Noto Sans Latin',
+  src: notoSansLatinBoldItalic,
+  fontWeight: 700,
+  fontStyle: 'italic',
+});
+Font.register({
+  family: 'Noto Sans Latin Ext',
+  src: notoSansLatinExtItalic,
+  fontWeight: 400,
+  fontStyle: 'italic',
+});
+Font.register({
+  family: 'Noto Sans Latin Ext',
+  src: notoSansLatinExtBoldItalic,
+  fontWeight: 700,
+  fontStyle: 'italic',
 });
 
 const latinExtRanges = [

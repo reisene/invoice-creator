@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.2](https://github.com-reisene/reisene/invoice-creator/compare/0.10.1...0.10.2) (2026-11-13)
+
+### Bug Fixes
+
+- **invoice:** add italic font styles for improved document presentation ([8b15fa5](https://github.com-reisene/reisene/invoice-creator/commit/8b15fa5c45dd6ffe4f78d81932bc27304268f1f7))
+- **invoice:** refactor form group components for improved accessibility and consistency ([1f03d19](https://github.com-reisene/reisene/invoice-creator/commit/1f03d196cf27722803c245db9385d0d0f02ad571))
+
 ## [0.10.1](https://github.com-reisene/reisene/invoice-creator/compare/0.10.0...0.10.1) (2026-11-13)
 
 ### Bug Fixes

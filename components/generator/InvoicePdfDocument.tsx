@@ -78,41 +78,53 @@ function Text({
     return <ReactPdfText style={style} render={render} fixed={fixed} />;
   }
 
-  const children = Children.map(textChildren, (child) => {
-    if (typeof child !== 'string') return child;
+  return (
+    <ReactPdfText style={style}>
+      {Children.map(textChildren, (child, index) =>
+        typeof child === 'string' ? (
+          <FontSegments key={index} text={child} />
+        ) : (
+          child
+        ),
+      )}
+    </ReactPdfText>
+  );
+}
 
-    const segments: { text: string; isLatinExt: boolean }[] = [];
-    for (const character of child) {
-      const codePoint = character.codePointAt(0);
-      const isLatinExt =
-        codePoint !== undefined &&
-        latinExtRanges.some(
-          ([start, end]) => codePoint >= start && codePoint <= end,
-        );
-      const previousSegment = segments.at(-1);
+function FontSegments({ text }: { text: string }) {
+  const segments: { text: string; isLatinExt: boolean }[] = [];
+  for (const character of text) {
+    const codePoint = character.codePointAt(0);
+    const isLatinExt =
+      codePoint !== undefined &&
+      latinExtRanges.some(
+        ([start, end]) => codePoint >= start && codePoint <= end,
+      );
+    const previousSegment = segments.at(-1);
 
-      if (previousSegment?.isLatinExt === isLatinExt) {
-        previousSegment.text += character;
-      } else {
-        segments.push({ text: character, isLatinExt });
-      }
+    if (previousSegment?.isLatinExt === isLatinExt) {
+      previousSegment.text += character;
+    } else {
+      segments.push({ text: character, isLatinExt });
     }
+  }
 
-    return segments.map((segment, index) => (
-      <ReactPdfText
-        key={`${index}-${segment.text}`}
-        style={{
-          fontFamily: segment.isLatinExt
-            ? 'Noto Sans Latin Ext'
-            : 'Noto Sans Latin',
-        }}
-      >
-        {segment.text}
-      </ReactPdfText>
-    ));
-  });
-
-  return <ReactPdfText style={style}>{children}</ReactPdfText>;
+  return (
+    <>
+      {segments.map((segment, index) => (
+        <ReactPdfText
+          key={`${index}-${segment.text}`}
+          style={{
+            fontFamily: segment.isLatinExt
+              ? 'Noto Sans Latin Ext'
+              : 'Noto Sans Latin',
+          }}
+        >
+          {segment.text}
+        </ReactPdfText>
+      ))}
+    </>
+  );
 }
 
 const styles = StyleSheet.create({

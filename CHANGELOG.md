@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.10.0](https://github.com-reisene/reisene/invoice-creator/compare/0.9.0...0.10.0) (2026-11-13)
+
+### Features
+
+- **invoice:** refactor PDF document rendering for improved text segmentation ([a9bf812](https://github.com-reisene/reisene/invoice-creator/commit/a9bf812be5096579e7774398503b4a508a1de109))
+- **setup:** add Codacy configuration and update .gitignore for improved linting ([b5b27e1](https://github.com-reisene/reisene/invoice-creator/commit/b5b27e186ae979a969376b0a0556a28fe98e80d2))
+- **timesheet:** implement timesheet functionality with validation and PDF support ([5bb7b12](https://github.com-reisene/reisene/invoice-creator/commit/5bb7b121ed1310afa80b9469ad214e3b1055ec53))
+
 ## [0.9.0](https://github.com-reisene/reisene/invoice-creator/compare/0.8.1...0.9.0) (2026-11-12)
 
 ### Features

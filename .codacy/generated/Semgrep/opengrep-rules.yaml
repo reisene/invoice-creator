@@ -1,0 +1,3463 @@
+rules:
+  - id: dockerfile.security.dockerd-socket-mount.dockerfile-dockerd-socket-mount
+    message: The Dockerfile(image) mounts docker.sock to the container which may
+      allow an attacker already inside of the container to escape container and
+      execute arbitrary commands on the host machine.
+    languages:
+      - dockerfile
+      - yaml
+    severity: ERROR
+    metadata:
+      cwe:
+        - "CWE-862: Missing Authorization"
+        - "CWE-269: Improper Privilege Management"
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: HIGH
+      subcategory:
+        - audit
+      technology:
+        - dockerfile
+      category: security
+      references:
+        - https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html
+        - https://redfoxsec.com/blog/insecure-volume-mounts-in-docker/
+        - https://blog.quarkslab.com/why-is-exposing-the-docker-socket-a-really-bad-idea.html
+    pattern-either:
+      - patterns:
+          - pattern: VOLUME $X
+          - metavariable-regex:
+              metavariable: $X
+              regex: /var/run/docker.sock
+      - patterns:
+          - pattern-regex: '- "/var/run/docker.sock:.*"'
+          - pattern-inside: |
+              volumes:
+                ...
+  - id: generic.secrets.security.detected-onfido-live-api-token.detected-onfido-live-api-token
+    pattern-regex: (?:api_live(?:_[a-zA-Z]{2})?\.[a-zA-Z0-9-_]{11}\.[-_a-zA-Z0-9]{32})
+    languages:
+      - regex
+    message: Onfido live API Token detected
+    severity: ERROR
+    metadata:
+      cwe:
+        - "CWE-798: Use of Hard-coded Credentials"
+      category: security
+      technology:
+        - secrets
+        - onfido
+      confidence: HIGH
+      references:
+        - https://documentation.onfido.com/api/latest/#api-tokens
+      subcategory:
+        - audit
+      likelihood: HIGH
+      impact: HIGH
+  - id: generic.secrets.security.detected-stripe-restricted-api-key.detected-stripe-restricted-api-key
+    pattern-regex: rk_live_[0-9a-zA-Z]{24}
+    languages:
+      - regex
+    message: Stripe Restricted API Key detected
+    severity: ERROR
+    metadata:
+      cwe:
+        - "CWE-798: Use of Hard-coded Credentials"
+      source-rule-url: https://github.com/dxa4481/truffleHogRegexes/blob/master/truffleHogRegexes/regexes.json
+      category: security
+      technology:
+        - secrets
+        - stripe
+      confidence: MEDIUM
+      owasp:
+        - A07:2021 - Identification and Authentication Failures
+      references:
+        - https://owasp.org/Top10/A07_2021-Identification_and_Authentication_Failures
+      cwe2022-top25: true
+      cwe2021-top25: true
+      subcategory:
+        - audit
+      likelihood: LOW
+      impact: LOW
+  - id: generic.secrets.security.detected-username-and-password-in-uri.detected-username-and-password-in-uri
+    patterns:
+      - pattern: $PROTOCOL://$...USERNAME:$...PASSWORD@$END
+      - metavariable-regex:
+          metavariable: $...USERNAME
+          regex: \A({?)([A-Za-z])([A-Za-z0-9_-]){5,31}(}?)\Z
+      - metavariable-regex:
+          metavariable: $...PASSWORD
+          regex: (?!.*[\s])(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]){6,32}
+      - metavariable-regex:
+          metavariable: $PROTOCOL
+          regex: (.*http.*)|(.*sql.*)|(.*ftp.*)|(.*smtp.*)
+    languages:
+      - generic
+    message: Username and password in URI detected
+    severity: ERROR
+    metadata:
+      owasp:
+        - A07:2021 - Identification and Authentication Failures
+      cwe:
+        - "CWE-798: Use of Hard-coded Credentials"
+      references:
+        - https://github.com/grab/secret-scanner/blob/master/scanner/signatures/pattern.go
+      category: security
+      technology:
+        - secrets
+      confidence: MEDIUM
+      license: Commons Clause License Condition v1.0[LGPL-2.1-only]
+      cwe2022-top25: true
+      cwe2021-top25: true
+      subcategory:
+        - vuln
+      likelihood: MEDIUM
+      impact: MEDIUM
+  - id: generic.secrets.security.google-maps-apikeyleak.google-maps-apikeyleak
+    patterns:
+      - pattern-regex: ^(AIza[0-9A-Za-z_-]{35}(?!\S))$
+    message: Detects potential Google Maps API keys in code
+    languages:
+      - generic
+    severity: WARNING
+    metadata:
+      description: Detects potential Google Maps API keys in code
+      severity: MEDIUM
+      category: security
+      confidence: MEDIUM
+      impact: HIGH
+      likelihood: MEDIUM
+      subcategory:
+        - audit
+      owasp:
+        - A3:2017 Sensitive Data Exposure
+      references:
+        - https://ozguralp.medium.com/unauthorized-google-maps-api-key-usage-cases-and-why-you-need-to-care-1ccb28bf21e
+      cwe:
+        - "CWE-538: Insertion of Sensitive Information into
+          Externally-Accessible File or Directory"
+      technology:
+        - Google Maps
+  - id: javascript.argon2.security.unsafe-argon2-config.unsafe-argon2-config
+    message: Prefer Argon2id where possible. Per RFC9016, section 4 IETF recommends
+      selecting Argon2id unless you can guarantee an adversary has no direct
+      access to the computing environment.
+    metadata:
+      references:
+        - https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+        - https://eprint.iacr.org/2016/759.pdf
+        - https://www.cs.tau.ac.il/~tromer/papers/cache-joc-20090619.pdf
+        - https://datatracker.ietf.org/doc/html/rfc9106#section-4
+      category: security
+      cwe:
+        - "CWE-916: Use of Password Hash With Insufficient Computational Effort"
+      technology:
+        - argon2
+        - cryptography
+      owasp:
+        - A02:2021 - Cryptographic Failures
+      subcategory:
+        - vuln
+      impact: LOW
+      likelihood: HIGH
+      confidence: MEDIUM
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    mode: taint
+    pattern-sources:
+      - patterns:
+          - pattern-inside: |
+              $ARGON = require('argon2');
+              ...
+          - pattern: |
+              {type: ...}
+    pattern-sinks:
+      - patterns:
+          - pattern: |
+              $Y
+          - pattern-inside: |
+              $ARGON.hash(...,$Y)
+    pattern-sanitizers:
+      - patterns:
+          - pattern: |
+              {type: $ARGON.argon2id}
+              ...
+  - id: javascript.browser.security.open-redirect.js-open-redirect
+    message: The application accepts potentially user-controlled input `$PROP` which
+      can control the location of the current window context. This can lead two
+      types of vulnerabilities open-redirection and Cross-Site-Scripting (XSS)
+      with JavaScript URIs. It is recommended to validate user-controllable
+      input before allowing it to control the redirection.
+    options:
+      interfile: true
+    metadata:
+      interfile: true
+      cwe:
+        - "CWE-601: URL Redirection to Untrusted Site ('Open Redirect')"
+      owasp:
+        - A01:2021 - Broken Access Control
+      asvs:
+        section: V5 Validation, Sanitization and Encoding
+        control_id: 5.5.1 Insecue Redirect
+        control_url: https://github.com/OWASP/ASVS/blob/master/4.0/en/0x13-V5-Validation-Sanitization-Encoding.md#v51-input-validation
+        version: "4"
+      category: security
+      confidence: HIGH
+      references:
+        - https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html
+      technology:
+        - browser
+      license: Commons Clause License Condition v1.0[LGPL-2.1-only]
+      subcategory:
+        - vuln
+      likelihood: HIGH
+      impact: MEDIUM
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    mode: taint
+    pattern-sources:
+      - patterns:
+          - pattern-either:
+              - pattern-inside: >
+                  $PROP = new URLSearchParams($WINDOW. ...
+                  .location.search).get('...')
+
+                  ...
+              - pattern-inside: |
+                  $PROP = new URLSearchParams(location.search).get('...')
+                  ...
+              - pattern-inside: >
+                  $PROP = new URLSearchParams($WINDOW. ...
+                  .location.hash.substring(1)).get('...')
+
+                  ...
+              - pattern-inside: >
+                  $PROP = new
+                  URLSearchParams(location.hash.substring(1)).get('...')
+
+                  ...
+          - pattern: $PROP
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  $PROPS = new URLSearchParams($WINDOW. ... .location.search)
+                  ...
+              - pattern-inside: |
+                  $PROPS = new URLSearchParams(location.search)
+                  ...
+              - pattern-inside: >
+                  $PROPS = new URLSearchParams($WINDOW. ...
+                  .location.hash.substring(1))
+
+                  ...
+              - pattern-inside: |
+                  $PROPS = new URLSearchParams(location.hash.substring(1))
+                  ...
+          - pattern: $PROPS.get('...')
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  $PROPS = new URL($WINDOW. ... .location.href)
+                  ...
+              - pattern-inside: |
+                  $PROPS = new URL(location.href)
+                  ...
+          - pattern: $PROPS.searchParams.get('...')
+      - patterns:
+          - pattern-either:
+              - pattern-inside: >
+                  $PROPS = new URL($WINDOW. ...
+                  .location.href).searchParams.get('...')
+
+                  ...
+              - pattern-inside: |
+                  $PROPS = new URL(location.href).searchParams.get('...')
+                  ...
+          - pattern: $PROPS
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: location.href = $SINK
+              - pattern: $THIS. ... .location.href = $SINK
+              - pattern: location.replace($SINK)
+              - pattern: $THIS. ... .location.replace($SINK)
+              - pattern: location = $SINK
+              - pattern: $WINDOW. ... .location = $SINK
+          - focus-metavariable: $SINK
+          - metavariable-pattern:
+              patterns:
+                - pattern-not: |
+                    "..." + $VALUE
+                - pattern-not: |
+                    `...${$VALUE}`
+              metavariable: $SINK
+  - id: javascript.browser.security.raw-html-concat.raw-html-concat
+    message: User controlled data in a HTML string may result in XSS
+    metadata:
+      cwe:
+        - "CWE-79: Improper Neutralization of Input During Web Page Generation
+          ('Cross-site Scripting')"
+      owasp:
+        - A07:2017 - Cross-Site Scripting (XSS)
+        - A03:2021 - Injection
+      references:
+        - https://owasp.org/www-community/attacks/xss/
+      category: security
+      technology:
+        - browser
+      license: Commons Clause License Condition v1.0[LGPL-2.1-only]
+      cwe2022-top25: true
+      cwe2021-top25: true
+      subcategory:
+        - vuln
+      likelihood: MEDIUM
+      impact: MEDIUM
+      confidence: MEDIUM
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    mode: taint
+    pattern-sources:
+      - patterns:
+          - pattern-either:
+              - pattern: location.href
+              - pattern: location.hash
+              - pattern: location.search
+              - pattern: $WINDOW. ... .location.href
+              - pattern: $WINDOW. ... .location.hash
+              - pattern: $WINDOW. ... .location.search
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - patterns:
+                  - pattern: $STRING + $EXPR
+                  - pattern-not: $STRING + "..."
+                  - metavariable-pattern:
+                      patterns:
+                        - pattern: <$TAG ...
+                        - pattern-not: <$TAG ...>...</$TAG>...
+                      metavariable: $STRING
+                      language: generic
+              - patterns:
+                  - pattern: $EXPR + $STRING
+                  - pattern-not: '"..." + $STRING'
+                  - metavariable-pattern:
+                      patterns:
+                        - pattern: ... </$TAG
+                      metavariable: $STRING
+                      language: generic
+              - patterns:
+                  - pattern: "[..., $STRING, ...].join(...)"
+                  - metavariable-pattern:
+                      patterns:
+                        - pattern: <$TAG ...
+                      metavariable: $STRING
+                      language: generic
+              - patterns:
+                  - pattern: "[..., $STRING, ...].join(...)"
+                  - metavariable-pattern:
+                      patterns:
+                        - pattern: ... </$TAG
+                      metavariable: $STRING
+                      language: generic
+              - patterns:
+                  - pattern: $VAR += $STRING
+                  - metavariable-pattern:
+                      patterns:
+                        - pattern: <$TAG ...
+                      metavariable: $STRING
+                      language: generic
+              - patterns:
+                  - pattern: $VAR += $STRING
+                  - metavariable-pattern:
+                      patterns:
+                        - pattern: ... </$TAG
+                      metavariable: $STRING
+                      language: generic
+    pattern-sanitizers:
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  import $S from "underscore.string"
+                  ...
+              - pattern-inside: |
+                  import * as $S from "underscore.string"
+                  ...
+              - pattern-inside: |
+                  import $S from "underscore.string"
+                  ...
+              - pattern-inside: |
+                  $S = require("underscore.string")
+                  ...
+          - pattern-either:
+              - pattern: $S.escapeHTML(...)
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  import $S from "dompurify"
+                  ...
+              - pattern-inside: |
+                  import { ..., $S,... } from "dompurify"
+                  ...
+              - pattern-inside: |
+                  import * as $S from "dompurify"
+                  ...
+              - pattern-inside: |
+                  $S = require("dompurify")
+                  ...
+              - pattern-inside: |
+                  import $S from "isomorphic-dompurify"
+                  ...
+              - pattern-inside: |
+                  import * as $S from "isomorphic-dompurify"
+                  ...
+              - pattern-inside: |
+                  $S = require("isomorphic-dompurify")
+                  ...
+          - pattern-either:
+              - patterns:
+                  - pattern-inside: |
+                      $VALUE = $S(...)
+                      ...
+                  - pattern: $VALUE.sanitize(...)
+              - patterns:
+                  - pattern-inside: |
+                      $VALUE = $S.sanitize
+                      ...
+                  - pattern: $S(...)
+              - pattern: $S.sanitize(...)
+              - pattern: $S(...)
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  import $S from 'xss';
+                  ...
+              - pattern-inside: |
+                  import * as $S from 'xss';
+                  ...
+              - pattern-inside: |
+                  $S = require("xss")
+                  ...
+          - pattern: $S(...)
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  import $S from 'sanitize-html';
+                  ...
+              - pattern-inside: |
+                  import * as $S from "sanitize-html";
+                  ...
+              - pattern-inside: |
+                  $S = require("sanitize-html")
+                  ...
+          - pattern: $S(...)
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  $S = new Remarkable()
+                  ...
+          - pattern: $S.render(...)
+  - id: javascript.browser.security.wildcard-postmessage-configuration.wildcard-postmessage-configuration
+    message: The target origin of the window.postMessage() API is set to "*". This
+      could allow for information disclosure due to the possibility of any
+      origin allowed to receive the message.
+    metadata:
+      owasp:
+        - A08:2021 - Software and Data Integrity Failures
+      cwe:
+        - "CWE-345: Insufficient Verification of Data Authenticity"
+      category: security
+      technology:
+        - browser
+      subcategory:
+        - audit
+      likelihood: HIGH
+      impact: MEDIUM
+      confidence: MEDIUM
+      references:
+        - https://owasp.org/Top10/A08_2021-Software_and_Data_Integrity_Failures
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    pattern: $OBJECT.postMessage(...,'*')
+  - id: javascript.chrome-remote-interface.security.audit.chrome-remote-interface-compilescript-injection.chrome-remote-interface-compilescript-injection
+    message: If unverified user data can reach the `compileScript` method it can
+      result in Server-Side Request Forgery vulnerabilities
+    metadata:
+      owasp:
+        - A10:2021 - Server-Side Request Forgery (SSRF)
+      cwe:
+        - "CWE-918: Server-Side Request Forgery (SSRF)"
+      category: security
+      technology:
+        - chrome-remote-interface
+      references:
+        - https://github.com/cyrus-and/chrome-remote-interface
+      cwe2022-top25: true
+      cwe2021-top25: true
+      subcategory:
+        - vuln
+      likelihood: MEDIUM
+      impact: MEDIUM
+      confidence: MEDIUM
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    mode: taint
+    pattern-sources:
+      - patterns:
+          - pattern-inside: function ... (..., $ARG,...) {...}
+          - focus-metavariable: $ARG
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  require('chrome-remote-interface');
+                  ...
+              - pattern-inside: |
+                  import 'chrome-remote-interface';
+                  ...
+          - pattern-either:
+              - pattern: |
+                  $RUNTIME.compileScript({expression: $SINK},...)
+              - pattern: |
+                  $RUNTIME.evaluate({expression: $SINK},...)
+              - pattern: |
+                  $PAGE.navigate({url: $SINK},...)
+              - pattern: |
+                  $RUNTIME.printToPDF({headerTemplate: $SINK},...)
+              - pattern: |
+                  $RUNTIME.printToPDF({footerTemplate: $SINK},...)
+              - pattern: |
+                  $PAGE.setDocumentContent({html: $SINK},...)
+          - focus-metavariable: $SINK
+  - id: javascript.deno.security.audit.deno-dangerous-run.deno-dangerous-run
+    message: Detected non-literal calls to Deno.run(). This could lead to a command
+      injection vulnerability.
+    metadata:
+      cwe:
+        - "CWE-78: Improper Neutralization of Special Elements used in an OS
+          Command ('OS Command Injection')"
+      owasp:
+        - A01:2017 - Injection
+        - A03:2021 - Injection
+      category: security
+      technology:
+        - deno
+      references:
+        - https://deno.land/manual/examples/subprocess#simple-example
+      cwe2022-top25: true
+      cwe2021-top25: true
+      subcategory:
+        - vuln
+      likelihood: LOW
+      impact: HIGH
+      confidence: MEDIUM
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    mode: taint
+    pattern-sources:
+      - patterns:
+          - pattern-inside: function ... (..., $ARG,...) {...}
+          - focus-metavariable: $ARG
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: |
+                  Deno.run({cmd: [$INPUT,...]},...)
+              - pattern: >
+                  Deno.run({cmd:
+                  ["=~/(sh|bash|ksh|csh|tcsh|zsh)/","-c",$INPUT,...]},...)
+              - patterns:
+                  - pattern: |
+                      Deno.run({cmd: [$CMD,"-c",$INPUT,...]},...)
+                  - pattern-inside: |
+                      $CMD = "=~/(sh|bash|ksh|csh|tcsh|zsh)/"
+                      ...
+          - focus-metavariable: $INPUT
+  - id: javascript.intercom.security.audit.intercom-settings-user-identifier-without-user-hash.intercom-settings-user-identifier-without-user-hash
+    patterns:
+      - pattern-either:
+          - pattern: |
+              window.intercomSettings = {..., email: $EMAIL, ...};
+          - pattern: |
+              window.intercomSettings = {..., user_id: $USER_ID, ...};
+          - pattern: |
+              Intercom('boot', {..., email: $EMAIL, ...});
+          - pattern: |
+              Intercom('boot', {..., user_id: $USER_ID, ...});
+          - pattern: |
+              $VAR = {..., email: $EMAIL, ...};
+              ...
+              Intercom('boot', $VAR);
+          - pattern: |
+              $VAR = {..., user_id: $EMAIL, ...};
+              ...
+              Intercom('boot', $VAR);
+      - pattern-not: |
+          window.intercomSettings = {..., user_hash: $USER_HASH, ...};
+      - pattern-not: |
+          Intercom('boot', {..., user_hash: $USER_HASH, ...});
+      - pattern-not: |
+          $VAR = {..., user_hash: $USER_HASH, ...};
+          ...
+          Intercom('boot', $VAR);
+    message: Found an initialization of the Intercom Messenger that identifies a
+      User, but does not specify a `user_hash`. This configuration allows users
+      to impersonate one another. See the Intercom Identity Verification docs
+      for more context
+      https://www.intercom.com/help/en/articles/183-set-up-identity-verification-for-web-and-mobile
+    languages:
+      - js
+    severity: WARNING
+    metadata:
+      category: security
+      subcategory:
+        - audit
+      cwe:
+        - "CWE-287: Improper Authentication"
+      confidence: MEDIUM
+      likelihood: MEDIUM
+      impact: HIGH
+      technology:
+        - intercom
+      references:
+        - https://www.intercom.com/help/en/articles/183-set-up-identity-verification-for-web-and-mobile
+  - id: javascript.jose.security.jwt-hardcode.hardcoded-jwt-secret
+    message: A hard-coded credential was detected. It is not recommended to store
+      credentials in source-code, as this risks secrets being leaked and used by
+      either an internal or external malicious adversary. It is recommended to
+      use environment variables to securely provide credentials or retrieve
+      credentials from a secure vault or HSM (Hardware Security Module).
+    metadata:
+      interfile: true
+      cwe:
+        - "CWE-798: Use of Hard-coded Credentials"
+      references:
+        - https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html
+      owasp:
+        - A07:2021 - Identification and Authentication Failures
+      asvs:
+        section: "V3: Session Management Verification Requirements"
+        control_id: 3.5.2 Static API keys or secret
+        control_url: https://github.com/OWASP/ASVS/blob/master/4.0/en/0x12-V3-Session-management.md#v35-token-based-session-management
+        version: "4"
+      category: security
+      technology:
+        - jose
+        - jwt
+        - secrets
+      cwe2022-top25: true
+      cwe2021-top25: true
+      subcategory:
+        - vuln
+      likelihood: HIGH
+      impact: MEDIUM
+      confidence: HIGH
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    patterns:
+      - pattern-inside: |
+          $JOSE = require("jose");
+          ...
+      - pattern-either:
+          - pattern-inside: |
+              var {JWT} = $JOSE;
+              ...
+          - pattern-inside: |
+              var {JWK, JWT} = $JOSE;
+              ...
+          - pattern-inside: |
+              const {JWT} = $JOSE;
+              ...
+          - pattern-inside: |
+              const {JWK, JWT} = $JOSE;
+              ...
+          - pattern-inside: |
+              let {JWT} = $JOSE;
+              ...
+          - pattern-inside: |
+              let {JWK, JWT} = $JOSE;
+              ...
+      - pattern-either:
+          - pattern: |
+              JWT.verify($P, "...", ...);
+          - pattern: |
+              JWT.sign($P, "...", ...);
+          - pattern: |
+              JWT.verify($P, JWK.asKey("..."), ...);
+          - pattern: |
+              $JWT.sign($P, JWK.asKey("..."), ...);
+    options:
+      symbolic_propagation: true
+      interfile: true
+  - id: javascript.jose.security.jwt-none-alg.jwt-none-alg
+    message: Detected use of the 'none' algorithm in a JWT token. The 'none'
+      algorithm assumes the integrity of the token has already been verified.
+      This would allow a malicious actor to forge a JWT token that will
+      automatically be verified. Do not explicitly use the 'none' algorithm.
+      Instead, use an algorithm such as 'HS256'.
+    metadata:
+      cwe:
+        - "CWE-327: Use of a Broken or Risky Cryptographic Algorithm"
+      owasp:
+        - A03:2017 - Sensitive Data Exposure
+        - A02:2021 - Cryptographic Failures
+      source-rule-url: https://semgrep.dev/blog/2020/hardcoded-secrets-unverified-tokens-and-other-common-jwt-mistakes/
+      asvs:
+        section: "V3: Session Management Verification Requirements"
+        control_id: 3.5.3 Insecue Stateless Session Tokens
+        control_url: https://github.com/OWASP/ASVS/blob/master/4.0/en/0x12-V3-Session-management.md#v35-token-based-session-management
+        version: "4"
+      category: security
+      technology:
+        - jose
+        - jwt
+      subcategory:
+        - vuln
+      likelihood: HIGH
+      impact: MEDIUM
+      confidence: HIGH
+      references:
+        - https://owasp.org/Top10/A02_2021-Cryptographic_Failures
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    pattern-either:
+      - pattern: |
+          var $JOSE = require("jose");
+          ...
+          var { JWK, JWT } = $JOSE;
+          ...
+          var $T = JWT.verify($P, JWK.None,...);
+      - pattern: |
+          var $JOSE = require("jose");
+          ...
+          var { JWK, JWT } = $JOSE;
+          ...
+          $T = JWT.verify($P, JWK.None,...);
+      - pattern: |
+          var $JOSE = require("jose");
+          ...
+          var { JWK, JWT } = $JOSE;
+          ...
+          JWT.verify($P, JWK.None,...);
+  - id: javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret
+    message: A hard-coded credential was detected. It is not recommended to store
+      credentials in source-code, as this risks secrets being leaked and used by
+      either an internal or external malicious adversary. It is recommended to
+      use environment variables to securely provide credentials or retrieve
+      credentials from a secure vault or HSM (Hardware Security Module).
+    metadata:
+      cwe:
+        - "CWE-798: Use of Hard-coded Credentials"
+      references:
+        - https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html
+      owasp:
+        - A07:2021 - Identification and Authentication Failures
+      asvs:
+        section: "V3: Session Management Verification Requirements"
+        control_id: 3.5.2 Static API keys or secret
+        control_url: https://github.com/OWASP/ASVS/blob/master/4.0/en/0x12-V3-Session-management.md#v35-token-based-session-management
+        version: "4"
+      category: security
+      technology:
+        - jwt
+        - javascript
+        - secrets
+      cwe2022-top25: true
+      cwe2021-top25: true
+      subcategory:
+        - vuln
+      likelihood: HIGH
+      impact: MEDIUM
+      confidence: HIGH
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    mode: taint
+    pattern-sources:
+      - patterns:
+          - pattern: |
+              $X = '...'
+          - pattern: |
+              $X = '$Y'
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  $JWT.sign($DATA,"...",...);
+              - pattern-inside: |
+                  $JWT.verify($DATA,"...",...);
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  $JWT = require("jsonwebtoken")
+                  ...
+              - pattern-inside: |
+                  import $JWT from "jsonwebtoken"
+                  ...
+              - pattern-inside: |
+                  import * as $JWT from "jsonwebtoken"
+                  ...
+              - pattern-inside: |
+                  import {...,$JWT,...} from "jsonwebtoken"
+                  ...
+          - pattern-either:
+              - pattern-inside: |
+                  $JWT.sign($DATA,$VALUE,...);
+              - pattern-inside: |
+                  $JWT.verify($DATA,$VALUE,...);
+          - focus-metavariable: $VALUE
+  - id: javascript.jsonwebtoken.security.jwt-none-alg.jwt-none-alg
+    message: Detected use of the 'none' algorithm in a JWT token. The 'none'
+      algorithm assumes the integrity of the token has already been verified.
+      This would allow a malicious actor to forge a JWT token that will
+      automatically be verified. Do not explicitly use the 'none' algorithm.
+      Instead, use an algorithm such as 'HS256'.
+    metadata:
+      cwe:
+        - "CWE-327: Use of a Broken or Risky Cryptographic Algorithm"
+      owasp:
+        - A03:2017 - Sensitive Data Exposure
+        - A02:2021 - Cryptographic Failures
+      source-rule-url: https://semgrep.dev/blog/2020/hardcoded-secrets-unverified-tokens-and-other-common-jwt-mistakes/
+      asvs:
+        section: "V3: Session Management Verification Requirements"
+        control_id: 3.5.3 Insecue Stateless Session Tokens
+        control_url: https://github.com/OWASP/ASVS/blob/master/4.0/en/0x12-V3-Session-management.md#v35-token-based-session-management
+        version: "4"
+      category: security
+      technology:
+        - jwt
+      subcategory:
+        - vuln
+      likelihood: MEDIUM
+      impact: HIGH
+      confidence: MEDIUM
+      references:
+        - https://owasp.org/Top10/A02_2021-Cryptographic_Failures
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    patterns:
+      - pattern-inside: |
+          $JWT = require("jsonwebtoken");
+          ...
+      - pattern: $JWT.verify($P, $X, {algorithms:[...,'none',...]},...)
+  - id: javascript.jwt-simple.security.jwt-simple-noverify.jwt-simple-noverify
+    message: Detected the decoding of a JWT token without a verify step. JWT tokens
+      must be verified before use, otherwise the token's integrity is unknown.
+      This means a malicious actor could forge a JWT token with any claims. Set
+      'verify' to `true` before using the token.
+    severity: ERROR
+    metadata:
+      owasp:
+        - A05:2021 - Security Misconfiguration
+        - A07:2021 - Identification and Authentication Failures
+      cwe:
+        - "CWE-287: Improper Authentication"
+        - "CWE-345: Insufficient Verification of Data Authenticity"
+        - "CWE-347: Improper Verification of Cryptographic Signature"
+      category: security
+      subcategory:
+        - vuln
+      technology:
+        - jwt-simple
+        - jwt
+      confidence: HIGH
+      likelihood: MEDIUM
+      impact: HIGH
+      references:
+        - https://www.npmjs.com/package/jwt-simple
+        - https://cwe.mitre.org/data/definitions/287
+        - https://cwe.mitre.org/data/definitions/345
+        - https://cwe.mitre.org/data/definitions/347
+    languages:
+      - javascript
+      - typescript
+    patterns:
+      - pattern-inside: |
+          $JWT = require('jwt-simple');
+          ...
+      - pattern: $JWT.decode($TOKEN, $SECRET, $NOVERIFY, ...)
+      - metavariable-pattern:
+          metavariable: $NOVERIFY
+          patterns:
+            - pattern-either:
+                - pattern: |
+                    true
+                - pattern: |
+                    "..."
+  - id: javascript.lang.security.audit.code-string-concat.code-string-concat
+    message: Found data from an Express or Next web request flowing to `eval`. If
+      this data is user-controllable this can lead to execution of arbitrary
+      system commands in the context of your application process. Avoid `eval`
+      whenever possible.
+    options:
+      interfile: true
+    metadata:
+      interfile: true
+      confidence: HIGH
+      owasp:
+        - A03:2021 - Injection
+      cwe:
+        - "CWE-95: Improper Neutralization of Directives in Dynamically
+          Evaluated Code ('Eval Injection')"
+      references:
+        - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval
+        - https://nodejs.org/api/child_process.html#child_processexeccommand-options-callback
+        - https://www.stackhawk.com/blog/nodejs-command-injection-examples-and-prevention/
+        - https://ckarande.gitbooks.io/owasp-nodegoat-tutorial/content/tutorial/a1_-_server_side_js_injection.html
+      category: security
+      technology:
+        - node.js
+        - Express
+        - Next.js
+      subcategory:
+        - vuln
+      likelihood: MEDIUM
+      impact: MEDIUM
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    mode: taint
+    pattern-sources:
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern-inside: function ... ($REQ, $RES) {...}
+                  - pattern-inside: function ... ($REQ, $RES, $NEXT) {...}
+                  - patterns:
+                      - pattern-either:
+                          - pattern-inside: $APP.$METHOD(..., function $FUNC($REQ, $RES) {...})
+                          - pattern-inside: $APP.$METHOD(..., function $FUNC($REQ, $RES, $NEXT) {...})
+                      - metavariable-regex:
+                          metavariable: $METHOD
+                          regex: ^(get|post|put|head|delete|options)$
+              - pattern-either:
+                  - pattern: $REQ.query
+                  - pattern: $REQ.body
+                  - pattern: $REQ.params
+                  - pattern: $REQ.cookies
+                  - pattern: $REQ.headers
+          - patterns:
+              - pattern-either:
+                  - pattern-inside: |
+                      import { ...,$IMPORT,... } from 'next/router'
+                      ...
+                  - pattern-inside: |
+                      import $IMPORT from 'next/router';
+                      ...
+              - pattern-either:
+                  - patterns:
+                      - pattern-inside: |
+                          $ROUTER = $IMPORT()
+                          ...
+                      - pattern-either:
+                          - pattern-inside: |
+                              const { ...,$PROPS,... } = $ROUTER.query
+                              ...
+                          - pattern-inside: |
+                              var { ...,$PROPS,... } = $ROUTER.query
+                              ...
+                          - pattern-inside: |
+                              let { ...,$PROPS,... } = $ROUTER.query
+                              ...
+                      - focus-metavariable: $PROPS
+                  - patterns:
+                      - pattern-inside: |
+                          $ROUTER = $IMPORT()
+                          ...
+                      - pattern: |
+                          $ROUTER.query.$VALUE
+                  - patterns:
+                      - pattern: $IMPORT().query.$VALUE
+    pattern-sinks:
+      - patterns:
+          - pattern: |
+              eval(...)
+  - id: javascript.lang.security.audit.sqli.node-knex-sqli.node-knex-sqli
+    message: "Detected SQL statement that is tainted by `$REQ` object. This could
+      lead to SQL injection if the variable is user-controlled and not properly
+      sanitized. In order to prevent SQL injection, it is recommended to use
+      parameterized queries or prepared statements. An example of parameterized
+      queries like so: `knex.raw('SELECT $1 from table', [userinput])` can help
+      prevent SQLi."
+    metadata:
+      confidence: MEDIUM
+      references:
+        - https://knexjs.org/#Builder-fromRaw
+        - https://knexjs.org/#Builder-whereRaw
+        - https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+      category: security
+      owasp:
+        - A01:2017 - Injection
+        - A03:2021 - Injection
+      cwe:
+        - "CWE-89: Improper Neutralization of Special Elements used in an SQL
+          Command ('SQL Injection')"
+      technology:
+        - express
+        - nodejs
+        - knex
+      license: Commons Clause License Condition v1.0[LGPL-2.1-only]
+      cwe2022-top25: true
+      cwe2021-top25: true
+      subcategory:
+        - vuln
+      likelihood: HIGH
+      impact: MEDIUM
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    mode: taint
+    pattern-sources:
+      - patterns:
+          - pattern-either:
+              - pattern-inside: function ... ($REQ, $RES) {...}
+              - pattern-inside: function ... ($REQ, $RES, $NEXT) {...}
+              - patterns:
+                  - pattern-either:
+                      - pattern-inside: $APP.$METHOD(..., function $FUNC($REQ, $RES) {...})
+                      - pattern-inside: $APP.$METHOD(..., function $FUNC($REQ, $RES, $NEXT) {...})
+                  - metavariable-regex:
+                      metavariable: $METHOD
+                      regex: ^(get|post|put|head|delete|options)
+          - pattern-either:
+              - pattern: $REQ.query
+              - pattern: $REQ.body
+              - pattern: $REQ.params
+              - pattern: $REQ.cookies
+              - pattern: $REQ.headers
+              - pattern: $REQ.files.$ANYTHING.data.toString('utf8')
+              - pattern: $REQ.files.$ANYTHING['data'].toString('utf8')
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  ({ $REQ }: Request,$RES: Response, $NEXT: NextFunction) =>
+                  {...}
+              - pattern-inside: |
+                  ({ $REQ }: Request,$RES: Response) => {...}
+          - focus-metavariable: $REQ
+          - pattern-either:
+              - pattern: params
+              - pattern: query
+              - pattern: cookies
+              - pattern: headers
+              - pattern: body
+              - pattern: files.$ANYTHING.data.toString('utf8')
+              - pattern: files.$ANYTHING['data'].toString('utf8')
+    pattern-sinks:
+      - patterns:
+          - focus-metavariable: $QUERY
+          - pattern-either:
+              - pattern-inside: $KNEX.fromRaw($QUERY, ...)
+              - pattern-inside: $KNEX.whereRaw($QUERY, ...)
+              - pattern-inside: $KNEX.raw($QUERY, ...)
+          - pattern-either:
+              - pattern-inside: |
+                  require('knex')
+                  ...
+              - pattern-inside: |
+                  import 'knex'
+                  ...
+    pattern-sanitizers:
+      - patterns:
+          - pattern: parseInt(...)
+  - id: javascript.lang.security.detect-eval-with-expression.detect-eval-with-expression
+    message: Detected use of dynamic execution of JavaScript which may come from
+      user-input, which can lead to Cross-Site-Scripting (XSS). Where possible
+      avoid including user-input in functions which dynamically execute
+      user-input.
+    metadata:
+      cwe:
+        - "CWE-95: Improper Neutralization of Directives in Dynamically
+          Evaluated Code ('Eval Injection')"
+      owasp:
+        - A03:2021 - Injection
+      source-rule-url: https://github.com/nodesecurity/eslint-plugin-security/blob/master/rules/detect-eval-with-expression.js
+      references:
+        - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval#never_use_eval!
+      category: security
+      technology:
+        - javascript
+      subcategory:
+        - vuln
+      likelihood: MEDIUM
+      impact: MEDIUM
+      confidence: MEDIUM
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    mode: taint
+    pattern-sources:
+      - patterns:
+          - pattern-either:
+              - pattern-inside: >
+                  $PROP = new URLSearchParams($WINDOW. ...
+                  .location.search).get('...')
+                    ...
+              - pattern-inside: |
+                  $PROP = new URLSearchParams(location.search).get('...')
+                    ...
+              - pattern-inside: >
+                  $PROP = new URLSearchParams($WINDOW. ...
+                  .location.hash.substring(1)).get('...')
+                    ...
+              - pattern-inside: >
+                  $PROP = new
+                  URLSearchParams(location.hash.substring(1)).get('...')
+                    ...
+          - focus-metavariable: $PROP
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  $PROPS = new URLSearchParams($WINDOW. ... .location.search)
+                    ...
+              - pattern-inside: |
+                  $PROPS = new URLSearchParams(location.search)
+                    ...
+              - pattern-inside: |
+                  $PROPS = new
+                  URLSearchParams($WINDOW. ... .location.hash.substring(1))
+                    ...
+              - pattern-inside: |
+                  $PROPS = new URLSearchParams(location.hash.substring(1))
+                  ...
+          - pattern: $PROPS.get('...')
+          - focus-metavariable: $PROPS
+      - patterns:
+          - pattern-either:
+              - pattern: location.href
+              - pattern: location.hash
+              - pattern: location.search
+              - pattern: $WINDOW. ... .location.href
+              - pattern: $WINDOW. ... .location.hash
+              - pattern: $WINDOW. ... .location.search
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: eval(<... $SINK ...>)
+              - pattern: window.eval(<... $SINK ...>)
+              - pattern: new Function(<... $SINK ...>)
+              - pattern: new Function(<... $SINK ...>)(...)
+              - pattern: setTimeout(<... $SINK ...>,...)
+              - pattern: setInterval(<... $SINK ...>,...)
+          - focus-metavariable: $SINK
+    pattern-sanitizers:
+      - patterns:
+          - pattern-either:
+              - pattern: location.href = $FUNC(...)
+              - pattern: location.hash = $FUNC(...)
+              - pattern: location.search = $FUNC(...)
+              - pattern: $WINDOW. ... .location.href = $FUNC(...)
+              - pattern: $WINDOW. ... .location.hash = $FUNC(...)
+              - pattern: $WINDOW. ... .location.search = $FUNC(...)
+  - id: javascript.node-crypto.security.aead-no-final.aead-no-final
+    message: The 'final' call of a Decipher object checks the authentication tag in
+      a mode for authenticated encryption. Failing to call 'final' will
+      invalidate all integrity guarantees of the released ciphertext.
+    metadata:
+      cwe:
+        - "CWE-310: CWE CATEGORY: Cryptographic Issues"
+      owasp:
+        - A02:2021 - Cryptographic Failures
+      category: security
+      subcategory:
+        - vuln
+      technology:
+        - node-crypto
+      likelihood: HIGH
+      impact: MEDIUM
+      confidence: HIGH
+      references:
+        - https://nodejs.org/api/crypto.html#deciphersetauthtagbuffer-encoding
+        - https://owasp.org/Top10/A02_2021-Cryptographic_Failures/
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    patterns:
+      - pattern: |
+          $DECIPHER = $CRYPTO.createDecipheriv('$ALGO', ...)
+          ...
+          $DECIPHER.update(...)
+      - pattern-not-inside: |
+          $DECIPHER = $CRYPTO.createDecipheriv('$ALGO', ...)
+          ...
+          $DECIPHER.final(...)
+      - metavariable-regex:
+          metavariable: $ALGO
+          regex: .*(-gcm|-ccm|-ocb|chacha20-poly1305)$
+  - id: javascript.node-crypto.security.create-de-cipher-no-iv.create-de-cipher-no-iv
+    message: The deprecated functions 'createCipher' and 'createDecipher' generate
+      the same initialization vector every time. For counter modes such as CTR,
+      GCM, or CCM this leads to break of both confidentiality and integrity, if
+      the key is used more than once. Other modes are still affected in their
+      strength, though they're not completely broken. Use 'createCipheriv' or
+      'createDecipheriv' instead.
+    metadata:
+      cwe:
+        - "CWE-1204: Generation of Weak Initialization Vector (IV)"
+      category: security
+      subcategory:
+        - vuln
+      technology:
+        - node-crypto
+      likelihood: HIGH
+      impact: MEDIUM
+      confidence: HIGH
+      references:
+        - https://nodejs.org/api/crypto.html#cryptocreatecipheralgorithm-password-options
+        - https://nodejs.org/api/crypto.html#cryptocreatedecipheralgorithm-password-options
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $CRYPTO.createCipher(...)
+          - pattern: |
+              $CRYPTO.createDecipher(...)
+  - id: javascript.node-crypto.security.gcm-no-tag-length.gcm-no-tag-length
+    message: The call to 'createDecipheriv' with the Galois Counter Mode (GCM) mode
+      of operation is missing an expected authentication tag length. If the
+      expected authentication tag length is not specified or otherwise checked,
+      the application might be tricked into verifying a shorter-than-expected
+      authentication tag. This can be abused by an attacker to spoof ciphertexts
+      or recover the implicit authentication key of GCM, allowing arbitrary
+      forgeries.
+    metadata:
+      cwe:
+        - "CWE-310: CWE CATEGORY: Cryptographic Issues"
+      owasp:
+        - A02:2021 - Cryptographic Failures
+      category: security
+      subcategory:
+        - vuln
+      technology:
+        - node-crypto
+      likelihood: MEDIUM
+      impact: MEDIUM
+      confidence: MEDIUM
+      references:
+        - https://www.securesystems.de/blog/forging_ciphertexts_under_Galois_Counter_Mode_for_the_Node_js_crypto_module/
+        - https://nodejs.org/api/crypto.html#cryptocreatedecipherivalgorithm-key-iv-options
+        - https://owasp.org/Top10/A02_2021-Cryptographic_Failures/
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    patterns:
+      - pattern: |
+          $CRYPTO.createDecipheriv('$ALGO', $KEY, $IV)
+      - metavariable-regex:
+          metavariable: $ALGO
+          regex: .*(-gcm)$
+  - id: javascript.passport-jwt.security.passport-hardcode.hardcoded-passport-secret
+    message: A hard-coded credential was detected. It is not recommended to store
+      credentials in source-code, as this risks secrets being leaked and used by
+      either an internal or external malicious adversary. It is recommended to
+      use environment variables to securely provide credentials or retrieve
+      credentials from a secure vault or HSM (Hardware Security Module).
+    metadata:
+      cwe:
+        - "CWE-798: Use of Hard-coded Credentials"
+      references:
+        - https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html
+      owasp:
+        - A07:2021 - Identification and Authentication Failures
+      asvs:
+        section: "V3: Session Management Verification Requirements"
+        control_id: 3.5.2 Static API keys or secret
+        control_url: https://github.com/OWASP/ASVS/blob/master/4.0/en/0x12-V3-Session-management.md#v35-token-based-session-management
+        version: "4"
+      category: security
+      technology:
+        - jwt
+        - nodejs
+        - secrets
+      cwe2022-top25: true
+      cwe2021-top25: true
+      subcategory:
+        - vuln
+      likelihood: HIGH
+      impact: MEDIUM
+      confidence: HIGH
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    mode: taint
+    pattern-sources:
+      - by-side-effect: true
+        patterns:
+          - pattern-either:
+              - pattern: |
+                  {..., clientSecret: "...", ...}
+              - pattern: |
+                  {..., secretOrKey: "...", ...}
+              - pattern: |
+                  {..., consumerSecret: "...", ...}
+              - patterns:
+                  - pattern-inside: |
+                      $OBJ = {}
+                      ...
+                  - pattern-either:
+                      - pattern: |
+                          $OBJ.clientSecret = "..."
+                      - pattern: |
+                          $OBJ.secretOrKey = "..."
+                      - pattern: |
+                          $OBJ.consumerSecret = "..."
+                  - pattern: $OBJ
+              - patterns:
+                  - pattern-inside: |
+                      $SECRET = '...'
+                      ...
+                  - pattern-either:
+                      - pattern: |
+                          {..., clientSecret: $SECRET, ...}
+                      - pattern: |
+                          {..., secretOrKey: $SECRET, ...}
+                      - pattern: |
+                          {..., consumerSecret: $SECRET, ...}
+              - patterns:
+                  - pattern-inside: |
+                      $SECRET = '...'
+                      ...
+                  - pattern-either:
+                      - pattern-inside: |
+                          $VALUE = {..., clientSecret: $SECRET, ...}
+                          ...
+                      - pattern-inside: |
+                          $VALUE = {..., secretOrKey: $SECRET, ...}
+                          ...
+                      - pattern-inside: |
+                          $VALUE = {..., consumerSecret: $SECRET, ...}
+                          ...
+                  - pattern: $VALUE
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  $F = require("$I").Strategy
+                  ...
+              - pattern-inside: |
+                  $F = require("$I")
+                  ...
+              - pattern-inside: |
+                  import { $STRAT as $F } from '$I'
+                  ...
+              - pattern-inside: |
+                  import $F from '$I'
+                  ...
+          - metavariable-regex:
+              metavariable: $I
+              regex: (passport-.*)
+          - pattern-inside: |
+              new $F($VALUE,...)
+          - focus-metavariable: $VALUE
+  - id: javascript.react.correctness.hooks.set-state-no-op.calling-set-state-on-current-state
+    patterns:
+      - pattern: $Y($X);
+      - pattern-inside: |
+          const [$X, $Y] = useState(...);
+          ...
+    message: Calling setState on the current state is always a no-op. Did you mean
+      to change the state like $Y(!$X) instead?
+    languages:
+      - javascript
+    severity: ERROR
+    metadata:
+      technology:
+        - react
+      category: correctness
+  - id: json.aws.security.public-s3-bucket.public-s3-bucket
+    languages:
+      - json
+    message: Detected public S3 bucket. This policy allows anyone to have some kind
+      of access to the bucket. The exact level of access and types of actions
+      allowed will depend on the configuration of bucket policy and ACLs. Please
+      review the bucket configuration to make sure they are set with intended
+      values.
+    metadata:
+      category: security
+      cwe:
+        - "CWE-264: CWE CATEGORY: Permissions, Privileges, and Access Controls"
+      license: Commons Clause License Condition v1.0[LGPL-2.1-only]
+      owasp:
+        - A01:2021 - Broken Access Control
+      references:
+        - https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html
+      technology:
+        - aws
+      subcategory:
+        - vuln
+      likelihood: LOW
+      impact: HIGH
+      confidence: MEDIUM
+    patterns:
+      - pattern-inside: |
+          $BUCKETNAME: {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+            ...,
+            },
+            ...,
+          }
+      - pattern-either:
+          - pattern: |
+              "PublicAccessBlockConfiguration": {
+                   ...,
+                   "RestrictPublicBuckets": false,
+                   ...,
+                 },
+          - pattern: |
+              "PublicAccessBlockConfiguration": {
+                   ...,
+                   "IgnorePublicAcls": false,
+                   ...,
+                 },
+          - pattern: |
+              "PublicAccessBlockConfiguration": {
+                   ...,
+                   "BlockPublicAcls": false,
+                   ...,
+                 },
+          - pattern: |
+              "PublicAccessBlockConfiguration": {
+                   ...,
+                   "BlockPublicPolicy": false,
+                   ...,
+                 },
+    severity: WARNING
+  - id: json.aws.security.public-s3-policy-statement.public-s3-policy-statement
+    pattern: |
+      {
+        "Effect": "Allow",
+        "Principal": "*",
+        "Resource": [
+          ..., "=~/arn:aws:s3.*/", ...
+        ],
+        ...
+      }
+    message: Detected public S3 bucket policy. This policy allows anyone to access
+      certain properties of or items in the bucket. Do not do this unless you
+      will never have sensitive data inside the bucket.
+    metadata:
+      owasp:
+        - A01:2021 - Broken Access Control
+      cwe:
+        - "CWE-264: CWE CATEGORY: Permissions, Privileges, and Access Controls"
+      references:
+        - https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteAccessPermissionsReqd.html
+      category: security
+      technology:
+        - aws
+      subcategory:
+        - vuln
+      likelihood: LOW
+      impact: HIGH
+      confidence: MEDIUM
+    severity: WARNING
+    languages:
+      - json
+  - id: json.aws.security.wildcard-assume-role.wildcard-assume-role
+    patterns:
+      - pattern-inside: |
+          "Statement": [...]
+      - pattern-inside: |
+          {..., "Effect": "Allow", ..., "Action": "sts:AssumeRole", ...}
+      - pattern: |
+          "Principal": {..., "AWS": "*", ...}
+    message: "Detected wildcard access granted to sts:AssumeRole. This means anyone
+      with your AWS account ID and the name of the role can assume the role.
+      Instead, limit to a specific identity in your account, like this:
+      `arn:aws:iam::<account_id>:root`."
+    metadata:
+      cwe:
+        - "CWE-250: Execution with Unnecessary Privileges"
+      category: security
+      technology:
+        - aws
+      references:
+        - https://rhinosecuritylabs.com/aws/assume-worst-aws-assume-role-enumeration/
+      owasp:
+        - A06:2017 - Security Misconfiguration
+        - A05:2021 - Security Misconfiguration
+      subcategory:
+        - vuln
+      likelihood: HIGH
+      impact: HIGH
+      confidence: MEDIUM
+    languages:
+      - json
+    severity: ERROR
+  - id: problem-based-packs.insecure-transport.js-node.bypass-tls-verification.bypass-tls-verification
+    message: Checks for setting the environment variable
+      NODE_TLS_REJECT_UNAUTHORIZED to 0, which disables TLS verification. This
+      should only be used for debugging purposes. Setting the option
+      rejectUnauthorized to false bypasses verification against the list of
+      trusted CAs, which also leads to insecure transport. These options lead to
+      vulnerability to MTM attacks, and should not be used.
+    severity: WARNING
+    metadata:
+      likelihood: MEDIUM
+      impact: MEDIUM
+      confidence: MEDIUM
+      category: security
+      cwe: "CWE-319: Cleartext Transmission of Sensitive Information"
+      owasp: A03:2017 - Sensitive Data Exposure
+      references:
+        - https://nodejs.org/api/https.html#https_https_request_options_callback
+        - https://stackoverflow.com/questions/20433287/node-js-request-cert-has-expired#answer-29397100
+      subcategory:
+        - vuln
+      technology:
+        - node.js
+      vulnerability: Insecure Transport
+    languages:
+      - javascript
+      - typescript
+    pattern-either:
+      - pattern: |
+          process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+      - pattern: |
+          {rejectUnauthorized:false}
+  - id: problem-based-packs.insecure-transport.js-node.disallow-old-tls-versions1.disallow-old-tls-versions1
+    message: Detects direct creations of $HTTPS servers that don't disallow SSL v2,
+      SSL v3, and TLS v1. These protocols are deprecated due to POODLE, man in
+      the middle attacks, and other vulnerabilities.
+    severity: WARNING
+    metadata:
+      likelihood: MEDIUM
+      impact: MEDIUM
+      confidence: MEDIUM
+      category: security
+      cwe: "CWE-319: Cleartext Transmission of Sensitive Information"
+      owasp: A03:2017 - Sensitive Data Exposure
+      references:
+        - https://us-cert.cisa.gov/ncas/alerts/TA14-290A
+        - https://stackoverflow.com/questions/40434934/how-to-disable-the-ssl-3-0-and-tls-1-0-in-nodejs
+        - https://nodejs.org/api/https.html#https_https_createserver_options_requestlistener
+      subcategory:
+        - vuln
+      technology:
+        - node.js
+      vulnerability: Insecure Transport
+    languages:
+      - javascript
+      - typescript
+    patterns:
+      - pattern-either:
+          - pattern-inside: |
+              $CONST = require('crypto');
+              ...
+          - pattern-inside: |
+              $CONST = require('constants');
+              ...
+      - pattern-inside: |
+          $HTTPS = require('https');
+          ...
+      - pattern: |
+          $HTTPS.createServer(...).$FUNC(...);
+      - pattern-not: >
+          $HTTPS.createServer({secureOptions: $CONST.SSL_OP_NO_TLSv1 |
+          $CONST.SSL_OP_NO_SSLv3 | $CONST.SSL_OP_NO_SSLv2 }, ...).$FUNC(...);
+      - pattern-not: >
+          $HTTPS.createServer({secureOptions: $CONST.SSL_OP_NO_TLSv1 |
+          $CONST.SSL_OP_NO_SSLv2 |$CONST.SSL_OP_NO_SSLv3 }, ...).$FUNC(...);
+      - pattern-not: >
+          $HTTPS.createServer({secureOptions: $CONST.SSL_OP_NO_SSLv2
+          |$CONST.SSL_OP_NO_SSLv3 |$CONST.SSL_OP_NO_TLSv1 }, ...).$FUNC(...);
+      - pattern-not: >
+          $HTTPS.createServer({secureOptions: $CONST.SSL_OP_NO_SSLv2
+          |$CONST.SSL_OP_NO_TLSv1 | $CONST.SSL_OP_NO_SSLv3}, ...).$FUNC(...);
+      - pattern-not: >
+          $HTTPS.createServer({secureOptions:$CONST.SSL_OP_NO_SSLv3 |
+          $CONST.SSL_OP_NO_SSLv2 |$CONST.SSL_OP_NO_TLSv1}, ...).$FUNC(...);
+      - pattern-not: >
+          $HTTPS.createServer({secureOptions:$CONST.SSL_OP_NO_SSLv3 |
+          $CONST.SSL_OP_NO_TLSv1| $CONST.SSL_OP_NO_SSLv2}, ...).$FUNC(...);
+  - id: problem-based-packs.insecure-transport.js-node.disallow-old-tls-versions2.disallow-old-tls-versions2
+    message: Detects creations of $HTTPS servers from option objects that don't
+      disallow SSL v2, SSL v3, and TLS v1. These protocols are deprecated due to
+      POODLE, man in the middle attacks, and other vulnerabilities.
+    severity: WARNING
+    metadata:
+      likelihood: MEDIUM
+      impact: MEDIUM
+      confidence: MEDIUM
+      category: security
+      cwe: "CWE-319: Cleartext Transmission of Sensitive Information"
+      owasp: A03:2017 - Sensitive Data Exposure
+      references:
+        - https://us-cert.cisa.gov/ncas/alerts/TA14-290A
+        - https://stackoverflow.com/questions/40434934/how-to-disable-the-ssl-3-0-and-tls-1-0-in-nodejs
+        - https://nodejs.org/api/https.html#https_https_createserver_options_requestlistener
+      subcategory:
+        - vuln
+      technology:
+        - node.js
+      vulnerability: Insecure Transport
+    languages:
+      - javascript
+      - typescript
+    patterns:
+      - pattern-either:
+          - pattern-inside: |
+              $CONST = require('crypto');
+              ...
+          - pattern-inside: |
+              $CONST = require('constants');
+              ...
+      - pattern-inside: |
+          $HTTPS = require('https');
+          ...
+      - pattern: |
+          $OPTIONS = {};
+          ...
+          $HTTPS.createServer($OPTIONS, ...);
+      - pattern-not: >
+          $OPTIONS = {secureOptions: $CONST.SSL_OP_NO_TLSv1 |
+          $CONST.SSL_OP_NO_SSLv3 | $CONST.SSL_OP_NO_SSLv2};
+
+          ...
+
+          $HTTPS.createServer($OPTIONS, ...);
+      - pattern-not: >
+          $OPTIONS = {secureOptions: $CONST.SSL_OP_NO_TLSv1 |
+          $CONST.SSL_OP_NO_SSLv2 | $CONST.SSL_OP_NO_SSLv3};
+
+          ...
+
+          $HTTPS.createServer($OPTIONS, ...);
+      - pattern-not: >
+          $OPTIONS = {secureOptions: $CONST.SSL_OP_NO_SSLv2  |
+          $CONST.SSL_OP_NO_TLSv1 | $CONST.SSL_OP_NO_SSLv3};
+
+          ...
+
+          $HTTPS.createServer($OPTIONS, ...);
+      - pattern-not: >
+          $OPTIONS = {secureOptions: $CONST.SSL_OP_NO_SSLv2 |
+          $CONST.SSL_OP_NO_SSLv3 | $CONST.SSL_OP_NO_TLSv1};
+
+          ...
+
+          $HTTPS.createServer($OPTIONS, ...);
+      - pattern-not: >
+          $OPTIONS = {secureOptions: $CONST.SSL_OP_NO_SSLv3 |
+          $CONST.SSL_OP_NO_SSLv2 | $CONST.SSL_OP_NO_TLSv1};
+
+          ...
+
+          $HTTPS.createServer($OPTIONS, ...);
+      - pattern-not: >
+          $OPTIONS = {secureOptions: $CONST.SSL_OP_NO_SSLv3 |
+          $CONST.SSL_OP_NO_TLSv1 | $CONST.SSL_OP_NO_SSLv2};
+
+          ...
+
+          $HTTPS.createServer($OPTIONS, ...);
+  - id: problem-based-packs.insecure-transport.js-node.ftp-request.ftp-request
+    message: 'Checks for lack of usage of the "secure: true" option when sending ftp
+      requests through the nodejs ftp module. This leads to unencrypted traffic
+      being sent to the ftp server. There are other options such as "implicit"
+      that still does not encrypt all traffic. ftp is the most utilized npm ftp
+      module.'
+    severity: WARNING
+    metadata:
+      likelihood: MEDIUM
+      impact: MEDIUM
+      confidence: MEDIUM
+      category: security
+      cwe: "CWE-319: Cleartext Transmission of Sensitive Information"
+      owasp: A03:2017 - Sensitive Data Exposure
+      references:
+        - https://www.npmjs.com/package/ftp
+        - https://openbase.io/js/ftp
+      subcategory:
+        - vuln
+      technology:
+        - node.js
+      vulnerability: Insecure Transport
+    languages:
+      - javascript
+      - typescript
+    patterns:
+      - pattern-inside: |
+          $X = require('ftp');
+          ...
+          $C = new $X();
+          ...
+      - pattern-not-inside: |
+          $OPTIONS = {secure: true};
+          ...
+      - pattern: |
+          $C.connect($OPTIONS,...);
+      - pattern-not: |
+          $C.connect({...,secure: true});
+  - id: problem-based-packs.insecure-transport.js-node.http-request.http-request
+    message: Checks for requests sent to http:// URLs. This is dangerous as the
+      server is attempting to connect to a website that does not encrypt traffic
+      with TLS. Instead, only send requests to https:// URLs.
+    severity: WARNING
+    metadata:
+      likelihood: MEDIUM
+      impact: MEDIUM
+      confidence: MEDIUM
+      category: security
+      cwe: "CWE-319: Cleartext Transmission of Sensitive Information"
+      owasp: A03:2017 - Sensitive Data Exposure
+      references:
+        - https://nodejs.org/api/http.html#http_http_request_options_callback
+      subcategory:
+        - vuln
+      technology:
+        - node.js
+      vulnerability: Insecure Transport
+    languages:
+      - javascript
+    patterns:
+      - pattern-inside: |
+          $HTTP = require('http');
+          ...
+      - pattern-either:
+          - pattern: |
+              $HTTP.request("=~/http://.*/",...);
+          - pattern: |
+              $HTTP.get("=~/http://.*/", ...)
+          - pattern: |
+              $VAR = new URL("=~/http://.*/");
+              ...
+              $HTTP.request($VAR, ...);
+          - pattern: |
+              $VAR = {...,hostname: "..."};
+              ...
+              $HTTP.request(..., $VAR, ...);
+          - pattern: |
+              $HTTP.request(..., {...,hostname: "..."}, ...);
+      - pattern-not: |
+          $VAR = {...,protocol: "https"};
+          ...
+          $HTTP.request(..., $VAR, ...);
+      - pattern-not: |
+          $HTTP.request(..., {...,protocol: "https"}, ...);
+  - id: problem-based-packs.insecure-transport.js-node.rest-http-client-support.rest-http-client-support
+    message: Checks for requests to http (unencrypted) sites using some of node js's
+      most popular REST/HTTP libraries, including node-rest-client, axios, and
+      got.
+    severity: WARNING
+    metadata:
+      likelihood: MEDIUM
+      impact: MEDIUM
+      confidence: MEDIUM
+      category: security
+      cwe: "CWE-319: Cleartext Transmission of Sensitive Information"
+      owasp: A03:2017 - Sensitive Data Exposure
+      references:
+        - https://www.npmjs.com/package/axios
+        - https://www.npmjs.com/package/got
+        - https://www.npmjs.com/package/node-rest-client
+      subcategory:
+        - vuln
+      technology:
+        - node.js
+      vulnerability: Insecure Transport
+    languages:
+      - javascript
+    patterns:
+      - pattern-either:
+          - pattern-inside: |
+              $CLIENT = require('node-rest-client').Client;
+              ...
+              $C = new $CLIENT();
+              ...
+          - pattern-inside: |
+              $C = require('axios');
+              ...
+          - pattern-inside: |
+              $C = require('got');
+              ...
+      - pattern-either:
+          - pattern: |
+              $C.$REQ("=~/http://.*/", ...)
+          - pattern: |
+              $C("=~/http://.*/", ...)
+          - pattern: |
+              $C({...,url: "=~/http://.*/"})
+          - pattern: |
+              $C.$REQ({...,url: "=~/http://.*/"})
+  - id: problem-based-packs.insecure-transport.js-node.telnet-request.telnet-request
+    message: Checks for creation of telnet servers or attempts to connect through
+      telnet. This is insecure as the telnet protocol supports no encryption,
+      and data passes through unencrypted.
+    severity: WARNING
+    metadata:
+      likelihood: MEDIUM
+      impact: MEDIUM
+      confidence: MEDIUM
+      category: security
+      cwe: "CWE-319: Cleartext Transmission of Sensitive Information"
+      owasp: A03:2017 - Sensitive Data Exposure
+      references:
+        - https://www.npmjs.com/package/telnet
+        - https://www.npmjs.com/package/telnet-client
+      subcategory:
+        - vuln
+      technology:
+        - node.js
+      vulnerability: Insecure Transport
+    languages:
+      - javascript
+    patterns:
+      - pattern-either:
+          - pattern-inside: |
+              $TEL = require('telnet-client');
+              ...
+              $SERVER = new $TEL();
+              ...
+          - pattern-inside: |
+              $SERVER = require('telnet');
+              ...
+      - pattern-either:
+          - pattern: |
+              $SERVER.on(...)
+          - pattern: |
+              $SERVER.connect(...)
+          - pattern: |
+              $SERVER.createServer(...)
+  - id: typescript.react.best-practice.define-styled-components-on-module-level.define-styled-components-on-module-level
+    patterns:
+      - pattern-inside: |
+          import styled from 'styled-components';
+          ...
+      - pattern-either:
+          - pattern-inside: |
+              function $FUNC(...) {
+                ...
+              }
+          - pattern-inside: |
+              class $CLASS {
+                ...
+              }
+      - pattern-either:
+          - pattern: |
+              styled.$EL`...`;
+          - pattern: |
+              styled($EL)`...`;
+    message: By declaring a styled component inside the render method of a react
+      component, you are dynamically creating a new component on every render.
+      This means that React will have to discard and re-calculate that part of
+      the DOM subtree on each subsequent render, instead of just calculating the
+      difference of what changed between them. This leads to performance
+      bottlenecks and unpredictable behavior.
+    metadata:
+      references:
+        - https://styled-components.com/docs/faqs#why-should-i-avoid-declaring-styled-components-in-the-render-method
+      category: best-practice
+      technology:
+        - react
+    languages:
+      - typescript
+      - javascript
+    severity: WARNING
+  - id: typescript.react.best-practice.react-find-dom.react-find-dom
+    pattern-either:
+      - pattern: |
+          findDOMNode(...)
+      - pattern: |
+          $DOM.findDOMNode(...)
+    message: findDOMNode is an escape hatch used to access the underlying DOM node.
+      In most cases, use of this escape hatch is discouraged because it pierces
+      the component abstraction.
+    metadata:
+      references:
+        - https://react.dev/reference/react-dom/findDOMNode
+        - https://github.com/yannickcr/eslint-plugin-react/issues/678#issue-165177220
+      category: best-practice
+      technology:
+        - react
+    languages:
+      - typescript
+      - javascript
+    severity: WARNING
+  - id: typescript.react.best-practice.react-legacy-component.react-legacy-component
+    patterns:
+      - pattern: |
+          $METHOD(...) {
+            ...
+          }
+      - metavariable-regex:
+          metavariable: $METHOD
+          regex: componentWillMount|componentWillReceiveProps|componentWillUpdate
+    message: Legacy component lifecycle was detected - $METHOD.
+    languages:
+      - typescript
+      - javascript
+    severity: WARNING
+    metadata:
+      category: best-practice
+      technology:
+        - react
+  - id: typescript.react.best-practice.react-props-in-state.react-props-in-state
+    pattern-either:
+      - patterns:
+          - pattern-inside: |
+              class $CN extends React.Component {
+                ...
+              }
+          - pattern-either:
+              - pattern: |
+                  state = {$NAME: <... this.props.$PROP ...>}
+              - pattern: |
+                  this.state = {$NAME: <... this.props.$PROP ...>}
+          - metavariable-regex:
+              metavariable: $NAME
+              regex: ^(?!default|initial).*$
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  function $FN({$PROP},...) {
+                    ...
+                  }
+              - pattern-inside: |
+                  function $FN($PROP,...) {
+                    ...
+                  }
+          - pattern-either:
+              - pattern: useState(<... $PROP ...>)
+              - pattern: useState(<... $PROP.$KEY ...>)
+              - pattern: |
+                  useState(function $X(...) {
+                    ...
+                    <... $PROP ...>
+                    ...
+                  })
+              - pattern: |
+                  useState(function $X(...) {
+                    ...
+                    <... $PROP.$KEY ...>
+                    ...
+                  })
+          - metavariable-regex:
+              metavariable: $PROP
+              regex: ^(?!default|initial).*$
+    message: Copying a prop into state in React -- this is bad practice as all
+      updates to it are ignored. Instead, read props directly in your component
+      and avoid copying props into state.
+    metadata:
+      references:
+        - https://overreacted.io/writing-resilient-components/#principle-1-dont-stop-the-data-flow
+      category: best-practice
+      technology:
+        - react
+    languages:
+      - typescript
+      - javascript
+    severity: WARNING
+  - id: typescript.react.best-practice.react-props-spreading.react-props-spreading
+    patterns:
+      - pattern: <$X {...$PROPS} />
+      - focus-metavariable: $PROPS
+    message: It's best practice to explicitly pass props to an HTML component rather
+      than use the spread operator. The spread operator risks passing invalid
+      HTML props to an HTML element, which can cause console warnings or worse,
+      give malicious actors a way to inject unexpected attributes.
+    languages:
+      - typescript
+      - javascript
+    severity: WARNING
+    metadata:
+      source-rule-url: https://github.com/yannickcr/eslint-plugin-react/blob/master/docs/rules/jsx-props-no-spreading.md
+      references:
+        - https://github.com/yannickcr/eslint-plugin-react/blob/master/docs/rules/jsx-props-no-spreading.md
+      category: best-practice
+      technology:
+        - react
+      license: Commons Clause License Condition v1.0[LGPL-2.1-only]
+  - id: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml
+    message: Detection of dangerouslySetInnerHTML from non-constant definition. This
+      can inadvertently expose users to cross-site scripting (XSS) attacks if
+      this comes from user-provided input. If you have to use
+      dangerouslySetInnerHTML, consider using a sanitization library such as
+      DOMPurify to sanitize your HTML.
+    metadata:
+      cwe:
+        - "CWE-79: Improper Neutralization of Input During Web Page Generation
+          ('Cross-site Scripting')"
+      owasp:
+        - A07:2017 - Cross-Site Scripting (XSS)
+        - A03:2021 - Injection
+      references:
+        - https://react.dev/reference/react-dom/components/common#dangerously-setting-the-inner-html
+      category: security
+      confidence: MEDIUM
+      technology:
+        - react
+      license: Commons Clause License Condition v1.0[LGPL-2.1-only]
+      cwe2022-top25: true
+      cwe2021-top25: true
+      subcategory:
+        - vuln
+      likelihood: MEDIUM
+      impact: MEDIUM
+    languages:
+      - typescript
+      - javascript
+    severity: WARNING
+    mode: taint
+    pattern-sources:
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  function ...({..., $X, ...}) { ... }
+              - pattern-inside: |
+                  function ...(..., $X, ...) { ... }
+          - focus-metavariable: $X
+          - pattern-not-inside: |
+              $F. ... .$SANITIZEUNC(...)
+    pattern-sinks:
+      - patterns:
+          - focus-metavariable: $X
+          - pattern-either:
+              - pattern: |
+                  {...,dangerouslySetInnerHTML: {__html: $X},...}
+              - pattern: |
+                  <$Y ... dangerouslySetInnerHTML={{__html: $X}} />
+          - pattern-not: |
+              <$Y ... dangerouslySetInnerHTML={{__html: "..."}} />
+          - pattern-not: |
+              {...,dangerouslySetInnerHTML:{__html: "..."},...}
+          - metavariable-pattern:
+              patterns:
+                - pattern-not: |
+                    {...}
+              metavariable: $X
+          - pattern-not: |
+              <... {__html: "..."} ...>
+          - pattern-not: |
+              <... {__html: `...`} ...>
+    pattern-sanitizers:
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  import $S from "underscore.string"
+                  ...
+              - pattern-inside: |
+                  import * as $S from "underscore.string"
+                  ...
+              - pattern-inside: |
+                  import $S from "underscore.string"
+                  ...
+              - pattern-inside: |
+                  $S = require("underscore.string")
+                  ...
+          - pattern-either:
+              - pattern: $S.escapeHTML(...)
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  import $S from "dompurify"
+                  ...
+              - pattern-inside: |
+                  import { ..., $S,... } from "dompurify"
+                  ...
+              - pattern-inside: |
+                  import * as $S from "dompurify"
+                  ...
+              - pattern-inside: |
+                  $S = require("dompurify")
+                  ...
+              - pattern-inside: |
+                  import $S from "isomorphic-dompurify"
+                  ...
+              - pattern-inside: |
+                  import * as $S from "isomorphic-dompurify"
+                  ...
+              - pattern-inside: |
+                  $S = require("isomorphic-dompurify")
+                  ...
+          - pattern-either:
+              - patterns:
+                  - pattern-inside: |
+                      $VALUE = $S(...)
+                      ...
+                  - pattern: $VALUE.sanitize(...)
+              - patterns:
+                  - pattern-inside: |
+                      $VALUE = $S.sanitize
+                      ...
+                  - pattern: $S(...)
+              - pattern: $S.sanitize(...)
+              - pattern: $S(...)
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  import $S from 'xss';
+                  ...
+              - pattern-inside: |
+                  import * as $S from 'xss';
+                  ...
+              - pattern-inside: |
+                  $S = require("xss")
+                  ...
+          - pattern: $S(...)
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  import $S from 'sanitize-html';
+                  ...
+              - pattern-inside: |
+                  import * as $S from "sanitize-html";
+                  ...
+              - pattern-inside: |
+                  $S = require("sanitize-html")
+                  ...
+          - pattern: $S(...)
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  $S = new Remarkable()
+                  ...
+          - pattern: $S.render(...)
+  - id: typescript.react.security.audit.react-href-var.react-href-var
+    message: Detected a variable used in an anchor tag with the 'href' attribute. A
+      malicious actor may be able to input the 'javascript:' URI, which could
+      cause cross-site scripting (XSS). It is recommended to disallow
+      'javascript:' URIs within your application.
+    metadata:
+      cwe:
+        - "CWE-79: Improper Neutralization of Input During Web Page Generation
+          ('Cross-site Scripting')"
+      owasp:
+        - A07:2017 - Cross-Site Scripting (XSS)
+        - A03:2021 - Injection
+      references:
+        - https://reactjs.org/blog/2019/08/08/react-v16.9.0.html#deprecating-javascript-urls
+        - https://pragmaticwebsecurity.com/articles/spasecurity/react-xss-part1.html
+      category: security
+      confidence: LOW
+      technology:
+        - react
+      license: Commons Clause License Condition v1.0[LGPL-2.1-only]
+      cwe2022-top25: true
+      cwe2021-top25: true
+      subcategory:
+        - audit
+      likelihood: LOW
+      impact: MEDIUM
+    languages:
+      - typescript
+      - javascript
+    severity: WARNING
+    mode: taint
+    pattern-sources:
+      - label: TAINTED
+        patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  function ...({..., $X, ...}) { ... }
+              - pattern-inside: |
+                  function ...(..., $X, ...) { ... }
+          - focus-metavariable: $X
+          - pattern-either:
+              - pattern: $X.$Y
+              - pattern: $X[...]
+          - pattern-not-inside: |
+              $F. ... .$SANITIZEUNC(...)
+      - label: CONCAT
+        requires: TAINTED
+        patterns:
+          - pattern-either:
+              - pattern: |
+                  `...${$X}...`
+              - pattern: |
+                  $SANITIZE + <... $X ...>
+          - pattern-not: |
+              `${$X}...`
+          - pattern-not: |
+              $X + ...
+          - focus-metavariable: $X
+      - label: CLEAN
+        by-side-effect: true
+        patterns:
+          - pattern-either:
+              - pattern: $A($SOURCE)
+              - pattern: $SANITIZE. ... .$A($SOURCE)
+              - pattern: $A. ... .$SANITIZE($SOURCE)
+          - focus-metavariable: $SOURCE
+          - metavariable-regex:
+              metavariable: $A
+              regex: (?i)(.*valid|.*sanitiz)
+    pattern-sinks:
+      - requires: TAINTED and not CONCAT and not CLEAN
+        patterns:
+          - focus-metavariable: $X
+          - pattern-either:
+              - pattern: |
+                  <$EL href={$X} />
+              - pattern: |
+                  React.createElement($EL, {href: $X})
+              - pattern-inside: |
+                  $PARAMS = {href: $X};
+                  ...
+                  React.createElement($EL, $PARAMS);
+          - metavariable-pattern:
+              patterns:
+                - pattern-not-regex: (?i)(button)
+              metavariable: $EL
+  - id: typescript.react.security.audit.react-jwt-decoded-property.react-jwt-decoded-property
+    message: Property decoded from JWT token without verifying and cannot be
+      trustworthy.
+    metadata:
+      cwe:
+        - "CWE-922: Insecure Storage of Sensitive Information"
+      references:
+        - https://pragmaticwebsecurity.com/articles/oauthoidc/localstorage-xss.html
+      category: security
+      owasp:
+        - A01:2021 - Broken Access Control
+      technology:
+        - react
+      subcategory:
+        - audit
+      likelihood: LOW
+      impact: LOW
+      confidence: LOW
+    languages:
+      - typescript
+      - javascript
+    severity: INFO
+    patterns:
+      - pattern-inside: |
+          import jwt_decode from "jwt-decode";
+          ...
+      - pattern-inside: |
+          $DECODED = jwt_decode($TOKEN,...);
+          ...
+      - pattern: $DECODED.$PROPERTY
+  - id: typescript.react.security.audit.react-jwt-in-localstorage.react-jwt-in-localstorage
+    message: Storing JWT tokens in localStorage known to be a bad practice, consider
+      moving your tokens from localStorage to a HTTP cookie.
+    metadata:
+      cwe:
+        - "CWE-922: Insecure Storage of Sensitive Information"
+      references:
+        - https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies
+      category: security
+      owasp:
+        - A01:2021 - Broken Access Control
+      technology:
+        - react
+      subcategory:
+        - audit
+      likelihood: LOW
+      impact: LOW
+      confidence: LOW
+    languages:
+      - typescript
+      - javascript
+    severity: INFO
+    patterns:
+      - pattern-inside: |
+          import jwt_decode from "jwt-decode";
+          ...
+      - pattern-either:
+          - pattern: |
+              $DECODED = jwt_decode($TOKEN,...);
+              ...
+              localStorage.setItem($NAME, <... $TOKEN ...>);
+          - pattern: |
+              $DECODED = jwt_decode(...);
+              ...
+              localStorage.setItem($NAME, <... $DECODED ...>);
+  - id: typescript.react.security.audit.react-unsanitized-method.react-unsanitized-method
+    message: Detection of $HTML from non-constant definition. This can inadvertently
+      expose users to cross-site scripting (XSS) attacks if this comes from
+      user-provided input. If you have to use $HTML, consider using a
+      sanitization library such as DOMPurify to sanitize your HTML.
+    metadata:
+      cwe:
+        - "CWE-79: Improper Neutralization of Input During Web Page Generation
+          ('Cross-site Scripting')"
+      owasp:
+        - A07:2017 - Cross-Site Scripting (XSS)
+        - A03:2021 - Injection
+      references:
+        - https://developer.mozilla.org/en-US/docs/Web/API/Document/writeln
+        - https://developer.mozilla.org/en-US/docs/Web/API/Document/write
+        - https://developer.mozilla.org/en-US/docs/Web/API/Element/insertAdjacentHTML
+      category: security
+      confidence: MEDIUM
+      technology:
+        - react
+      license: Commons Clause License Condition v1.0[LGPL-2.1-only]
+      cwe2022-top25: true
+      cwe2021-top25: true
+      subcategory:
+        - vuln
+      likelihood: HIGH
+      impact: MEDIUM
+    languages:
+      - typescript
+      - javascript
+    severity: WARNING
+    mode: taint
+    pattern-sources:
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  function ...({..., $X, ...}) { ... }
+              - pattern-inside: |
+                  function ...(..., $X, ...) { ... }
+          - focus-metavariable: $X
+          - pattern-either:
+              - pattern: $X.$Y
+              - pattern: $X[...]
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: |
+                  this.window.document. ... .$HTML('...',$SINK)
+              - pattern: |
+                  window.document. ... .$HTML('...',$SINK)
+              - pattern: |
+                  document.$HTML($SINK)
+          - metavariable-regex:
+              metavariable: $HTML
+              regex: (writeln|write)
+          - focus-metavariable: $SINK
+      - patterns:
+          - pattern-either:
+              - pattern: |
+                  $PROP. ... .$HTML('...',$SINK)
+          - metavariable-regex:
+              metavariable: $HTML
+              regex: (insertAdjacentHTML)
+          - focus-metavariable: $SINK
+    pattern-sanitizers:
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  import $S from "underscore.string"
+                  ...
+              - pattern-inside: |
+                  import * as $S from "underscore.string"
+                  ...
+              - pattern-inside: |
+                  import $S from "underscore.string"
+                  ...
+              - pattern-inside: |
+                  $S = require("underscore.string")
+                  ...
+          - pattern-either:
+              - pattern: $S.escapeHTML(...)
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  import $S from "dompurify"
+                  ...
+              - pattern-inside: |
+                  import { ..., $S,... } from "dompurify"
+                  ...
+              - pattern-inside: |
+                  import * as $S from "dompurify"
+                  ...
+              - pattern-inside: |
+                  $S = require("dompurify")
+                  ...
+              - pattern-inside: |
+                  import $S from "isomorphic-dompurify"
+                  ...
+              - pattern-inside: |
+                  import * as $S from "isomorphic-dompurify"
+                  ...
+              - pattern-inside: |
+                  $S = require("isomorphic-dompurify")
+                  ...
+          - pattern-either:
+              - patterns:
+                  - pattern-inside: |
+                      $VALUE = $S(...)
+                      ...
+                  - pattern: $VALUE.sanitize(...)
+              - patterns:
+                  - pattern-inside: |
+                      $VALUE = $S.sanitize
+                      ...
+                  - pattern: $S(...)
+              - pattern: $S.sanitize(...)
+              - pattern: $S(...)
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  import $S from 'xss';
+                  ...
+              - pattern-inside: |
+                  import * as $S from 'xss';
+                  ...
+              - pattern-inside: |
+                  $S = require("xss")
+                  ...
+          - pattern: $S(...)
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  import $S from 'sanitize-html';
+                  ...
+              - pattern-inside: |
+                  import * as $S from "sanitize-html";
+                  ...
+              - pattern-inside: |
+                  $S = require("sanitize-html")
+                  ...
+          - pattern: $S(...)
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  $S = new Remarkable()
+                  ...
+          - pattern: $S.render(...)
+  - id: typescript.react.security.audit.react-unsanitized-property.react-unsanitized-property
+    message: Detection of $HTML from non-constant definition. This can inadvertently
+      expose users to cross-site scripting (XSS) attacks if this comes from
+      user-provided input. If you have to use $HTML, consider using a
+      sanitization library such as DOMPurify to sanitize your HTML.
+    metadata:
+      cwe:
+        - "CWE-79: Improper Neutralization of Input During Web Page Generation
+          ('Cross-site Scripting')"
+      owasp:
+        - A07:2017 - Cross-Site Scripting (XSS)
+        - A03:2021 - Injection
+      references:
+        - https://react.dev/reference/react-dom/components/common#dangerously-setting-the-inner-html
+      category: security
+      confidence: MEDIUM
+      technology:
+        - react
+      license: Commons Clause License Condition v1.0[LGPL-2.1-only]
+      cwe2022-top25: true
+      cwe2021-top25: true
+      subcategory:
+        - vuln
+      likelihood: MEDIUM
+      impact: MEDIUM
+    languages:
+      - typescript
+      - javascript
+    severity: WARNING
+    mode: taint
+    pattern-sources:
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  function ...({..., $X, ...}) { ... }
+              - pattern-inside: |
+                  function ...(..., $X, ...) { ... }
+          - focus-metavariable: $X
+          - pattern-either:
+              - pattern: $X.$Y
+              - pattern: $X[...]
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  $BODY = $REACT.useRef(...)
+                  ...
+              - pattern-inside: |
+                  $BODY = useRef(...)
+                  ...
+              - pattern-inside: |
+                  $BODY = findDOMNode(...)
+                  ...
+              - pattern-inside: |
+                  $BODY = createRef(...)
+                  ...
+              - pattern-inside: |
+                  $BODY = $REACT.findDOMNode(...)
+                  ...
+              - pattern-inside: |
+                  $BODY = $REACT.createRef(...)
+                  ...
+          - pattern-either:
+              - pattern: |
+                  $BODY. ... .$HTML = $SINK
+              - pattern: |
+                  $BODY.$HTML = $SINK
+          - metavariable-regex:
+              metavariable: $HTML
+              regex: (innerHTML|outerHTML)
+          - focus-metavariable: $SINK
+      - patterns:
+          - pattern-either:
+              - pattern: ReactDOM.findDOMNode(...).$HTML = $SINK
+          - metavariable-regex:
+              metavariable: $HTML
+              regex: (innerHTML|outerHTML)
+          - focus-metavariable: $SINK
+    pattern-sanitizers:
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  import $S from "underscore.string"
+                  ...
+              - pattern-inside: |
+                  import * as $S from "underscore.string"
+                  ...
+              - pattern-inside: |
+                  import $S from "underscore.string"
+                  ...
+              - pattern-inside: |
+                  $S = require("underscore.string")
+                  ...
+          - pattern-either:
+              - pattern: $S.escapeHTML(...)
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  import $S from "dompurify"
+                  ...
+              - pattern-inside: |
+                  import { ..., $S,... } from "dompurify"
+                  ...
+              - pattern-inside: |
+                  import * as $S from "dompurify"
+                  ...
+              - pattern-inside: |
+                  $S = require("dompurify")
+                  ...
+              - pattern-inside: |
+                  import $S from "isomorphic-dompurify"
+                  ...
+              - pattern-inside: |
+                  import * as $S from "isomorphic-dompurify"
+                  ...
+              - pattern-inside: |
+                  $S = require("isomorphic-dompurify")
+                  ...
+          - pattern-either:
+              - patterns:
+                  - pattern-inside: |
+                      $VALUE = $S(...)
+                      ...
+                  - pattern: $VALUE.sanitize(...)
+              - patterns:
+                  - pattern-inside: |
+                      $VALUE = $S.sanitize
+                      ...
+                  - pattern: $S(...)
+              - pattern: $S.sanitize(...)
+              - pattern: $S(...)
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  import $S from 'xss';
+                  ...
+              - pattern-inside: |
+                  import * as $S from 'xss';
+                  ...
+              - pattern-inside: |
+                  $S = require("xss")
+                  ...
+          - pattern: $S(...)
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  import $S from 'sanitize-html';
+                  ...
+              - pattern-inside: |
+                  import * as $S from "sanitize-html";
+                  ...
+              - pattern-inside: |
+                  $S = require("sanitize-html")
+                  ...
+          - pattern: $S(...)
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  $S = new Remarkable()
+                  ...
+          - pattern: $S.render(...)
+  - id: typescript.react.security.react-insecure-request.react-insecure-request
+    message: Unencrypted request over HTTP detected.
+    metadata:
+      vulnerability: Insecure Transport
+      owasp:
+        - A03:2017 - Sensitive Data Exposure
+        - A02:2021 - Cryptographic Failures
+      cwe:
+        - "CWE-319: Cleartext Transmission of Sensitive Information"
+      references:
+        - https://www.npmjs.com/package/axios
+      category: security
+      technology:
+        - react
+      subcategory:
+        - vuln
+      likelihood: LOW
+      impact: MEDIUM
+      confidence: MEDIUM
+    languages:
+      - typescript
+      - javascript
+    severity: ERROR
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-either:
+                  - pattern-inside: |
+                      import $AXIOS from 'axios';
+                      ...
+                      $AXIOS.$METHOD(...)
+                  - pattern-inside: |
+                      $AXIOS = require('axios');
+                      ...
+                      $AXIOS.$METHOD(...)
+              - pattern: $AXIOS.$VERB("$URL",...)
+              - metavariable-regex:
+                  metavariable: $VERB
+                  regex: ^(get|post|delete|head|patch|put|options)
+          - patterns:
+              - pattern-either:
+                  - pattern-inside: |
+                      import $AXIOS from 'axios';
+                      ...
+                      $AXIOS(...)
+                  - pattern-inside: |
+                      $AXIOS = require('axios');
+                      ...
+                      $AXIOS(...)
+              - pattern-either:
+                  - pattern: '$AXIOS({url: "$URL"}, ...)'
+                  - pattern: |
+                      $OPTS = {url: "$URL"}
+                      ...
+                      $AXIOS($OPTS, ...)
+          - pattern: fetch("$URL", ...)
+      - metavariable-regex:
+          metavariable: $URL
+          regex: ^([Hh][Tt][Tt][Pp]:\/\/(?!localhost).*)
+  - id: typescript.react.security.react-markdown-insecure-html.react-markdown-insecure-html
+    message: Overwriting `transformLinkUri` or `transformImageUri` to something
+      insecure, or turning `allowDangerousHtml` on, or turning `escapeHtml` off,
+      will open the code up to XSS vectors.
+    metadata:
+      cwe:
+        - "CWE-79: Improper Neutralization of Input During Web Page Generation
+          ('Cross-site Scripting')"
+      owasp:
+        - A07:2017 - Cross-Site Scripting (XSS)
+        - A03:2021 - Injection
+      references:
+        - https://www.npmjs.com/package/react-markdown#security
+      category: security
+      technology:
+        - react
+      cwe2022-top25: true
+      cwe2021-top25: true
+      subcategory:
+        - audit
+      likelihood: LOW
+      impact: LOW
+      confidence: LOW
+    languages:
+      - typescript
+      - javascript
+    severity: WARNING
+    patterns:
+      - pattern-either:
+          - pattern-inside: |
+              $X = require('react-markdown/with-html');
+              ...
+          - pattern-inside: |
+              $X = require('react-markdown');
+              ...
+          - pattern-inside: |
+              import 'react-markdown/with-html';
+              ...
+          - pattern-inside: |
+              import 'react-markdown';
+              ...
+      - pattern-either:
+          - pattern: |
+              <$EL allowDangerousHtml />
+          - pattern: |
+              <$EL escapeHtml={false} />
+          - pattern: |
+              <$EL transformLinkUri=... />
+          - pattern: |
+              <$EL transformImageUri=... />
+  - id: yaml.argo.security.argo-workflow-parameter-command-injection.argo-workflow-parameter-command-injection
+    message: Using input or workflow parameters in here-scripts can lead to command
+      injection or code injection. Convert the parameters to env variables
+      instead.
+    languages:
+      - yaml
+    metadata:
+      category: security
+      cwe:
+        - "CWE-78: Improper Neutralization of Special Elements used in an OS
+          Command ('OS Command Injection')"
+        - "CWE-94: Improper Control of Generation of Code ('Code Injection')"
+      owasp:
+        - A03:2021 – Injection
+      confidence: MEDIUM
+      likelihood: MEDIUM
+      impact: HIGH
+      subcategory:
+        - vuln
+      references:
+        - https://github.com/argoproj/argo-workflows/issues/5061
+        - https://github.com/argoproj/argo-workflows/issues/5114#issue-808865370
+      technology:
+        - ci
+        - argo
+    severity: ERROR
+    patterns:
+      - pattern-inside: |
+          apiVersion: $VERSION
+          ...
+      - metavariable-regex:
+          metavariable: $VERSION
+          regex: (argoproj.io.*)
+      - pattern-either:
+          - patterns:
+              - pattern-inside: |
+                  command:
+                    ...
+                    - python
+                    ...
+                  ...
+                  source: 
+                    $SCRIPT
+              - focus-metavariable: $SCRIPT
+              - metavariable-pattern:
+                  metavariable: $SCRIPT
+                  language: python
+                  patterns:
+                    - pattern: |
+                        $FUNC(..., $PARAM, ...)
+                    - metavariable-pattern:
+                        metavariable: $PARAM
+                        pattern-either:
+                          - pattern-regex: (.*{{.*inputs.parameters.*}}.*)
+                          - pattern-regex: (.*{{.*workflow.parameters.*}}.*)
+          - patterns:
+              - pattern-inside: |
+                  command:
+                    ...
+                    - $LANG
+                    ...
+                  ...
+                  source: 
+                    $SCRIPT
+              - metavariable-regex:
+                  metavariable: $LANG
+                  regex: (bash|sh)
+              - focus-metavariable: $SCRIPT
+              - metavariable-pattern:
+                  metavariable: $SCRIPT
+                  language: bash
+                  patterns:
+                    - pattern: |
+                        $CMD ... $PARAM  ...
+                    - metavariable-pattern:
+                        metavariable: $PARAM
+                        pattern-either:
+                          - pattern-regex: (.*{{.*inputs.parameters.*}}.*)
+                          - pattern-regex: (.*{{.*workflow.parameters.*}}.*)
+          - patterns:
+              - pattern-inside: |
+                  container:
+                    ...
+                    command: $LANG
+                    ...
+                    args: $PARAM
+              - metavariable-regex:
+                  metavariable: $LANG
+                  regex: .*(sh|bash|ksh|csh|tcsh|zsh).*
+              - metavariable-pattern:
+                  metavariable: $PARAM
+                  pattern-either:
+                    - pattern-regex: (.*{{.*inputs.parameters.*}}.*)
+                    - pattern-regex: (.*{{.*workflow.parameters.*}}.*)
+              - focus-metavariable: $PARAM
+  - id: yaml.docker-compose.security.privileged-service.privileged-service
+    patterns:
+      - pattern-inside: |
+          version: ...
+          ...
+          services:
+            ...
+            $SERVICE:
+              ...
+              privileged: $TRUE
+      - focus-metavariable: $TRUE
+      - metavariable-regex:
+          metavariable: $TRUE
+          regex: (true)
+    fix: |
+      false
+    message: Service '$SERVICE' is running in privileged mode. This grants the
+      container the equivalent of root capabilities on the host machine. This
+      can lead to container escapes, privilege escalation, and other security
+      concerns. Remove the 'privileged' key to disable this capability.
+    metadata:
+      cwe:
+        - "CWE-250: Execution with Unnecessary Privileges"
+      owasp:
+        - A06:2017 - Security Misconfiguration
+        - A05:2021 - Security Misconfiguration
+      references:
+        - https://www.trendmicro.com/en_us/research/19/l/why-running-a-privileged-container-in-docker-is-a-bad-idea.html
+        - https://containerjournal.com/topics/container-security/why-running-a-privileged-container-is-not-a-good-idea/
+      category: security
+      technology:
+        - docker-compose
+      license: Commons Clause License Condition v1.0[LGPL-2.1-only]
+      subcategory:
+        - vuln
+      likelihood: HIGH
+      impact: HIGH
+      confidence: HIGH
+    languages:
+      - yaml
+    severity: WARNING
+  - id: yaml.github-actions.security.allowed-unsecure-commands.allowed-unsecure-commands
+    languages:
+      - yaml
+    severity: WARNING
+    message: The environment variable `ACTIONS_ALLOW_UNSECURE_COMMANDS` grants this
+      workflow permissions to use the `set-env` and `add-path` commands. There
+      is a vulnerability in these commands that could result in environment
+      variables being modified by an attacker. Depending on the use of the
+      environment variable, this could enable an attacker to, at worst, modify
+      the system path to run a different command than intended, resulting in
+      arbitrary code execution. This could result in stolen code or secrets.
+      Don't use `ACTIONS_ALLOW_UNSECURE_COMMANDS`. Instead, use Environment
+      Files. See
+      https://github.com/actions/toolkit/blob/main/docs/commands.md#environment-files
+      for more information.
+    metadata:
+      cwe:
+        - "CWE-749: Exposed Dangerous Method or Function"
+      owasp: A06:2017 - Security Misconfiguration
+      references:
+        - https://github.blog/changelog/2020-10-01-github-actions-deprecating-set-env-and-add-path-commands/
+        - https://github.com/actions/toolkit/security/advisories/GHSA-mfwh-5m23-j46w
+        - https://github.com/actions/toolkit/blob/main/docs/commands.md#environment-files
+      category: security
+      technology:
+        - github-actions
+      subcategory:
+        - vuln
+      likelihood: LOW
+      impact: MEDIUM
+      confidence: MEDIUM
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern-inside: "{env: ...}"
+              - pattern: "ACTIONS_ALLOW_UNSECURE_COMMANDS: true"
+  - id: yaml.github-actions.security.audit.unsafe-add-mask-workflow-command.unsafe-add-mask-workflow-command
+    patterns:
+      - pattern-regex: "::add-mask::"
+    languages:
+      - yaml
+    severity: WARNING
+    message: GitHub Actions provides the **'add-mask'** workflow command to mask
+      sensitive data in the workflow logs. If **'add-mask'** is not used or if
+      workflow commands have been stopped, sensitive data can leaked into the
+      workflow logs. An attacker could simply copy the workflow to another
+      branch and add the following payload `echo "::stop-commands::$stopMarker"`
+      to stop workflow command processing ([described
+      here](https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#stopping-and-starting-workflow-commands)),
+      which will cause the secret token to be exposed despite the **'add-mask'**
+      usage. For more information, please refer to the [GitHub
+      documentation](https://github.com/actions/toolkit/blob/main/docs/commands.md#register-a-secret).
+    metadata:
+      cwe:
+        - "CWE-200: Exposure of Sensitive Information to an Unauthorized Actor"
+      owasp: A06:2017 - Security Misconfiguration
+      category: security
+      technology:
+        - github-actions
+      subcategory:
+        - audit
+      likelihood: LOW
+      impact: MEDIUM
+      confidence: LOW
+      license: Commons Clause License Condition v1.0[LGPL-2.1-only]
+      vulnerability_class:
+        - Dangerous Method or Function
+      references:
+        - https://github.blog/changelog/2020-10-01-github-actions-deprecating-set-env-and-add-path-commands/
+        - https://github.com/actions/runner/issues/159
+        - https://github.com/actions/runner/issues/475
+        - https://github.com/actions/runner/issues/807
+        - https://0xn3va.gitbook.io/cheat-sheets/ci-cd/github/actions#misuse-of-sensitive-data-in-workflows
+        - https://github.com/github/docs/blob/main/content/actions/using-workflows/workflow-commands-for-github-actions.md#masking-a-value-in-a-log
+  - id: yaml.github-actions.security.curl-eval.curl-eval
+    languages:
+      - yaml
+    message: Data is being eval'd from a `curl` command. An attacker with control of
+      the server in the `curl` command could inject malicious code into the
+      `eval`, resulting in a system comrpomise. Avoid eval'ing untrusted data if
+      you can. If you must do this, consider checking the SHA sum of the content
+      returned by the server to verify its integrity.
+    metadata:
+      category: security
+      cwe:
+        - "CWE-78: Improper Neutralization of Special Elements used in an OS
+          Command ('OS Command Injection')"
+      owasp:
+        - A01:2017 - Injection
+        - A03:2021 - Injection
+      references:
+        - https://docs.github.com/en/actions/learn-github-actions/security-hardening-for-github-actions#understanding-the-risk-of-script-injections
+      technology:
+        - github-actions
+        - bash
+        - curl
+      cwe2022-top25: true
+      cwe2021-top25: true
+      subcategory:
+        - audit
+      likelihood: LOW
+      impact: HIGH
+      confidence: LOW
+    patterns:
+      - pattern-inside: "steps: [...]"
+      - pattern-inside: |
+          - run: ...
+            ...
+      - pattern: "run: $SHELL"
+      - metavariable-pattern:
+          language: bash
+          metavariable: $SHELL
+          patterns:
+            - pattern: |
+                $DATA=<... curl ...>
+                ...
+                eval <... $DATA ...>
+    severity: ERROR
+  - id: yaml.github-actions.security.github-script-injection.github-script-injection
+    languages:
+      - yaml
+    message: "Using variable interpolation `${{...}}` with `github` context data in
+      a `actions/github-script`'s `script:` step could allow an attacker to
+      inject their own code into the runner. This would allow them to steal
+      secrets and code. `github` context data can have arbitrary user input and
+      should be treated as untrusted. Instead, use an intermediate environment
+      variable with `env:` to store the data and use the environment variable in
+      the `run:` script. Be sure to use double-quotes the environment variable,
+      like this: \"$ENVVAR\"."
+    metadata:
+      category: security
+      cwe:
+        - "CWE-94: Improper Control of Generation of Code ('Code Injection')"
+      owasp:
+        - A03:2021 - Injection
+      references:
+        - https://docs.github.com/en/actions/learn-github-actions/security-hardening-for-github-actions#understanding-the-risk-of-script-injections
+        - https://securitylab.github.com/research/github-actions-untrusted-input/
+        - https://github.com/actions/github-script
+      technology:
+        - github-actions
+      cwe2022-top25: true
+      subcategory:
+        - vuln
+      likelihood: HIGH
+      impact: HIGH
+      confidence: HIGH
+    patterns:
+      - pattern-inside: "steps: [...]"
+      - pattern-inside: |
+          uses: $ACTION
+          ...
+      - pattern-inside: |
+          with:
+            ...
+            script: ...
+            ...
+      - pattern: "script: $SHELL"
+      - metavariable-regex:
+          metavariable: $ACTION
+          regex: actions/github-script@.*
+      - metavariable-pattern:
+          language: generic
+          metavariable: $SHELL
+          patterns:
+            - pattern-either:
+                - pattern: ${{ github.event.issue.title }}
+                - pattern: ${{ github.event.issue.body }}
+                - pattern: ${{ github.event.pull_request.title }}
+                - pattern: ${{ github.event.pull_request.body }}
+                - pattern: ${{ github.event.comment.body }}
+                - pattern: ${{ github.event.review.body }}
+                - pattern: ${{ github.event.review_comment.body }}
+                - pattern: ${{ github.event.pages. ... .page_name}}
+                - pattern: ${{ github.event.head_commit.message }}
+                - pattern: ${{ github.event.head_commit.author.email }}
+                - pattern: ${{ github.event.head_commit.author.name }}
+                - pattern: ${{ github.event.commits ... .author.email }}
+                - pattern: ${{ github.event.commits ... .author.name }}
+                - pattern: ${{ github.event.pull_request.head.ref }}
+                - pattern: ${{ github.event.pull_request.head.label }}
+                - pattern: ${{ github.event.pull_request.head.repo.default_branch }}
+                - pattern: ${{ github.head_ref }}
+                - pattern: ${{ github.event.inputs ... }}
+                - pattern: ${{ github.event.discussion.title }}
+                - pattern: ${{ github.event.discussion.body }}
+    severity: ERROR
+  - id: yaml.github-actions.security.pull-request-target-code-checkout.pull-request-target-code-checkout
+    languages:
+      - yaml
+    message: This GitHub Actions workflow file uses `pull_request_target` and checks
+      out code from the incoming pull request. When using `pull_request_target`,
+      the Action runs in the context of the target repository, which includes
+      access to all repository secrets. Normally, this is safe because the
+      Action only runs code from the target repository, not the incoming PR.
+      However, by checking out the incoming PR code, you're now using the
+      incoming code for the rest of the action. You may be inadvertently
+      executing arbitrary code from the incoming PR with access to repository
+      secrets, which would let an attacker steal repository secrets. This
+      normally happens by running build scripts (e.g., `npm build` and `make`)
+      or dependency installation scripts (e.g., `python setup.py install`).
+      Audit your workflow file to make sure no code from the incoming PR is
+      executed. Please see
+      https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
+      for additional mitigations.
+    metadata:
+      category: security
+      owasp:
+        - A01:2021 - Broken Access Control
+      cwe:
+        - "CWE-913: Improper Control of Dynamically-Managed Code Resources"
+      references:
+        - https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
+        - https://github.com/justinsteven/advisories/blob/master/2021_github_actions_checkspelling_token_leak_via_advice_symlink.md
+      technology:
+        - github-actions
+      subcategory:
+        - audit
+      likelihood: LOW
+      impact: MEDIUM
+      confidence: LOW
+    patterns:
+      - pattern-either:
+          - pattern-inside: |
+              on:
+                ...
+                pull_request_target: ...
+                ...
+              ...
+          - pattern-inside: |
+              on: [..., pull_request_target, ...]
+              ...
+          - pattern-inside: |
+              on: pull_request_target
+              ...
+      - pattern-inside: |
+          jobs:
+            ...
+            $JOBNAME:
+              ...
+              steps:
+                ...
+      - pattern: |
+          ...
+          uses: "$ACTION"
+          with:
+            ...
+            ref: $EXPR
+      - metavariable-regex:
+          metavariable: $ACTION
+          regex: actions/checkout@.*
+      - metavariable-pattern:
+          language: generic
+          metavariable: $EXPR
+          patterns:
+            - pattern: ${{ github.event.pull_request ... }}
+    severity: WARNING
+  - id: yaml.github-actions.security.run-shell-injection.run-shell-injection
+    languages:
+      - yaml
+    message: 'Using variable interpolation `${{...}}` with `github` context data in
+      a `run:` step could allow an attacker to inject their own code into the
+      runner. This would allow them to steal secrets and code. `github` context
+      data can have arbitrary user input and should be treated as untrusted.
+      Instead, use an intermediate environment variable with `env:` to store the
+      data and use the environment variable in the `run:` script. Be sure to use
+      double-quotes the environment variable, like this: "$ENVVAR".'
+    metadata:
+      category: security
+      cwe:
+        - "CWE-78: Improper Neutralization of Special Elements used in an OS
+          Command ('OS Command Injection')"
+      owasp:
+        - A01:2017 - Injection
+        - A03:2021 - Injection
+      references:
+        - https://docs.github.com/en/actions/learn-github-actions/security-hardening-for-github-actions#understanding-the-risk-of-script-injections
+        - https://securitylab.github.com/research/github-actions-untrusted-input/
+      technology:
+        - github-actions
+      cwe2022-top25: true
+      cwe2021-top25: true
+      subcategory:
+        - vuln
+      likelihood: HIGH
+      impact: HIGH
+      confidence: HIGH
+    patterns:
+      - pattern-inside: "steps: [...]"
+      - pattern-inside: |
+          - run: ...
+            ...
+      - pattern: "run: $SHELL"
+      - metavariable-pattern:
+          language: generic
+          metavariable: $SHELL
+          patterns:
+            - pattern-either:
+                - pattern: ${{ github.event.issue.title }}
+                - pattern: ${{ github.event.issue.body }}
+                - pattern: ${{ github.event.pull_request.title }}
+                - pattern: ${{ github.event.pull_request.body }}
+                - pattern: ${{ github.event.comment.body }}
+                - pattern: ${{ github.event.review.body }}
+                - pattern: ${{ github.event.review_comment.body }}
+                - pattern: ${{ github.event.pages. ... .page_name}}
+                - pattern: ${{ github.event.head_commit.message }}
+                - pattern: ${{ github.event.head_commit.author.email }}
+                - pattern: ${{ github.event.head_commit.author.name }}
+                - pattern: ${{ github.event.commits ... .author.email }}
+                - pattern: ${{ github.event.commits ... .author.name }}
+                - pattern: ${{ github.event.pull_request.head.ref }}
+                - pattern: ${{ github.event.pull_request.head.label }}
+                - pattern: ${{ github.event.pull_request.head.repo.default_branch }}
+                - pattern: ${{ github.head_ref }}
+                - pattern: ${{ github.event.inputs ... }}
+                - pattern: ${{ github.event.discussion.title }}
+                - pattern: ${{ github.event.discussion.body }}
+    severity: ERROR
+  - id: yaml.github-actions.security.third-party-action-not-pinned-to-commit-sha.third-party-action-not-pinned-to-commit-sha
+    patterns:
+      - pattern-inside: "{steps: ...}"
+      - pattern: |
+          uses: "$USES"
+      - metavariable-pattern:
+          metavariable: $USES
+          language: generic
+          patterns:
+            - pattern-not-regex: ^[.]/
+            - pattern-not-regex: ^actions/
+            - pattern-not-regex: ^github/
+            - pattern-not-regex: "@[0-9a-f]{40}$"
+            - pattern-not-regex: ^docker://.*@sha256:[0-9a-f]{64}$
+    message: An action sourced from a third-party repository on GitHub is not pinned
+      to a full length commit SHA. Pinning an action to a full length commit SHA
+      is currently the only way to use an action as an immutable release.
+      Pinning to a particular SHA helps mitigate the risk of a bad actor adding
+      a backdoor to the action's repository, as they would need to generate a
+      SHA-1 collision for a valid Git object payload.
+    languages:
+      - yaml
+    severity: WARNING
+    metadata:
+      cwe:
+        - "CWE-1357: Reliance on Insufficiently Trustworthy Component"
+        - "CWE-353: Missing Support for Integrity Check"
+      owasp: A06:2021 - Vulnerable and Outdated Components
+      references:
+        - https://owasp.org/Top10/A06_2021-Vulnerable_and_Outdated_Components
+        - https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
+      category: security
+      technology:
+        - github-actions
+      subcategory:
+        - vuln
+      likelihood: LOW
+      impact: LOW
+      confidence: HIGH
+  - id: yaml.github-actions.security.workflow-run-target-code-checkout.workflow-run-target-code-checkout
+    languages:
+      - yaml
+    message: This GitHub Actions workflow file uses `workflow_run` and checks out
+      code from the incoming pull request. When using `workflow_run`, the Action
+      runs in the context of the target repository, which includes access to all
+      repository secrets. Normally, this is safe because the Action only runs
+      code from the target repository, not the incoming PR. However, by checking
+      out the incoming PR code, you're now using the incoming code for the rest
+      of the action. You may be inadvertently executing arbitrary code from the
+      incoming PR with access to repository secrets, which would let an attacker
+      steal repository secrets. This normally happens by running build scripts
+      (e.g., `npm build` and `make`) or dependency installation scripts (e.g.,
+      `python setup.py install`). Audit your workflow file to make sure no code
+      from the incoming PR is executed. Please see
+      https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
+      for additional mitigations.
+    metadata:
+      category: security
+      owasp: A01:2017 - Injection
+      cwe: "CWE-913: Improper Control of Dynamically-Managed Code Resources"
+      likelihood: MEDIUM
+      impact: MEDIUM
+      confidence: MEDIUM
+      subcategory:
+        - vuln
+      references:
+        - https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
+        - https://github.com/justinsteven/advisories/blob/master/2021_github_actions_checkspelling_token_leak_via_advice_symlink.md
+        - https://www.legitsecurity.com/blog/github-privilege-escalation-vulnerability
+      technology:
+        - github-actions
+    patterns:
+      - pattern-inside: |
+          on:
+            ...
+            workflow_run: ...
+            ...
+          ...
+      - pattern-inside: |
+          jobs:
+            ...
+            $JOBNAME:
+              ...
+              steps:
+                ...
+      - pattern: |
+          ...
+          uses: "$ACTION"
+          with:
+            ...
+            ref: $EXPR
+      - metavariable-regex:
+          metavariable: $ACTION
+          regex: actions/checkout@.*
+      - metavariable-pattern:
+          language: generic
+          metavariable: $EXPR
+          patterns:
+            - pattern: ${{ github.event.workflow_run ... }}
+    severity: WARNING
+  - id: yaml.github-actions.semgrep-configuration.semgrep-github-action-push-without-branches.semgrep-github-action-push-without-branches
+    message: The 'branches' field (in the push event configuration) contains no
+      branches. This causes all branches to be scanned and may result in
+      unneccessary duplicate findings across the entire codebase.
+    severity: WARNING
+    languages:
+      - yaml
+    paths:
+      include:
+        - .github/workflows/semgrep.yml
+        - "*.test.yml"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              on: [..., push, ...]
+              ...
+          - pattern: |
+              on: push
+              ...
+          - pattern: |
+              on:
+                ...
+                push: ""
+                ...
+              ...
+          - pattern: |
+              on:
+                ...
+                push: {}
+                ...
+              ...
+          - patterns:
+              - pattern-inside: |
+                  on:
+                    ...
+                    push: ...
+                    ...
+                  ...
+              - pattern-either:
+                  - pattern: |
+                      branches: ""
+                  - pattern: |
+                      branches: []
+    metadata:
+      category: correctness
+      technology:
+        - github-action
+  - id: yaml.openapi.security.openai-consequential-action-false.openai-consequential-action-false
+    languages:
+      - yaml
+    message: "Found 'x-openai-isConsequential: false' in a state-changing HTTP
+      method: $METHOD $PATH. This Action configuration will enable the 'Always
+      Allow' option for state-changing HTTP methods, such as POST, PUT, PATCH,
+      or DELETE. The risk of a user selecting the 'Always Allow' button is that
+      the agent could perform unintended actions on behalf of the user. When
+      working with sensitive functionality, it is always best to include a Human
+      In The Loop (HITL) type of control. Consider the trade-off between
+      security  and user friction and then make a risk-based decision about this
+      function."
+    severity: WARNING
+    pattern-either:
+      - pattern-inside: |
+          post:
+            ...
+            x-openai-isConsequential: false
+      - pattern-inside: |
+          put:
+            ...
+            x-openai-isConsequential: false
+      - pattern-inside: |
+          patch:
+            ...
+            x-openai-isConsequential: false
+      - pattern-inside: |
+          delete:
+            ...
+            x-openai-isConsequential: false
+    metadata:
+      category: security
+      subcategory:
+        - audit
+      technology:
+        - openapi
+        - openai
+      likelihood: HIGH
+      impact: HIGH
+      confidence: HIGH
+      cwe: "CWE-441: Unintended Proxy or Intermediary ('Confused Deputy')"
+      owasp:
+        - A04:2021 Insecure Design
+        - LLM08:2023 - Excessive Agency
+      references:
+        - https://platform.openai.com/docs/actions/consequential-flag
+        - https://owasp.org/Top10/A04_2021-Insecure_Design/
+        - https://owasp.org/www-project-top-10-for-large-language-model-applications/assets/PDF/OWASP-Top-10-for-LLMs-2023-v1_1.pdf
+  - id: yaml.openapi.security.use-of-basic-authentication.use-of-basic-authentication
+    languages:
+      - yaml
+    message: Basic authentication is considered weak and should be avoided.  Use a
+      different authentication scheme, such of OAuth2, OpenID Connect, or mTLS.
+    severity: ERROR
+    patterns:
+      - pattern-inside: |
+          openapi: $VERSION
+          ...
+          components:
+            ...
+            securitySchemes:
+              ...
+              $SCHEME:
+                ...
+      - metavariable-regex:
+          metavariable: $VERSION
+          regex: 3.*
+      - pattern: |
+          type: http
+          ...
+          scheme: basic
+    metadata:
+      category: security
+      subcategory:
+        - vuln
+      technology:
+        - openapi
+      likelihood: MEDIUM
+      impact: HIGH
+      confidence: HIGH
+      cwe: "CWE-287: Improper Authentication"
+      owasp:
+        - A04:2021 Insecure Design
+        - A07:2021 Identification and Authentication Failures
+      references:
+        - https://cwe.mitre.org/data/definitions/287.html
+        - https://owasp.org/Top10/A04_2021-Insecure_Design/
+        - https://owasp.org/Top10/A07_2021-Identification_and_Authentication_Failures/
+  - id: yaml_spring_rule-SpringActuatorFullyEnabled
+    languages:
+      - yaml
+    severity: WARNING
+    message: |
+      Spring Boot Actuator is fully enabled. This exposes sensitive endpoints
+      such as /actuator/env, /actuator/logfile, /actuator/heapdump and others.
+      If the application lacks proper security measures (e.g., authentication and 
+      authorization), sensitive data could be accessed, compromising the application and 
+      its infrastructure. This configuration poses a serious risk in production 
+      environments or public-facing deployments.
+
+      To mitigate the risks, take the following measures:
+        - Expose only the Actuator endpoints required for your use case
+        - For production environments, restrict exposure to non-sensitive endpoints 
+        like `health` or `info`
+        - Ensure Actuator endpoints are protected with authentication and authorization 
+        (e.g., via Spring Security)
+        - Use environment-specific configurations to limit exposure in production
+
+      Secure Code Example:
+      Instead of include: "*", list only the endpoints you need to expose:
+      ```
+      management:
+        endpoints:
+          web:
+            exposure:
+              include: "health,info,metrics"
+      ```
+
+      References:
+      - https://docs.spring.io/spring-boot/reference/actuator/endpoints.html#actuator.endpoints.exposing
+      - https://medium.com/walmartglobaltech/perils-of-spring-boot-actuators-misconfiguration-185c43a0f785
+      - https://blog.maass.xyz/spring-actuator-security-part-1-stealing-secrets-using-spring-actuators
+    metadata:
+      likelihood: MEDIUM
+      impact: HIGH
+      confidence: MEDIUM
+      shortDescription: Exposure of sensitive system information to an unauthorized
+        control sphere
+      category: security
+      cwe: CWE-497
+      owasp:
+        - A3:2017-Sensitive Data Exposure
+        - A01:2021-Broken Access Control
+        - A01:2025-Broken Access Control
+      security-severity: Medium
+      technology:
+        - java
+    patterns:
+      - pattern: |
+          management:
+            ...
+            endpoints:
+              ...
+              web:
+                ...
+                exposure:
+                  ...
+                  include: "*"
+                  ...

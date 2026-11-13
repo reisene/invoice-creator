@@ -1,4 +1,5 @@
 import { formatPolishBankAccount } from '@/lib/invoice/bankUtils';
+import { DAY_TYPE_LABELS, sumTimesheetHours } from '@/lib/invoice/timesheet';
 import { getSiteDisplayUrl } from '@/lib/siteUrl';
 import { numberToWords } from '@/lib/toWords';
 import type { InvoiceData } from '@/types/invoice';
@@ -77,41 +78,53 @@ function Text({
     return <ReactPdfText style={style} render={render} fixed={fixed} />;
   }
 
-  const children = Children.map(textChildren, (child) => {
-    if (typeof child !== 'string') return child;
+  return (
+    <ReactPdfText style={style}>
+      {Children.map(textChildren, (child, index) =>
+        typeof child === 'string' ? (
+          <FontSegments key={index} text={child} />
+        ) : (
+          child
+        ),
+      )}
+    </ReactPdfText>
+  );
+}
 
-    const segments: { text: string; isLatinExt: boolean }[] = [];
-    for (const character of child) {
-      const codePoint = character.codePointAt(0);
-      const isLatinExt =
-        codePoint !== undefined &&
-        latinExtRanges.some(
-          ([start, end]) => codePoint >= start && codePoint <= end,
-        );
-      const previousSegment = segments.at(-1);
+function FontSegments({ text }: { text: string }) {
+  const segments: { text: string; isLatinExt: boolean }[] = [];
+  for (const character of text) {
+    const codePoint = character.codePointAt(0);
+    const isLatinExt =
+      codePoint !== undefined &&
+      latinExtRanges.some(
+        ([start, end]) => codePoint >= start && codePoint <= end,
+      );
+    const previousSegment = segments.at(-1);
 
-      if (previousSegment?.isLatinExt === isLatinExt) {
-        previousSegment.text += character;
-      } else {
-        segments.push({ text: character, isLatinExt });
-      }
+    if (previousSegment?.isLatinExt === isLatinExt) {
+      previousSegment.text += character;
+    } else {
+      segments.push({ text: character, isLatinExt });
     }
+  }
 
-    return segments.map((segment, index) => (
-      <ReactPdfText
-        key={`${index}-${segment.text}`}
-        style={{
-          fontFamily: segment.isLatinExt
-            ? 'Noto Sans Latin Ext'
-            : 'Noto Sans Latin',
-        }}
-      >
-        {segment.text}
-      </ReactPdfText>
-    ));
-  });
-
-  return <ReactPdfText style={style}>{children}</ReactPdfText>;
+  return (
+    <>
+      {segments.map((segment, index) => (
+        <ReactPdfText
+          key={`${index}-${segment.text}`}
+          style={{
+            fontFamily: segment.isLatinExt
+              ? 'Noto Sans Latin Ext'
+              : 'Noto Sans Latin',
+          }}
+        >
+          {segment.text}
+        </ReactPdfText>
+      ))}
+    </>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -267,6 +280,27 @@ export default function createInvoicePdfDocument(
           />
         </View>
       </Page>
+      {data.timesheet && data.timesheet.length > 0 && (
+        <Page size='A4' style={styles.page} wrap>
+          <Text style={styles.sectionTitle}>
+            Wykaz godzin do rachunku nr {invoiceNumber}
+          </Text>
+          {data.timesheet.map((day) => (
+            <View key={day.date} style={styles.tableRow} wrap={false}>
+              <Text style={styles.tableLabel}>{formatIssueDate(day.date)}</Text>
+              <Text style={styles.tableLabel}>{DAY_TYPE_LABELS[day.type]}</Text>
+              <Text style={styles.tableValue}>
+                {day.hours.toString().replace('.', ',')} h
+              </Text>
+            </View>
+          ))}
+          <PdfRow
+            label='Razem godzin pracy'
+            value={`${sumTimesheetHours(data.timesheet)} h`.replace('.', ',')}
+            bold
+          />
+        </Page>
+      )}
     </Document>
   );
 }

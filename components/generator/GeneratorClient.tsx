@@ -29,22 +29,22 @@ import type {
 } from '@/types/savedData';
 import type { TaxParams } from '@/types/taxParams';
 import * as Sentry from '@sentry/nextjs';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Button, Col, Container, Modal, Row } from 'react-bootstrap';
 
 function getInitialData(
   savedBankAccount?: UserBankAccountDto | null,
 ): InvoiceFormData {
   const now = new Date();
-  const today = [
-    now.getFullYear(),
-    String(now.getMonth() + 1).padStart(2, '0'),
-    String(now.getDate()).padStart(2, '0'),
-  ].join('-');
-  const monthStart = new Date();
-  monthStart.setDate(1);
-  const monthEnd = new Date();
-  monthEnd.setMonth(monthEnd.getMonth() + 1, 0);
+  const toLocalIso = (d: Date) =>
+    [
+      d.getFullYear(),
+      String(d.getMonth() + 1).padStart(2, '0'),
+      String(d.getDate()).padStart(2, '0'),
+    ].join('-');
+  const today = toLocalIso(now);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
   return {
     clientType: 'company',
@@ -62,8 +62,8 @@ function getInitialData(
     contractDate: today,
     issuePlace: '',
     issueDate: today,
-    periodStart: monthStart.toISOString().slice(0, 10),
-    periodEnd: monthEnd.toISOString().slice(0, 10),
+    periodStart: toLocalIso(monthStart),
+    periodEnd: toLocalIso(monthEnd),
     contractType: 'monthly',
 
     grossAmount: undefined,

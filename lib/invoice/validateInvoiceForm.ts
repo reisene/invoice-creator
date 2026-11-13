@@ -1,5 +1,6 @@
 import type { InvoiceFormData } from '@/types/invoiceForm';
 import type { TaxParams } from '@/types/taxParams';
+import { isValidTimesheetDays, sumTimesheetHours } from './timesheet';
 
 function digitsOnly(value: string): string {
   return value.replace(/[\s-]/g, '');
@@ -224,7 +225,18 @@ function validateContract(data: InvoiceFormData, errors: string[]): void {
     if (!data.hourlyRate || data.hourlyRate <= 0) {
       errors.push('Podaj stawkę godzinową większą od zera.');
     }
-    if (!data.hoursWorked || data.hoursWorked <= 0) {
+    if (data.timesheet && data.timesheet.length > 0) {
+      const inPeriod = data.timesheet.every(
+        (d) => d.date >= data.periodStart && d.date <= data.periodEnd,
+      );
+      if (!isValidTimesheetDays(data.timesheet) || !inPeriod) {
+        errors.push('Wykaz godzin zawiera nieprawidłowe dni lub godziny.');
+      } else if (sumTimesheetHours(data.timesheet) <= 0) {
+        errors.push(
+          'Wykaz godzin musi zawierać co najmniej jedną godzinę pracy.',
+        );
+      }
+    } else if (!data.hoursWorked || data.hoursWorked <= 0) {
       errors.push('Podaj liczbę przepracowanych godzin.');
     }
   }

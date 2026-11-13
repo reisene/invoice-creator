@@ -1,3 +1,5 @@
+import type { TimesheetDay } from '@/types/invoiceForm';
+
 export interface InvoiceData {
   issuePlace?: string;
   issueDate?: string;
@@ -40,6 +42,9 @@ export interface InvoiceData {
     hourlyRate?: number;
     hoursWorked?: number;
   };
+
+  // Wykaz godzin (opcjonalny, tylko stawka godzinowa)
+  timesheet?: TimesheetDay[];
 
   // Status i opcje
   contractorStatus: 'standard' | 'student_under_26' | 'with_employment';

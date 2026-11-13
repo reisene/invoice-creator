@@ -2,6 +2,7 @@ import type { InvoiceData } from '@/types/invoice';
 import type { InvoiceFormData } from '@/types/invoiceForm';
 import type { TaxParams } from '@/types/taxParams';
 import { YEARLY_TAX_FREE_AMOUNT } from './taxConstants';
+import { sumTimesheetHours } from './timesheet';
 
 const round2 = (value: number): number =>
   Math.round((value + 1e-9) * 100) / 100;
@@ -90,10 +91,14 @@ export function calculateInvoice(
   P: TaxParams,
 ): InvoiceData {
   // 1. Brutto
+  const hasTimesheet = !!data.timesheet && data.timesheet.length > 0;
+  const hoursWorked = hasTimesheet
+    ? sumTimesheetHours(data.timesheet ?? [])
+    : data.hoursWorked;
   const gross = round2(
     data.contractType === 'monthly'
       ? (data.grossAmount ?? 0)
-      : (data.hourlyRate ?? 0) * (data.hoursWorked ?? 0),
+      : (data.hourlyRate ?? 0) * (hoursWorked ?? 0),
   );
   const {
     pensionContribution,
@@ -212,8 +217,12 @@ export function calculateInvoice(
     remuneration: {
       gross,
       hourlyRate: data.hourlyRate,
-      hoursWorked: data.hoursWorked,
+      hoursWorked,
     },
+    timesheet:
+      data.contractType === 'hourly' && hasTimesheet
+        ? data.timesheet
+        : undefined,
     contractorStatus: data.contractorStatus,
     voluntarySickness: data.voluntarySickness,
     costType: data.costType,

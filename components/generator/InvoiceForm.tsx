@@ -26,6 +26,7 @@ import {
   BsInfoCircleFill,
   BsQuestionCircle,
 } from 'react-icons/bs';
+import { TimesheetEditor } from './TimesheetEditor';
 
 interface InvoiceFormProps {
   data: InvoiceFormData;
@@ -533,7 +534,7 @@ function ContractFields({ data, updateField }: FormSectionProps) {
   );
 }
 
-function RemunerationFields({ data, updateField }: FormSectionProps) {
+function RemunerationFields({ data, onChange, updateField }: FormSectionProps) {
   return (
     <>
       {/* Wynagrodzenie */}
@@ -606,11 +607,17 @@ function RemunerationFields({ data, updateField }: FormSectionProps) {
                     e.target.value ? Number(e.target.value) : undefined,
                   );
                 }}
-                required={data.contractType === 'hourly'}
+                readOnly={!!data.timesheet?.length}
+                required={
+                  data.contractType === 'hourly' && !data.timesheet?.length
+                }
               />
             </Form.Group>
           </Col>
         </Row>
+      )}
+      {data.contractType === 'hourly' && (
+        <TimesheetEditor data={data} onChange={onChange} />
       )}
     </>
   );

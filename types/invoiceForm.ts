@@ -3,6 +3,14 @@ export type ContractorStatus =
 
 export type ContractType = 'monthly' | 'hourly';
 
+export type DayType = 'work' | 'sick' | 'leave' | 'off';
+
+export interface TimesheetDay {
+  date: string;
+  type: DayType;
+  hours: number;
+}
+
 export type ClientType = 'company' | 'private';
 
 export type CostType = '20' | '50';
@@ -39,6 +47,8 @@ export interface InvoiceFormData {
   grossAmount?: number;
   hourlyRate?: number;
   hoursWorked?: number;
+  /** Optional timesheet (hourly contracts); when present its sum is the hours. */
+  timesheet?: TimesheetDay[];
 
   // Opcje
   contractorStatus: ContractorStatus;

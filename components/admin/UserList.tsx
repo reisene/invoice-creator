@@ -218,14 +218,18 @@ export default function UserList() {
                     <Button
                       variant='outline-danger'
                       size='sm'
-                      onClick={() => openBanModal(user)}
+                      onClick={() => {
+                        openBanModal(user);
+                      }}
                     >
                       Zbanuj
                     </Button>
                     <Button
                       variant='outline-warning'
                       size='sm'
-                      onClick={() => openPasswordModal(user)}
+                      onClick={() => {
+                        openPasswordModal(user);
+                      }}
                     >
                       Resetuj hasło
                     </Button>
@@ -255,7 +259,12 @@ export default function UserList() {
       </Table>
 
       {/* Modal potwierdzenia banu */}
-      <Modal show={showBanModal} onHide={() => setShowBanModal(false)}>
+      <Modal
+        show={showBanModal}
+        onHide={() => {
+          setShowBanModal(false);
+        }}
+      >
         <Modal.Header closeButton>
           <Modal.Title>Zbanuj użytkownika</Modal.Title>
         </Modal.Header>
@@ -275,7 +284,9 @@ export default function UserList() {
               as='textarea'
               rows={3}
               value={banReason}
-              onChange={(e) => setBanReason(e.target.value)}
+              onChange={(e) => {
+                setBanReason(e.target.value);
+              }}
               placeholder='Podaj powód zablokowania konta...'
             />
             <Form.Text className='text-body-secondary'>
@@ -287,7 +298,9 @@ export default function UserList() {
         <Modal.Footer>
           <Button
             variant='secondary'
-            onClick={() => setShowBanModal(false)}
+            onClick={() => {
+              setShowBanModal(false);
+            }}
             disabled={banPending}
           >
             Anuluj
@@ -305,7 +318,9 @@ export default function UserList() {
       {/* Modal resetu hasła */}
       <Modal
         show={showPasswordModal}
-        onHide={() => setShowPasswordModal(false)}
+        onHide={() => {
+          setShowPasswordModal(false);
+        }}
       >
         <Modal.Header closeButton>
           <Modal.Title>Resetuj hasło</Modal.Title>
@@ -325,7 +340,9 @@ export default function UserList() {
             <Form.Control
               type='password'
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
+              onChange={(e) => {
+                setNewPassword(e.target.value);
+              }}
               placeholder='Wpisz nowe hasło (min. 6 znaków)...'
             />
             <Form.Text className='text-body-secondary'>
@@ -337,7 +354,9 @@ export default function UserList() {
         <Modal.Footer>
           <Button
             variant='secondary'
-            onClick={() => setShowPasswordModal(false)}
+            onClick={() => {
+              setShowPasswordModal(false);
+            }}
             disabled={passwordPending}
           >
             Anuluj

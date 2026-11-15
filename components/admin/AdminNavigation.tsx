@@ -23,7 +23,9 @@ export default function AdminNavigation() {
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   return (
@@ -45,7 +47,9 @@ export default function AdminNavigation() {
               className={`btn shadow-sm ${
                 isActive ? 'btn-primary' : 'btn-light'
               }`}
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                setIsOpen(false);
+              }}
             >
               {link.label}
             </Link>
@@ -57,7 +61,9 @@ export default function AdminNavigation() {
       <button
         type='button'
         className='btn btn-primary rounded-circle shadow admin-fab'
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => {
+          setIsOpen((prev) => !prev);
+        }}
         aria-label={'Panel admina'}
         aria-expanded={isOpen}
       >

@@ -63,3 +63,4 @@ coverage
 
 # Ignore the following files and directories
 backup/
+**/*.patch

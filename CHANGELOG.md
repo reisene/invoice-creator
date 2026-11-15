@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.11.0](https://github.com-reisene/reisene/invoice-creator/compare/0.10.2...0.11.0) (2026-11-15)
+
+### Features
+
+- **invoice:** add watermark option to PDF invoice generation ([3729d4e](https://github.com-reisene/reisene/invoice-creator/commit/3729d4ed1c496137ecc482856c691367e4ad283f))
+
+### Bug Fixes
+
+- **invoice:** adjust font size for improved footer readability ([6865340](https://github.com-reisene/reisene/invoice-creator/commit/6865340d7b76c85dfe747ac971594de26ef40369))
+- **invoice:** adjust padding and font sizes for improved layout consistency ([76a7005](https://github.com-reisene/reisene/invoice-creator/commit/76a70051786d1359c9443f956a85b86b28370d7a))
+- **invoice:** enhance PDF layout with new styles and footer component ([34db691](https://github.com-reisene/reisene/invoice-creator/commit/34db691541f466833769edb7677623c1243b7c95))
+- **invoice:** reduce section margin for improved layout spacing ([cbde994](https://github.com-reisene/reisene/invoice-creator/commit/cbde9942a490e576b0f2ec5984df95197a5492f3))
+- **invoice:** reduce signature margin for improved layout spacing ([ba8d44d](https://github.com-reisene/reisene/invoice-creator/commit/ba8d44d666c753c6351d847d8ddcaabfac7442e9))
+- **invoice:** update signature margin for improved layout spacing ([80076bf](https://github.com-reisene/reisene/invoice-creator/commit/80076bf9c0c2e44f744909b6b68013b9fd6e5eab))
+
 ## [0.10.2](https://github.com-reisene/reisene/invoice-creator/compare/0.10.1...0.10.2) (2026-11-13)
 
 ### Bug Fixes

@@ -95,7 +95,7 @@ export default function PreviewClient({ taxParams }: PreviewClientProps) {
 
       const sampleInvoiceNumber = `WZORZEC/${selectedPreset.id.toUpperCase()}/2026`;
       const blob = await pdf(
-        createInvoicePdfDocument(invoiceData, sampleInvoiceNumber),
+        createInvoicePdfDocument(invoiceData, sampleInvoiceNumber, true),
       ).toBlob();
       const objectUrl = URL.createObjectURL(blob);
       const downloadLink = document.createElement('a');

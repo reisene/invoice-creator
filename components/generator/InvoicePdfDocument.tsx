@@ -262,6 +262,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  watermark: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  watermarkText: {
+    fontSize: 130,
+    fontWeight: 'bold',
+    color: '#000000',
+    opacity: 0.08,
+    transform: 'rotate(-45deg)',
+  },
   footerText: {
     fontSize: 7.5,
     color: '#6c757d',
@@ -314,9 +330,18 @@ function PdfFooter() {
   );
 }
 
+function PdfWatermark() {
+  return (
+    <View style={styles.watermark} fixed>
+      <Text style={styles.watermarkText}>WZÓR</Text>
+    </View>
+  );
+}
+
 export default function createInvoicePdfDocument(
   data: InvoiceData,
   invoiceNumber: string,
+  watermark = false,
 ) {
   return (
     <Document
@@ -325,6 +350,7 @@ export default function createInvoicePdfDocument(
       language='pl-PL'
     >
       <Page size='A4' style={styles.page} wrap>
+        {watermark && <PdfWatermark />}
         <PdfInvoiceDetails data={data} invoiceNumber={invoiceNumber} />
         <PdfSettlement data={data} />
         <PdfPayment data={data} />
@@ -346,6 +372,7 @@ export default function createInvoicePdfDocument(
       </Page>
       {data.timesheet && data.timesheet.length > 0 && (
         <Page size='A4' style={styles.page} wrap>
+          {watermark && <PdfWatermark />}
           <Text style={styles.sectionTitle}>
             Wykaz godzin do rachunku nr {invoiceNumber}
           </Text>

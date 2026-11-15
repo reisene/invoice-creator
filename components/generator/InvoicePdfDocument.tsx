@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   signatures: {
     flexDirection: 'row',
     gap: 40,
-    marginTop: 32,
+    marginTop: 48,
   },
   signature: {
     flex: 1,

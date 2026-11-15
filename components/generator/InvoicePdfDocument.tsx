@@ -194,7 +194,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderBottomWidth: 0.5,
     borderBottomColor: '#dee2e6',
-    paddingVertical: 5,
+    paddingVertical: 4,
+    fontSize: 9,
   },
   tableLabel: {
     flex: 1,
@@ -231,13 +232,14 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#212529',
     marginTop: 4,
-    paddingTop: 7,
+    paddingTop: 6,
+    fontSize: 9,
     fontWeight: 'bold',
   },
   signatures: {
     flexDirection: 'row',
     gap: 40,
-    marginTop: 48,
+    marginTop: 32,
   },
   signature: {
     flex: 1,
@@ -330,7 +332,7 @@ export default function createInvoicePdfDocument(
           <Text>{data.notes || '—'}</Text>
         </View>
 
-        <View style={styles.signatures}>
+        <View style={styles.signatures} wrap={false}>
           <View style={styles.signature}>
             <Text>Podpis zleceniodawcy</Text>
           </View>

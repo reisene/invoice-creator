@@ -209,6 +209,7 @@ describe('sample invoice preview', () => {
     expect(mocks.document).toHaveBeenCalledWith(
       expect.any(Object),
       'WZORZEC/STANDARD/2026',
+      true,
     );
     await act(async () => {
       resolve(new Blob(['invoice']));

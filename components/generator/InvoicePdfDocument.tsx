@@ -168,10 +168,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 2,
   },
   section: {
-    marginBottom: 16,
+    marginBottom: 8,
   },
   sectionTitle: {
     fontSize: 11,
@@ -194,7 +194,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderBottomWidth: 0.5,
     borderBottomColor: '#dee2e6',
-    paddingVertical: 5,
+    paddingVertical: 4,
+    fontSize: 9,
   },
   tableLabel: {
     flex: 1,
@@ -203,19 +204,42 @@ const styles = StyleSheet.create({
     width: 110,
     textAlign: 'right',
   },
+  tableValueWide: {
+    width: '50%',
+    textAlign: 'right',
+  },
+  compactRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#dee2e6',
+    paddingVertical: 2,
+    fontSize: 9,
+  },
+  issueInfo: {
+    textAlign: 'right',
+    marginBottom: 6,
+  },
+  invoiceNumber: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     borderTopWidth: 1,
     borderTopColor: '#212529',
     marginTop: 4,
-    paddingTop: 7,
+    paddingTop: 6,
+    fontSize: 9,
     fontWeight: 'bold',
   },
   signatures: {
     flexDirection: 'row',
     gap: 40,
-    marginTop: 48,
+    marginTop: 40,
   },
   signature: {
     flex: 1,
@@ -224,6 +248,7 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     textAlign: 'center',
     fontStyle: 'italic',
+    fontSize: 7.5,
   },
   footer: {
     position: 'absolute',
@@ -236,6 +261,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  watermark: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  watermarkText: {
+    fontSize: 130,
+    fontWeight: 'bold',
+    color: '#000000',
+    opacity: 0.08,
+    transform: 'rotate(-45deg)',
   },
   footerText: {
     fontSize: 7.5,
@@ -256,15 +297,43 @@ function PdfRow({
   label,
   value,
   bold = false,
+  wide = false,
 }: {
   label: string;
   value: string;
   bold?: boolean;
+  wide?: boolean;
 }) {
   return (
     <View style={bold ? styles.totalRow : styles.tableRow}>
       <Text style={styles.tableLabel}>{label}</Text>
-      <Text style={styles.tableValue}>{value}</Text>
+      <Text style={wide ? styles.tableValueWide : styles.tableValue}>
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+function PdfFooter() {
+  return (
+    <View style={styles.footer} fixed>
+      <Text style={styles.footerText}>
+        Dokument wygenerowany za pomocą Invoice Creator – {getSiteDisplayUrl()}
+      </Text>
+      <Text
+        style={styles.footerText}
+        render={({ pageNumber, totalPages }) =>
+          `Strona ${pageNumber} z ${totalPages}`
+        }
+      />
+    </View>
+  );
+}
+
+function PdfWatermark() {
+  return (
+    <View style={styles.watermark} fixed>
+      <Text style={styles.watermarkText}>WZÓR</Text>
     </View>
   );
 }
@@ -272,6 +341,7 @@ function PdfRow({
 export default function createInvoicePdfDocument(
   data: InvoiceData,
   invoiceNumber: string,
+  watermark = false,
 ) {
   return (
     <Document
@@ -280,6 +350,7 @@ export default function createInvoicePdfDocument(
       language='pl-PL'
     >
       <Page size='A4' style={styles.page} wrap>
+        {watermark && <PdfWatermark />}
         <PdfInvoiceDetails data={data} invoiceNumber={invoiceNumber} />
         <PdfSettlement data={data} />
         <PdfPayment data={data} />
@@ -288,7 +359,7 @@ export default function createInvoicePdfDocument(
           <Text>{data.notes || '—'}</Text>
         </View>
 
-        <View style={styles.signatures}>
+        <View style={styles.signatures} wrap={false}>
           <View style={styles.signature}>
             <Text>Podpis zleceniodawcy</Text>
           </View>
@@ -297,26 +368,16 @@ export default function createInvoicePdfDocument(
           </View>
         </View>
 
-        <View style={styles.footer} fixed>
-          <Text style={styles.footerText}>
-            Dokument wygenerowany za pomocą Invoice Creator –{' '}
-            {getSiteDisplayUrl()}
-          </Text>
-          <Text
-            style={styles.footerText}
-            render={({ pageNumber, totalPages }) =>
-              `Strona ${pageNumber} z ${totalPages}`
-            }
-          />
-        </View>
+        <PdfFooter />
       </Page>
       {data.timesheet && data.timesheet.length > 0 && (
         <Page size='A4' style={styles.page} wrap>
+          {watermark && <PdfWatermark />}
           <Text style={styles.sectionTitle}>
             Wykaz godzin do rachunku nr {invoiceNumber}
           </Text>
           {data.timesheet.map((day) => (
-            <View key={day.date} style={styles.tableRow} wrap={false}>
+            <View key={day.date} style={styles.compactRow} wrap={false}>
               <Text style={styles.tableLabel}>{formatIssueDate(day.date)}</Text>
               <Text style={styles.tableLabel}>{DAY_TYPE_LABELS[day.type]}</Text>
               <Text style={styles.tableValue}>
@@ -329,6 +390,7 @@ export default function createInvoicePdfDocument(
             value={`${sumTimesheetHours(data.timesheet)} h`.replace('.', ',')}
             bold
           />
+          <PdfFooter />
         </Page>
       )}
     </Document>
@@ -345,15 +407,13 @@ function PdfInvoiceDetails({
   const { client, contractor, contract } = data;
   return (
     <>
-      <Text style={styles.title}>RACHUNEK DO UMOWY ZLECENIA</Text>
-      <Text style={[styles.line, { textAlign: 'center', marginBottom: 16 }]}>
-        Numer rachunku: {invoiceNumber}
-      </Text>
       {data.issuePlace && data.issueDate ? (
-        <Text style={[styles.line, { textAlign: 'center', marginBottom: 16 }]}>
+        <Text style={styles.issueInfo}>
           {data.issuePlace}, {formatIssueDate(data.issueDate)}
         </Text>
       ) : null}
+      <Text style={styles.title}>RACHUNEK DO UMOWY ZLECENIA</Text>
+      <Text style={styles.invoiceNumber}>Nr {invoiceNumber}</Text>
 
       <View style={styles.columns}>
         <View style={styles.column}>
@@ -477,7 +537,7 @@ function PdfSettlement({ data }: { data: InvoiceData }) {
         value={formatCurrency(calculations.net)}
         bold
       />
-      <PdfRow label='Słownie' value={numberToWords(calculations.net)} />
+      <PdfRow label='Słownie' value={numberToWords(calculations.net)} wide />
     </View>
   );
 }

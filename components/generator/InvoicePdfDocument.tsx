@@ -248,6 +248,7 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     textAlign: 'center',
     fontStyle: 'italic',
+    fontSize: 7.5,
   },
   footer: {
     position: 'absolute',
